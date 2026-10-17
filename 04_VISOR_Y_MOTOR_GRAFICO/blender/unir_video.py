@@ -8,7 +8,7 @@ cuadros = sorted(f for f in os.listdir(CARPETA) if f.lower().endswith(".jpg") an
 esc = bpy.context.scene
 esc.render.fps = FPS
 ed = esc.sequence_editor_create()
-coleccion = getattr(ed, "strips", None) or ed.sequences
+coleccion = ed.strips if hasattr(ed, "strips") else ed.sequences     # Blender 5 la llama strips (empieza vacía)
 tira = coleccion.new_image("cuadros", os.path.join(CARPETA, cuadros[0]), channel=1, frame_start=1)
 for f in cuadros[1:]:
     tira.elements.append(f)
