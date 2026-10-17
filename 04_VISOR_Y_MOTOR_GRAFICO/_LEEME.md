@@ -41,3 +41,14 @@ Escena de ejemplo: el ladrón agachado detrás de V1 se cambia a V2 y el civil c
 §3.3 y D-051. Medido con la RTX: 144 cps y sin errores (`mediciones/medir_fps.mjs cancha`). Capturas:
 `mediciones/capturas/v17_cancha_*.jpg`. Las fases de la misión (tránsito → CH7 → zona) y el estado "IA activada" esperan
 los campos nuevos de `foto()` de la Simulación V17.
+
+## Blender instalado (D-057, 2026-10-17)
+
+- **Versión:** Blender 5.2.2 LTS (compilación d13f752e3b9c, 2026-09-15), Python 3.13.13 por dentro, importador FBX activo.
+- **De dónde:** `download.blender.org/release/Blender5.2/blender-5.2.2-windows-x64.zip` (404 MB), versión portable
+  (no pide administrador).
+- **SHA256:** `3849d17a682cba006075aaa3f3597ecb5c9c30ec31035b2e092c53e40679b535`, igual al publicado en
+  `blender-5.2.2.sha256` de la misma página.
+- **Dónde quedó:** en la carpeta `Programas\Blender` del usuario (fuera del repositorio, 925 MB). Se abre con
+  `blender.exe`; en consola: `blender.exe --background --version`.
+- **Gráfica:** Cycles ve la RTX 3050 por OptiX y por CUDA (para renderizar el video con la tarjeta).
