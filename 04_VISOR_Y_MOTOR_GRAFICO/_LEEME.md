@@ -75,3 +75,17 @@ rendirse (manos arriba) y grabar con el celular no vienen en la versión gratis 
 `Idle_Rail_Loop`, `Idle_TalkingPhone_Loop`); se arman con código sobre los mismos huesos. **Falta ropa:** sugerencia,
 el paquete gratis CC0 "Ultimate Modular Characters" de Quaternius (personas vestidas); no se bajó porque no estaba en
 lo autorizado.
+
+### Personas vestidas: Ultimate Modular Characters (CC0, bajado el 2026-10-17 con permiso de Brahian)
+
+- **De dónde:** carpeta pública de Google Drive que enlaza la página oficial `quaternius.com/packs/ultimatemodularcharacters.html`;
+  licencia CC0 1.0 (`License.txt`). Se bajaron los 11 personajes en glTF (Adventurer, Beach, Casual_2, Casual_Hoodie,
+  Farmer, King, Punk, Spacesuit, Suit, Swat, Worker; 35 MB) a `recursos_quaternius\ultimate-modular-characters\`.
+- **Traen 24 animaciones propias** (Idle, Walk, Run, Roll, Wave, Interact…), pero **otro esqueleto** (62 huesos, piernas
+  con IK) que no coincide con el de la Universal Animation Library (1 hueso en común).
+- **Redirección:** `blender/redirigir_animaciones.py` pasa las animaciones de la librería a estos personajes (giro de cada
+  hueso en el mundo × la diferencia entre las poses de referencia; IK apagado). Ya están pasadas **41**: 23 de la UAL1 en
+  `recursos_quaternius\animaciones_UMC_UAL1.blend` y 18 de la UAL2 en `animaciones_UMC_UAL2.blend` (terminan en `_UMC`).
+  Unos 10 s por librería.
+- **Prueba:** `blender/prueba_vestidos.py` → `mediciones/capturas/blender_prueba_vestidos.jpg` (correr, agachado junto
+  al panel, salto). Revisado a ojo en un cuadro; falta ver las animaciones en movimiento (pies que patinan, manos).
