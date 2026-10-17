@@ -29,5 +29,15 @@ internet (todo es local). Archivos que no son código:
 | `recursos/texturas/*.jpg` (12: concreto, pasto, tierra) | Generadas con ruido fractal por `herramientas/generar_texturas.py` | Propias (CC0) |
 | `replays_prueba/*.json` | Repeticiones de prueba de la V16; llevan el nombre de Brahian como autor | Propias |
 
-Fuente: `v16/simulacion/recursos/LICENCIAS.md`. Pendiente: `generar_texturas.py` no se trajo de la rama `v16-visor`;
-habría que copiarlo para que se vea cómo se hicieron las texturas.
+Fuente: `v16/simulacion/recursos/LICENCIAS.md`. El script que hizo las texturas está en `v16/simulacion/herramientas/generar_texturas.py`.
+
+## Cancha V17 en el visor (D-057, 2026-10-17)
+
+En `v16/`, escenario **"Vista previa · cancha V17, dos V de 90° (no entrenado)"** (`visor/previa.js`, `crearCancha`):
+cancha de fútbol con líneas y arcos (90 × 60 m, **medidas por medir**), zona de IA de 30 × 30 m en el centro de la mitad
+este (geocerca roja en la vista externa y en el mapa pequeño), dos V de 90° de paneles de exposición de 1.0 × 2.0 m con
+bolsas de arena, vértices a 10 m (V1 abre al sur, V2 al norte) y árboles fuera de la cancha (≥ 10 m de la geocerca).
+Escena de ejemplo: el ladrón agachado detrás de V1 se cambia a V2 y el civil cruza a 8 m. Fuente: `docs/PLAN_V17_REFUERZO.md`
+§3.3 y D-051. Medido con la RTX: 144 cps y sin errores (`mediciones/medir_fps.mjs cancha`). Capturas:
+`mediciones/capturas/v17_cancha_*.jpg`. Las fases de la misión (tránsito → CH7 → zona) y el estado "IA activada" esperan
+los campos nuevos de `foto()` de la Simulación V17.

@@ -265,6 +265,7 @@ export class Mundo {
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const geoc = new THREE.Line(geo, new THREE.LineDashedMaterial({ color: 0xffb347, dashSize: 1.2, gapSize: 0.8, transparent: true, opacity: 0.75 }));
     geoc.computeLineDistances();
+    geoc.name = "geocerca";               // la cancha V17 la cambia por la suya de 30 × 30 m
     this.ayudas.add(geoc);
     // autoría: grabada en el piso en la franja sur (como en el visor V15), solo en la vista externa
     const cv = document.createElement("canvas");

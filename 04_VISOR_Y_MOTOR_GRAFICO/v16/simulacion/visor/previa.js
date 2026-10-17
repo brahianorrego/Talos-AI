@@ -3,7 +3,7 @@
 // Cada escenario trae una escena de ejemplo (dron y personas con recorridos fijos) que pasa por las mismas cámaras,
 // cajas de YOLO e interfaz que una repetición; la cámara externa queda libre para recorrerlo.
 import * as THREE from "three";
-import { Mundo, juegoTexturas } from "./escena.js";
+import { Mundo, juegoTexturas, CAPA_AYUDAS } from "./escena.js";
 import { mundo, azar, uvMetros, lerp, angNorm, CAM, vfovDe } from "./util.js";
 
 const gris = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, metalness: 0.5 });
@@ -11,7 +11,7 @@ const gris = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, met
 export class Previa {
   constructor(M) {
     this.M = M;
-    this.grupos = { hangar: this.crearHangar(), campo: this.crearCampo() };
+    this.grupos = { hangar: this.crearHangar(), campo: this.crearCampo(), cancha: this.crearCancha() };
     Object.values(this.grupos).forEach(g => { g.visible = false; M.escena.add(g); });
     this.activo = null;
     this.ray = new THREE.Raycaster();
@@ -20,6 +20,7 @@ export class Previa {
   activar(nombre) {
     Object.entries(this.grupos).forEach(([k, g]) => { g.visible = k === nombre; });
     this.M.decorado.visible = nombre !== "hangar";
+    this.ponerCancha(nombre === "cancha");
     this.activo = nombre;
     this.M.renderer.shadowMap.needsUpdate = true;
     return new PartidaPrevia(nombre, this);
@@ -27,7 +28,90 @@ export class Previa {
   desactivar() {
     Object.values(this.grupos).forEach(g => { g.visible = false; });
     this.M.decorado.visible = true;
+    this.ponerCancha(false);
     this.activo = null;
+  }
+  // en la cancha los árboles del decorado (anillo desde 34 m) caerían sobre el campo, y la geocerca es de 30 × 30 m
+  ponerCancha(si) {
+    this.M.decorado.children.forEach(o => { if (o.isInstancedMesh) o.visible = !si; });
+    const geoc = this.M.ayudas.getObjectByName("geocerca");
+    if (geoc) geoc.visible = !si;
+  }
+
+  // ------------------------------------------------------------------------------------------------ cancha V17 (D-051)
+  // Zona de IA de 30 × 30 m centrada en el origen, en el centro de media cancha; dos V de 90° (alas de ~1.0 m, 2.0 m de
+  // alto) con los vértices a 10 m: V1 abre al sur y V2 al norte; árboles fuera de la cancha, a ≥ 10 m de la geocerca.
+  // Fuente: docs/PLAN_V17_REFUERZO.md §3.3 y docs/v17_zona_ia.png. Medidas de la cancha (90 × 60 m): por medir.
+  crearCancha() {
+    const g = new THREE.Group(), r = azar(17);
+    const add = (m, sombra = true) => { m.castShadow = sombra; m.receiveShadow = true; g.add(m); return m; };
+    const LX = 90, LY = 60, CX = -LX / 4;          // centro de la cancha: la zona queda en el centro de la mitad este
+    // líneas blancas de la cancha (0.12 m)
+    const cal = new THREE.MeshStandardMaterial({ color: 0xf2f2ee, roughness: 0.8 });
+    const linea = (x1, y1, x2, y2) => {
+      const L = Math.hypot(x2 - x1, y2 - y1), m = new THREE.Mesh(new THREE.BoxGeometry(L + 0.12, 0.01, 0.12), cal);
+      m.position.copy(mundo((x1 + x2) / 2, (y1 + y2) / 2, 0.012)); m.rotation.y = Math.atan2(y2 - y1, x2 - x1); add(m, false);
+    };
+    const caja = (x0, y0, x1, y1) => { linea(x0, y0, x1, y0); linea(x1, y0, x1, y1); linea(x1, y1, x0, y1); linea(x0, y1, x0, y0); };
+    const x0 = CX - LX / 2, x1 = CX + LX / 2;
+    caja(x0, -LY / 2, x1, LY / 2);
+    linea(CX, -LY / 2, CX, LY / 2);
+    [[x0, 1], [x1, -1]].forEach(([xa, s]) => { caja(xa, -20.15, xa + s * 16.5, 20.15); caja(xa, -9.15, xa + s * 5.5, 9.15); });
+    const circ = new THREE.Mesh(new THREE.RingGeometry(9.09, 9.21, 96), cal);
+    circ.rotation.x = -Math.PI / 2; circ.position.copy(mundo(CX, 0, 0.012)); add(circ, false);
+    // arcos (7.32 × 2.44 m) con red
+    const tubo = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35, metalness: 0.3 });
+    const red = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25, side: THREE.DoubleSide, roughness: 1 });
+    [[x0, -1], [x1, 1]].forEach(([xa, s]) => {
+      [-3.66, 3.66].forEach(y => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.44, 10), tubo); p.position.copy(mundo(xa, y, 1.22)); add(p); });
+      const trav = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 7.44, 10), tubo); trav.rotation.x = Math.PI / 2;
+      trav.position.copy(mundo(xa, 0, 2.44)); add(trav);
+      const fondo = new THREE.Mesh(new THREE.PlaneGeometry(7.32, 2.44), red); fondo.position.copy(mundo(xa + s * 1.5, 0, 1.22)); fondo.rotation.y = Math.PI / 2; add(fondo, false);
+    });
+    // paneles de exposición en V de 90°: tablero claro con marco de aluminio, bolsas de arena en los 3 pies
+    const tablero = new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.85 });
+    const marco = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, roughness: 0.35, metalness: 0.8 });
+    const arena = new THREE.MeshStandardMaterial({ color: 0x8a6f4a, roughness: 1 });
+    const ALA = 1.0, ALTO = 2.0, segs = [];
+    const panel = (xa, ya, xb, yb) => {
+      const L = Math.hypot(xb - xa, yb - ya), rot = Math.atan2(yb - ya, xb - xa), c = mundo((xa + xb) / 2, (ya + yb) / 2);
+      const t = new THREE.Mesh(new THREE.BoxGeometry(L - 0.06, ALTO - 0.12, 0.03), tablero); t.position.copy(c).setY(ALTO / 2 + 0.03); t.rotation.y = rot; add(t);
+      [[0, ALTO - 0.03, L, 0.04], [0, 0.06, L, 0.04]].forEach(([, y, w, h]) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.05), marco); m.position.copy(c).setY(y); m.rotation.y = rot; add(m);
+      });
+      segs.push([xa, ya, xb, yb, ALTO]);
+    };
+    const bolsa = (x, y) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.3), arena); m.position.copy(mundo(x, y, 0.07)); m.rotation.y = r() * 3; add(m); };
+    const d = ALA * Math.SQRT1_2;
+    [[-5, -1], [5, 1]].forEach(([xv, s]) => {      // s = -1: abre al sur (alas hacia -y); s = +1: abre al norte
+      [-1, 1].forEach(lado => { panel(xv, 0, xv + lado * d, s * d); bolsa(xv + lado * d, s * d); });
+      bolsa(xv, 0);
+    });
+    // árboles alrededor de la cancha (fuera de las líneas), en dos hileras irregulares
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
+    const variantes = [0, 1, 2, 1].map(t => Mundo.geometriaArbol(r, t)), pos = [];
+    const borde = (xa, ya, xb, yb) => { const L = Math.hypot(xb - xa, yb - ya); for (let k = 0; k <= L; k += 5 + r() * 3) {
+      const f = k / L, fuera = 4 + r() * 4 + (r() < 0.4 ? 7 : 0), nx = -(yb - ya) / L, ny = (xb - xa) / L;   // normal hacia afuera (bordes en sentido horario)
+      pos.push([xa + (xb - xa) * f + nx * fuera, ya + (yb - ya) * f + ny * fuera]); } };
+    borde(x0, LY / 2, x1, LY / 2); borde(x1, LY / 2, x1, -LY / 2); borde(x1, -LY / 2, x0, -LY / 2); borde(x0, -LY / 2, x0, LY / 2);
+    variantes.forEach((geo, v) => {
+      const mios = pos.filter((_, k) => k % variantes.length === v);
+      const im = new THREE.InstancedMesh(geo, mat, mios.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+      mios.forEach(([x, y], k) => {
+        const s = 0.8 + r() * 0.5;
+        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), r() * 6.28);
+        m4.compose(mundo(x, y), q, new THREE.Vector3(s, s * (0.85 + r() * 0.3), s));
+        im.setMatrixAt(k, m4);
+      });
+      im.castShadow = im.receiveShadow = true;
+      g.add(im);
+    });
+    // geocerca de la zona de IA (ayuda: solo en la vista externa)
+    const Z = 15, pts = [[-Z, -Z], [Z, -Z], [Z, Z], [-Z, Z], [-Z, -Z]].map(([x, y]) => mundo(x, y, 0.03));
+    const geoc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xe5534b, dashSize: 1.2, gapSize: 0.8 }));
+    geoc.computeLineDistances(); geoc.layers.set(CAPA_AYUDAS); g.add(geoc);
+    g.userData.segmentos = segs;
+    return g;
   }
 
   // ------------------------------------------------------------------------------------------------ hangar
@@ -213,6 +297,16 @@ const ESCENAS = {
       { id: 9, rol: "peaton", est: 1.8, pts: [[0, 3, -3], [75, 3, -3]], pos: 0, civ: 1 },                          // mira el dron
     ],
   },
+  cancha: {
+    titulo: "Vista previa · cancha V17, dos V de 90° (no entrenado)",
+    // entra por el sur desde el punto de activación (0, -12) y rodea las V a ~5 m; nunca sale de los 30 × 30 m
+    dron: [[0, 0, -12], [10, -2, -6], [24, -9, 1], [34, -6, 6], [46, 4, 6], [58, 10, 0], [70, 6, -6], [80, 0, -12]],
+    gente: [
+      // el ladrón se esconde detrás del vértice de V1 (del lado norte, el que no se ve desde el sur) y luego cambia a V2
+      { id: 3, rol: "ladron", est: 1.72, pts: [[0, -5, 0.9], [40, -5, 0.9], [43, 5, -0.9], [80, 5, -0.9]], pos: 1 },
+      { id: 7, rol: "peaton", est: 1.68, pts: [[0, -15, 8], [40, 15, 8], [42, 15, 8], [80, -15, 8]], pos: 0 },     // civil cruza a 8 m
+    ],
+  },
 };
 
 export class PartidaPrevia {
@@ -223,11 +317,12 @@ export class PartidaPrevia {
     this.dt = 0.1;
     this.total = E.dron[E.dron.length - 1][0];
     this.C = new Array(Math.round(this.total / this.dt) + 1).fill({});
-    this.paneles = (previa.grupos[nombre].userData.segmentos || []).map(s => [...s, 3]);
+    this.paneles = (previa.grupos[nombre].userData.segmentos || []).map(s => s.length > 4 ? s : [...s, 3]);
     this.eventos = [];
     this.clics = [];
     this.v16 = true;
     this.previa_ = true;
+    if (nombre === "cancha") this.arena = 15;      // zona de IA de 30 × 30 m (D-051)
     this.d = { titulo: E.titulo, version: "vista previa", resultado: null };
     this.ruta = "previa:" + nombre;
   }

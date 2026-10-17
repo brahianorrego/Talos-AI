@@ -132,7 +132,8 @@ export class Interfaz {
     for (let k = Math.ceil((oy - H / esc) / 5) * 5; k < oy + H / esc; k += 5) { g.beginPath(); g.moveTo(0, Y(k)); g.lineTo(W, Y(k)); g.stroke(); }
     // geocerca
     g.strokeStyle = "rgba(240,166,35,.55)"; g.setLineDash([6 * dpr, 4 * dpr]); g.lineWidth = 1.5 * dpr;
-    g.strokeRect(X(-25), Y(25), 50 * esc, 50 * esc); g.setLineDash([]);
+    const A = this.P.arena || 25;                // medio lado (m): 25 en la V16, 15 en la cancha V17
+    g.strokeRect(X(-A), Y(A), 2 * A * esc, 2 * A * esc); g.setLineDash([]);
     // paneles
     g.strokeStyle = "#aeb4ba"; g.lineWidth = Math.max(2, 0.2 * esc); g.lineCap = "butt";
     (this.P.paneles || []).forEach(([x1, y1, x2, y2]) => { g.beginPath(); g.moveTo(X(x1), Y(y1)); g.lineTo(X(x2), Y(y2)); g.stroke(); });

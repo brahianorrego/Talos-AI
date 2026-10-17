@@ -41,6 +41,27 @@ await dormir(3000);
 const info = await evaluar(`(() => { const gl = document.createElement('canvas').getContext('webgl2'); const e = gl.getExtension('WEBGL_debug_renderer_info');
   return { gpu: gl.getParameter(e.UNMASKED_RENDERER_WEBGL), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, vis: document.visibilityState }; })()`);
 const res = { etiqueta, extra, ...info, calidades: {} };
+const errores = [];
+ws.addEventListener("message", ev => { const m = JSON.parse(ev.data); if (m.method === "Runtime.exceptionThrown") errores.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); });
+await cdp("Runtime.enable");
+if (etiqueta === "cancha") {
+  const tomas = [
+    ["cancha_externa", "await __v16.escenario('cancha')"],
+    ["cancha_arriba", "__v16.modo('arriba')"],
+    ["cancha_seguir", "__v16.jugarDesde(36); __v16.modo('seguir')"],
+    ["cancha_camara", "__v16.jugarDesde(30); __v16.vista('camara')"],
+  ];
+  await evaluar(`document.getElementById('b-ing').click()`);
+  for (const [nombre, js] of tomas) {
+    await evaluar(`(async () => { ${js}; })()`);
+    await dormir(3000);
+    const foto = await cdp("Page.captureScreenshot", { format: "png" });
+    writeFileSync(join(salida, `v17_${nombre}.png`), Buffer.from(foto.result.data, "base64"));
+  }
+  const fps = await evaluar(`new Promise(r => { let n = 0; const t0 = performance.now(); (function f(a) { n++; a - t0 < 5000 ? requestAnimationFrame(f) : r(n / 5); })(t0); })`);
+  console.log(JSON.stringify({ fps, errores }));
+  ws.close(); chrome.kill(); process.exit(0);
+}
 if (etiqueta === "capturas") {   // fotos para Brahian: [nombre, código que arma la toma]
   const tomas = [
     ["camara_yolo", "__v16.irA(7.5)"],

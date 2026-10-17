@@ -199,6 +199,7 @@ async function ponerEscenario(nombre) {
   if (vistas.grande !== "externa") intercambiar();
   document.querySelector('[data-cam="libre"]').click();
   if (nombre === "hangar") { camExt.position.copy(mundo(-5, -13, 4.5)); controles.target.copy(mundo(4, -1, 1.2)); }
+  else if (nombre === "cancha") { camExt.position.copy(mundo(-14, -22, 9)); controles.target.copy(mundo(0, 0, 1)); }
   else { camExt.position.copy(mundo(-19, -25, 8)); controles.target.copy(mundo(-2, 0, 1)); }
   controles.update();
   document.title = "DRON-IA · " + P.d.titulo;
