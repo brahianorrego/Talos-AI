@@ -1,0 +1,59 @@
+# Repositorio PÚBLICO: nada de IPs, usuarios, claves, WiFi, fotos de personas, Word ni PDFs del comité.
+
+# --- Secretos ---
+.env
+.env.*
+*.env
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+
+# --- Privado: documento, memoria de Claude, permisos locales y registros de la migración ---
+07_DOCUMENTO_PROYECTO_DE_GRADO/
+_memoria_claude/
+.claude/settings.local.json
+_copia_log.txt
+
+# --- Fotos con personas o de origen desconocido (quedan solo en el PC) ---
+08_EVIDENCIA_Y_DIAGRAMAS/paneles_de_exposicion_universidad.png
+08_EVIDENCIA_Y_DIAGRAMAS/pan_tilt_servos.png
+08_EVIDENCIA_Y_DIAGRAMAS/privado/
+
+# --- Datos de campo (video y personas; respaldo en Google Drive) ---
+datos_campo/
+registros/
+01_MINIMO_INDISPENSABLE/registros_campo/*
+!01_MINIMO_INDISPENSABLE/registros_campo/.gitkeep
+
+# --- Entornos virtuales y cachés ---
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# --- Modelos y tensores (pesan GB; van a una Release de GitHub o a Google Drive) ---
+*.zip
+*.pt
+*.pth
+*.npy
+*.npz
+*.engine
+*.onnx
+03_SIMULACION_RL/modelos_master/
+03_SIMULACION_RL/modelos_v*/
+_archivo_versiones/modelos_y_salidas/
+
+# --- Salidas pesadas, logs y TensorBoard ---
+salida*/
+*.log
+runs/
+tb_logs/
+tensorboard/
+events.out.tfevents.*
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+desktop.ini

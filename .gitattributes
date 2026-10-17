@@ -1,0 +1,2 @@
+# La carpeta congelada se guarda byte por byte: si Git cambiara los saltos de línea, HUELLAS_SHA256.txt dejaría de coincidir
+01_MINIMO_INDISPENSABLE/** -text
