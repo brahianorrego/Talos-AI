@@ -588,6 +588,21 @@ Z_V17_TRANSITO = 3.0
 # Recompensa (plan 5.2): R1 K_COB, R2 K_ESC, R5 K_JERK_V16 y R6 R_SOBREVUELO / R_ANGULO_GMB son los de la V16; R3 (bono de
 # entropía) está en entrenar_master.py (--ent); R4: el bono y la multa de re-adquisición de la V17 (en la V15/V16, ±8)
 R_READQ_V17 = 2.0
+# V17.1 · D-059 (opción A): M1 = racha de RACHA_M1_V17 s seguidos con el ladrón a la vista y el ID correcto (el contador de
+# la V15). La recompensa se alinea con M1: un bono al completar la racha (una vez por racha) y un potencial por la racha en
+# curso (Ng: gamma·phi' - phi, no cambia lo óptimo; al perder la racha el potencial cae y eso es la multa)
+RACHA_M1_V17 = 30.0
+R_RACHA_V17 = 10.0
+# V17.1: R6 apagada en la cancha. Medido con los botones fijos (informes/v17/v171_rec_*.json, 256 partidas): con las
+# multas de sobrevuelo y de ángulo, "siempre SUBIR" (M1 61.7 %) cobraba MENOS que "siempre QUEDARSE" (55.1 %): la red
+# aprendía a quedarse. El punto ciego y el ángulo los cuidan reglas (reflejo de punto ciego, barrera de -45°).
+R_SOBREVUELO_V17, R_ANGULO_GMB_V17 = 0.0, 0.0
+K_RACHA_V17 = 3.0
+# D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
+TF03_PITCH_V17 = -3.0
+# D-063 · altura segura con el error del barómetro: en la V17, lo que se le PIDE a la Pixhawk con alguien cerca es
+# Z_SEGURA + MARGEN_BARO_V17 (la otra opción medida es el altímetro por LiDAR al piso: ALTIMETRO = "luna")
+MARGEN_BARO_V17 = 0.0
 # E7 · búsqueda tras el panel: con V cortas, el "muro de canto" (D-044) se mira desde A_CANTO_V17 m de la punta; con
 # CANTO_V17 = False se salta ese paso
 CANTO_V17 = True
@@ -879,7 +894,8 @@ class EntornoDronPersona(object):
         self.dz_est = z()                                # altura que cree la Pixhawk
         self.t_clic = np.full(n, 99.0)                   # V16: s desde el último clic del operador (tracker amarrado)
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
-        self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()   # V17 · visor: consignas, quién manda y motivo del árbitro
+        self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()
+        self.phi_racha = z()                             # V17.1: potencial de la racha en curso   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
         self.blur = z(N_PERS)                            # desenfoque de cada persona en la cámara principal (px)
         self.alt_obj = np.full(n, Z_V16_ENTRADA)         # V16 · A1: altura objetivo en rampa (lo que se le pide a la Pixhawk)
@@ -1256,6 +1272,7 @@ class EntornoDronPersona(object):
         self.c_noto[m] = False
         self.t_clic[m] = 99.0
         self.n_ruleta[m] = self.n_escudo[m] = 0.0
+        self.phi_racha[m] = 0.0
         self.z_v17[m] = Z_SEGURA
         # V16 · A3: tipo de gimbal, alcance del TF-Luna y ruido de navegación de la partida (solo en la V16)
         iv = np.where(m)[0][lv >= NIVEL_V16]
@@ -1717,7 +1734,8 @@ class EntornoDronPersona(object):
         d_bbox = np.where(h_norm >= 0.99, d_ancho, d_alto)
         # LiDAR acoplado a la cámara: solo mide la distancia a la persona si está en el centro de la imagen
         # V16 · A3: TF03 FIJO AL CHASIS (cabecea con él); el TF-LUNA va en el gimbal y es el que mide a la persona centrada
-        p_tf03 = np.where(v16, self.chasis_pitch + TF03_PITCH, self.cam_pitch)
+        p_tf03 = np.where(v16, self.chasis_pitch + np.where(self.lvl_ep == NIVEL_V17, TF03_PITCH_V17, TF03_PITCH),
+                          self.cam_pitch)
         t_l, tipo_l, jp_l, hx_l, hy_l, hz_l = self._lidar_camara(pitch=p_tf03)
         t_las, jp_las = t_l, jp_l
         if v16.any():
@@ -3098,7 +3116,7 @@ class EntornoDronPersona(object):
                                    z_ins,
                                    np.where(tran | (inv & ~self.vuelo_alto), z_tra, np.nan)))
         bajo_ok = v16 & ~np.isnan(z_bajo) & ~self.gente8 & ~self.anticenit & ~self.ciego & ALTURAS_V16
-        z_v16 = np.where(bajo_ok, z_bajo, np.maximum(z_obj, Z_SEGURA))
+        z_v16 = np.where(bajo_ok, z_bajo, np.maximum(z_obj, Z_SEGURA + np.where(v17, MARGEN_BARO_V17, 0.0)))
         z_obj = np.where(v16, z_v16, z_obj)
         z_obj = np.where(v17 & (fij | (self.modo == RECONFIRMAR)), np.maximum(z_obj, self.z_v17), z_obj)   # V17: SUBIR / BAJAR
         z_obj = np.where(np.minimum(d_pan, d_nube) < R_DESPEJE, np.maximum(z_obj, Z_TRANSITO), z_obj)
@@ -3419,6 +3437,7 @@ class EntornoDronPersona(object):
         # V15 · RENDICIÓN: contador continuo con el ladrón (el de verdad) fijado y a la vista; se pausa sin verlo mientras
         # el dron todavía sabe dónde está (memoria, PÉRDIDA, RECONFIRMAR) y vuelve a cero al pasar a la búsqueda
         a_la_vista = (self.modo == FIJADO) & self.lock & (self.trk == 0)
+        t_cont0 = self.t_cont.copy()
         self._contador(a_la_vista, designado)
         self.rendido = self.t_cont >= T_RINDE_BASE + T_RINDE_RESERVA * self.reserva * self.moral
         exito = self.rendido & ~falla
@@ -3434,6 +3453,12 @@ class EntornoDronPersona(object):
         phi_nuevo = self._potencial()
         rc["guia"] += np.where(done, 0.0, GAMMA_GUIA * phi_nuevo - self.phi)
         self.phi = phi_nuevo
+        # V17.1 · D-059: bono al completar la racha de M1 y potencial por la racha en curso
+        v17r = self.lvl_ep == NIVEL_V17
+        rc["exito"] += np.where(v17r & (t_cont0 < RACHA_M1_V17) & (self.t_cont >= RACHA_M1_V17), R_RACHA_V17, 0.0)
+        phi_r = np.where(v17r, K_RACHA_V17 * np.minimum(self.t_cont, RACHA_M1_V17) / RACHA_M1_V17, 0.0)
+        rc["guia"] += np.where(done, 0.0, GAMMA_GUIA * phi_r - self.phi_racha)
+        self.phi_racha = phi_r
         # V16 · A4: coberturas y abordaje (potenciales: no cambian la política óptima, guían el aprendizaje) y las multas
         # de sobrevolarlo o de dejarlo fuera del rango del gimbal
         pc, pe = self._potencial_v16()
@@ -3445,7 +3470,9 @@ class EntornoDronPersona(object):
                                                                          / np.tan(np.radians(-GIMBAL_MIN + VFOV / 2)))
         fuera_g = ((self.lvl_ep >= NIVEL_V16) & (self.modo >= FIJADO) & ~sobre
                    & (np.degrees(np.arctan2(self.dz - 0.9, np.maximum(dh_l, 1e-3))) > -GIMBAL_MIN))
-        rc["abordaje"] += np.where(sobre, R_SOBREVUELO, 0.0) + np.where(fuera_g, R_ANGULO_GMB, 0.0)
+        v17a = self.lvl_ep == NIVEL_V17
+        rc["abordaje"] += (np.where(sobre, np.where(v17a, R_SOBREVUELO_V17, R_SOBREVUELO), 0.0)
+                           + np.where(fuera_g, np.where(v17a, R_ANGULO_GMB_V17, R_ANGULO_GMB), 0.0))
 
         self.obs_retraso = self._sensores()
         visto = self.info_sensor["lock"] & (self.trk == 0)          # V15: solo con la persona correcta

@@ -164,6 +164,8 @@ class Red17(object):
 def cargar17(nombre):
     if nombre in ("b0", "b1", "b2"):
         return {"b0": B0, "b1": B1, "b2": B2}[nombre]()
+    if nombre == "b3":                                      # V17.1 · D-059: B3 = siempre SUBIR
+        return Fija(E.SUBIR)
     if nombre.upper() in E.CLASES_V17:                      # un botón fijo (si no está permitido, el entorno usa QUEDARSE)
         return Fija(E.CLASES_V17.index(nombre.upper()))
     return Red17(nombre.replace("-est", ""), nombre.endswith("-est"))
@@ -185,6 +187,7 @@ def v17(pol, n, semilla, max_pasos):
     mapeo = []                                             # E7: fracción de las 2 V que el LiDAR mapeó en el 360° de entrada
     t_bajo8_ent = t_bajo8_est = 0
     t_fij, run_vis, tramos = 0, np.zeros(n, int), []
+    ret, comp = np.zeros(n), np.zeros((n, len(E.R_COMP)))     # retorno de cada partida y por componente
     datos = lambda i, src: dict(racha=float(src["racha"][i]), vista=float(src["t_vista_ac"][i]), gmin=float(src["gmb_min"][i]),
                                 nr=int(src["n_readq"][i]), tr=float(src["t_readq_sum"][i]), np_=int(src["n_perd"][i]),
                                 n10=int(src["n_readq10"][i]), rul=int(src["ruleta"][i]), esc=int(src["escudo"][i]))
@@ -193,7 +196,9 @@ def v17(pol, n, semilla, max_pasos):
             obs = env.obs_dron().astype(np.float32)
             a, _ = pol.predict(obs, env=env, deterministic=True)
             ent0 = env.entrada.copy()
-            _, _, done, info = env.step(np.asarray(a).astype(int), ap, auto_reset=False)
+            r_, _, done, info = env.step(np.asarray(a).astype(int), ap, auto_reset=False)
+            ret += np.where(vivo, r_, 0.0)
+            comp += np.where(vivo[:, None], info["r_comp"], 0.0)
             for i in np.where(ent0 & ~env.entrada & vivo & ~ent_hecho)[0]:
                 ent_hecho[i] = True
                 env._mapear_lidar(i)
@@ -245,6 +250,8 @@ def v17(pol, n, semilla, max_pasos):
                # complementarias (la de 60 s seguidos se satura en 0 en la cancha): racha >= 30 s y la de la V16 (rendición o
                # 60 s de vista acumulada)
                custodia30=float(np.mean(racha >= 30.0)),
+               m1=float(np.mean(racha >= E.RACHA_M1_V17)),            # V17.1 · D-059: M1 = racha >= 30 s
+               retorno=float(ret.mean()), retorno_comp={k: round(float(v), 2) for k, v in zip(E.R_COMP, comp.mean(0))},
                custodia_v16=float(np.mean((res == "cumplida") | (np.array([f["vista"] for f in F]) >= 60.0))),
                readq10=float(r10 / max(perd, 1)), t_readq=float(tr / max(nr, 1)), perdidas=float(perd / n),
                gimbal_fuera=int(sum(f["gmin"] < E.GIMBAL_MIN - 1e-6 for f in F)),

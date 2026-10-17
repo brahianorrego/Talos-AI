@@ -61,6 +61,49 @@ Choques con peatones, paneles y geocerca: 0 en todas; gimbal siempre dentro de �
   y la distancia de 3.5-5 m, y SUBIR baja la vista total. Además, con SUBIR la cámara cae fuera del rango del gimbal cuando
   está cerca, y eso tiene multa (R6).
 
+## V17.1 · M1 = racha ≥ 30 s y recompensa alineada (D-059 A, D-061, D-064; 17-oct)
+
+**Nombres (D-061):** la corrida "todo" de 10 M con la recompensa original es la **V17.0** (`modelos_v17_todo`); la de esta
+sección es la **V17.1**; cada arreglo siguiente, V17.2, …
+
+**Cambios** (`entorno.py`, todo solo en la cancha; la V15 y la V16 no cambian):
+- **M1 = racha de 30 s seguidos** con el ladrón a la vista y el ID correcto (`RACHA_M1_V17`; `m1` en `medir_ia_aporta`). Los
+  60 s se siguen reportando (`custodia60`).
+- **Recompensa alineada con M1:** bono `R_RACHA_V17 = 10` al completar la racha (una vez por racha) y potencial
+  `K_RACHA_V17 = 3` × racha/30 (fórmula de Ng; al perder la racha el potencial cae y eso cobra).
+- **R6 apagada en la cancha** (`R_SOBREVUELO_V17 = R_ANGULO_GMB_V17 = 0`): con ella, "siempre SUBIR" cobraba menos que
+  "siempre QUEDARSE" aunque tenía más M1. El punto ciego y el ángulo los cuidan reglas (reflejo de punto ciego, barrera
+  de −45°).
+- **D-064: TF03 a −3° en la V17** (`TF03_PITCH_V17`): el 360° de entrada mapea el 49 % de las V (antes 24 %,
+  `v171_base_b0.json`, `mapeo_entrada`).
+- **B3 = siempre SUBIR** en `medir_ia_aporta.py` (`--pol b3`), más el retorno de cada partida y su desglose (`retorno`,
+  `retorno_comp`).
+
+**¿SUBIR cobra más que QUEDARSE?** Retorno medio por partida (256 partidas, `informes/v17/v171_rec_*.json` y
+`v171_base_b*.json`):
+
+| Recompensa | QUEDARSE | SUBIR | ¿SUBIR > QUEDARSE? |
+|---|---:|---:|---|
+| Bono 5, con R6 | 8.9 | 2.6 | No (la multa de ángulo: −18.3 contra −6.8) |
+| Bono 5, sin multa de ángulo | 14.3 | 10.5 | No |
+| Bono 10, sin multa de ángulo | 17.6 | 14.5 | No (queda la de sobrevuelo) |
+| **Bono 10, sin R6 (V17.1)** | **20.4** | **24.1** | **Sí** |
+| Bono 10, sin R6, potencial ×2 | 4.3 | 5.6 | Sí, pero por poco (descartado) |
+
+**Línea base V17.1** (512 partidas, TF03 −3°, `informes/v17/v171_base_b*.json`; medida con bono 5 y R6, pero esas
+constantes no cambian lo que hace una política fija, solo lo que cobra):
+
+| | B0 QUEDARSE | B1 azar | B2 posicionamiento | B3 SUBIR |
+|---|---:|---:|---:|---:|
+| **M1 racha ≥ 30 s** | 47.5 % | 51.0 % | 51.8 % | **60.0 %** |
+| Racha ≥ 60 s | 1.2 % | 0 % | 0.2 % | 0 % |
+| Vista total (s) | 109.9 | 103.8 | 108.4 | 103.2 |
+| M2 ≤ 10 s | 76.2 % | 78.6 % | 77.2 % | 83.7 % |
+| M3 rendición | 11.5 % | 17.4 % | 15.6 % | 25.6 % |
+| Alcanzado | 0.2 % | 0.2 % | 0 % | 0 % |
+
+La IA tiene que superar a las cuatro, o sea a B3: **60.0 % + 5 puntos**.
+
 ## Contrato `foto()` · campos nuevos de la V17 (para el visor)
 
 Además de los de la V16 (`docs/PROGRESO_V16.md` de la rama `v16-simulacion`):
