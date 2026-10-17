@@ -28,6 +28,10 @@ deterministas alrededor y un operador humano.
 
 - Escribir **"proyecto de grado"**, nunca "tesis" (salvo nombres ya existentes: `Tesis-IA-Drone`, `minimo_tesis/`).
 - Español, lenguaje sencillo: Brahian no es programador.
+- **Decisiones del plus (D-060, 17-oct):** no se le pregunta a Brahian con cuadros de sí o no. La sesión decide la mejor
+  opción y anota el motivo. Si de verdad no puede decidir sola, le pregunta al Supervisor por `SendMessage`
+  (`docs/EQUIPO_Y_SESIONES.md`). Brahian autoriza bajar e instalar programas gratuitos y de buena reputación desde su
+  página oficial, sin permisos de administrador y fuera del repositorio.
 - Pedir confirmación antes de lo irreversible o hacia afuera: `git push`, `gh repo create`, Releases, subir archivos,
   borrar, merge.
 - Pruebas físicas: un paso a la vez, con instrucciones exactas, esperando confirmación.
