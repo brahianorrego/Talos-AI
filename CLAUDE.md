@@ -7,6 +7,13 @@ Esta carpeta se armó el 2026-10-16 **copiando** (no moviendo) `Desktop\Claude\T
 como respaldo y archivo histórico (repositorio viejo `Tesis-IA-Drone`). Esta carpeta es el repositorio
 **`Dron-IA-Vigilancia`** (por ahora solo local; plan en `docs/PLAN_GITHUB_NUEVO.md`).
 
+## División del trabajo (desde 2026-10-16)
+
+**Aquí (cuenta de Brahian) solo se trabaja la simulación y el plus.** La parte física del dron, el mínimo
+indispensable y el documento se trabajan en la nube de la cuenta de Tania. Por eso aquí no se usa SSH con la Jetson y
+no se tocan `01_MINIMO_INDISPENSABLE/`, `02_JETSON_A_BORDO/` ni `07_DOCUMENTO_PROYECTO_DE_GRADO/`. Equipo de sesiones,
+roles y reglas: `docs/EQUIPO_Y_SESIONES.md`. Ideas nuevas de Brahian: `docs/IDEAS_BRAHIAN_2026-10-16.md`.
+
 ## Qué es este proyecto
 
 Proyecto de grado de Ingeniería Aeronáutica (Universidad de San Buenaventura): un cuadricóptero que **detecta
