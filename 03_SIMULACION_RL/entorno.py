@@ -879,6 +879,7 @@ class EntornoDronPersona(object):
         self.dz_est = z()                                # altura que cree la Pixhawk
         self.t_clic = np.full(n, 99.0)                   # V16: s desde el último clic del operador (tracker amarrado)
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
+        self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
         self.blur = z(N_PERS)                            # desenfoque de cada persona en la cámara principal (px)
         self.alt_obj = np.full(n, Z_V16_ENTRADA)         # V16 · A1: altura objetivo en rampa (lo que se le pide a la Pixhawk)
@@ -3337,6 +3338,12 @@ class EntornoDronPersona(object):
         self.gimbal = np.clip(self.gimbal, GIMBAL_MIN, GIMBAL_MAX)
         self.gmb_min_ep = np.minimum(self.gmb_min_ep, self.cam_pitch)
         self.gmb_sat_arriba = tiene & (-e_f > GIMBAL_MAX + 1.0)
+        # V17 · para el visor ("Vista del dron"): consignas que salen a la Pixhawk y al gimbal, quién las manda y por qué
+        # actúa el árbitro (0 red, 1 regla, 2 árbitro; el piloto no existe dentro de la zona de IA)
+        self.cmd_reg = np.stack([vx_c, vy_c, vz_c, yaw_cmd, self.gimbal_cmd], -1)
+        self.quien = np.where(eva | self.reflejo, 2, np.where(mando0 & (decide | decide_b), 0, 1))
+        self.arb = np.where(self.reflejo, 1, np.where(eva, 2, np.where(self.amenaza, 3, np.where(self.ciego, 4,
+                            np.where(self.perimetro, 5, 0)))))
 
         # ================= suavidad del control (reward shaping) =================
         # u = comandos normalizados (cabeceo, guiñada, gimbal) antes de los filtros de rampa. Derivada: solo si la IA
@@ -4199,6 +4206,10 @@ class EntornoDronPersona(object):
             "v16": bool(self.lvl_ep[i] >= NIVEL_V16),
             "v17": bool(self.lvl_ep[i] == NIVEL_V17), "z_v17": round(float(self.z_v17[i]), 2),   # V17: cancha; altura que pide la red
             "fase": "zona",                                                                      # V17: la partida empieza en la activación
+            # V17 · cmd = [vx, vy, vz (m/s, mundo), guiñada (°/s), gimbal (°), modo, quién manda]; arb = motivo del árbitro
+            "cmd": [round(float(v), 3) for v in self.cmd_reg[i]] + [NOMBRE_ESTADO[int(self.modo[i])],
+                                                                    ["red", "regla", "arbitro"][int(self.quien[i])]],
+            "arb": ["", "reflejo_ataque", "evadiendo", "amenaza", "punto_ciego", "perimetro"][int(self.arb[i])],
             "salto": {"f": int(self.salto_f[i]), "h": round(float(self.salto_h[i]), 2),
                       "mano": [round(float(v), 2) for v in self.mano[i]]},
             "alt_obj": round(float(self.alt_obj[i]), 2), "g8": bool(self.gente8[i]),

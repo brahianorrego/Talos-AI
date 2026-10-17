@@ -76,6 +76,24 @@ class TestCancha(unittest.TestCase):
             self.assertFalse(((env.modo == E.VERIFICAR) & env.entrada).any())
 
 
+class TestFotoVisor(unittest.TestCase):
+
+    def test_cmd_y_arb_en_cada_cuadro(self):
+        env = E.EntornoDronPersona(2, semilla=1, nivel=E.NIVEL_V17)
+        quienes = set()
+        for _ in range(150):
+            env.step(np.zeros(2, int), AP(2), auto_reset=True)
+            f = env.foto(0)
+            self.assertTrue(f["v17"])
+            self.assertEqual(len(f["cmd"]), 7)
+            self.assertTrue(all(np.isfinite(f["cmd"][:5])))
+            self.assertIn(f["cmd"][5], E.NOMBRE_ESTADO)
+            self.assertIn(f["cmd"][6], ("red", "regla", "arbitro"))
+            self.assertIsInstance(f["arb"], str)
+            quienes.add(f["cmd"][6])
+        self.assertIn("regla", quienes)
+
+
 class TestBotones(unittest.TestCase):
 
     def correr_botones(self, d, z17, reps=8):

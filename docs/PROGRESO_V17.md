@@ -61,6 +61,20 @@ Choques con peatones, paneles y geocerca: 0 en todas; gimbal siempre dentro de �
   y la distancia de 3.5-5 m, y SUBIR baja la vista total. Además, con SUBIR la cámara cae fuera del rango del gimbal cuando
   está cerca, y eso tiene multa (R6).
 
+## Contrato `foto()` · campos nuevos de la V17 (para el visor)
+
+Además de los de la V16 (`docs/PROGRESO_V16.md` de la rama `v16-simulacion`):
+
+| Campo | Qué es |
+|---|---|
+| `v17` | `true` si la partida es la cancha V17 |
+| `fase` | `"zona"` (la partida de entrenamiento empieza en la activación; tránsito y activación son de la misión del visor) |
+| `z_v17` | Altura (m) que pide la red con SUBIR / BAJAR (3.30 a 5.5) |
+| `cmd` | `[vx, vy, vz, guiñada, gimbal, modo, quién manda]`: velocidades en m/s (mundo) que se mandan a la Pixhawk, tasa de guiñada en °/s, ángulo pedido al gimbal en °, nombre del estado (`NOMBRE_ESTADO`) y `"red"`, `"regla"` o `"arbitro"` (el piloto no manda dentro de la zona de IA) |
+| `arb` | Motivo del árbitro: `""` (nada), `"reflejo_ataque"`, `"evadiendo"`, `"amenaza"`, `"punto_ciego"`, `"perimetro"` |
+
+Prueba: `tests/test_v17.py`, `TestFotoVisor` (salen en cada cuadro).
+
 ## Opciones para Brahian (no se cambió nada de esto)
 
 | Opción | Qué cambia | Costo | Recomendación |
