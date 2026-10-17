@@ -2,7 +2,7 @@
 // órdenes que la Jetson manda a la Pixhawk.
 // Las repeticiones de la V16 no traen la nube de puntos ni las órdenes: la nube se arma acumulando los impactos del TF03
 // (`lh`) y del TF-Luna (`luna`), como haría la estación con el sensor real; las órdenes se aproximan con la telemetría
-// (velocidad, rumbo, gimbal, altura pedida). Cuando foto() traiga `cmd` y `arb` (encargo a Simulación V17), se usan esos.
+// (velocidad, rumbo, gimbal, altura pedida). Las repeticiones de la V17 traen `cmd` y `arb` (commit af10c30) y se usan esos.
 import { $, limitar, angNorm } from "./util.js";
 
 const HIST = 10;               // s de historial de las órdenes
@@ -33,7 +33,11 @@ export class VistaDron {
   }
 
   quienManda(e) {
-    if (e.cmd && e.cmd[6]) return [e.cmd[6], "var(--aviso)"];
+    if (e.cmd && e.cmd[6]) {                         // V17: "red", "regla" o "arbitro", y el motivo del árbitro en `arb`
+      const motivo = { reflejo_ataque: "reflejo ante ataque", evadiendo: "evadiendo", amenaza: "amenaza", punto_ciego: "punto ciego", perimetro: "perímetro" }[e.arb];
+      if (e.cmd[6] === "arbitro") return ["Árbitro" + (motivo ? " · " + motivo : ""), "var(--peligro)"];
+      return [(e.cmd[6] === "red" ? "IA (PPO)" : "Reglas") + (motivo ? " · " + motivo : ""), e.cmd[6] === "red" ? "var(--ok)" : "var(--info)"];
+    }
     if (e.fase === 1) return [e.bloq ? "Piloto · bloqueo LiDAR" : "Piloto (radio)", "var(--info)"];
     if (e.rfx || e.gd) return ["Árbitro · esquive", "var(--peligro)"];
     if (e.amz) return ["IA · árbitro alerta", "var(--aviso)"];
@@ -49,7 +53,7 @@ export class VistaDron {
     $("o-yaw").textContent = `${h[4] >= 0 ? "+" : ""}${h[4].toFixed(0)} °/s`;
     $("o-gmb").textContent = `${h[5].toFixed(0)}° → PWM ${pwm(h[5])}`;
     $("o-alt").textContent = e.altObj !== null && e.altObj !== undefined ? `${e.altObj.toFixed(2)} m` : "–";
-    $("o-modo").textContent = e.fase === 1 ? "LOITER" : "GUIDED";
+    $("o-modo").textContent = (e.fase === 1 ? "LOITER" : "GUIDED") + (e.cmd && e.cmd[5] ? " · " + String(e.cmd[5]).toLowerCase() : "");
     $("o-fuente").textContent = e.cmd ? "órdenes de la repetición (cmd)" : "aproximadas desde la telemetría (la repetición no trae cmd)";
     this.dibujarHistorial();
     this.dibujarLidar(e);
