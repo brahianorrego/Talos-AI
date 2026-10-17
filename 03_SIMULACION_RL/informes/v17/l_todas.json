@@ -1,0 +1,43 @@
+{
+ "b0": {
+  "cumplida": 0.1484375,
+  "alcanzado": 0.0,
+  "perdido": 0.046875,
+  "no_encontrado": 0.0078125,
+  "panel": 0.0,
+  "choque_peaton": 0.0,
+  "geocerca": 0.0,
+  "tiempo": 0.796875,
+  "n": 128,
+  "dur": 275.6515625,
+  "custodia60": 0.0078125,
+  "custodia90": 0.0,
+  "racha_s": 29.577343750000157,
+  "vista_s": 106.0265624999981,
+  "custodia30": 0.4296875,
+  "custodia_v16": 0.953125,
+  "readq10": 0.765825100622027,
+  "t_readq": 6.377379619260917,
+  "perdidas": 21.3515625,
+  "gimbal_fuera": 0,
+  "bajo_330_con_persona_8m": 0.13773902040225175,
+  "bajo_330_8m_en_entrada": 0.01535737015412712,
+  "bajo_330_pedida_con_persona_8m": 0.02299017048248105,
+  "mapeo_entrada": 0.265625,
+  "frac_decide": 0.20466565013575788,
+  "reconf_partida": 5.53125,
+  "cambio_nodet": 0,
+  "ruleta_partidas": 0.9765625,
+  "escudo_partidas": 0.828125,
+  "acciones": {
+   "QUEDARSE": 1.0,
+   "RODEAR_IZQ": 0.0,
+   "RODEAR_DER": 0.0,
+   "ACERCARSE": 0.0,
+   "ALEJARSE": 0.0,
+   "SUBIR": 0.0,
+   "BAJAR": 0.0
+  },
+  "set": []
+ }
+}

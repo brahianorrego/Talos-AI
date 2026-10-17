@@ -22,7 +22,7 @@ class TestEntorno(unittest.TestCase):
         env = E.EntornoDronPersona(8, semilla=0)
         self.assertEqual(env.obs_dron().shape, (8, E.OBS_DRON))
         self.assertEqual(env.obs_persona().shape, (8, E.OBS_PERSONA))
-        self.assertEqual(E.OBS_DRON, 192)
+        self.assertEqual(E.OBS_DRON, 192 + E.N_OBS_V16)        # V16: + cámara al piso
         self.assertEqual(len(E.CLASES), 10)
         self.assertTrue(np.isfinite(env.obs_dron()).all())
 
@@ -30,7 +30,7 @@ class TestEntorno(unittest.TestCase):
         rng = np.random.default_rng(3)
         env = E.EntornoDronPersona(16, semilla=3)
         terminadas = 0
-        for _ in range(1500):       # V15: a la altura segura (3.30 m) casi no lo alcanzan: la primera termina hacia 134 s
+        for _ in range(E.PASOS_EPISODIO + 10):   # V16: con 2 paneles y 3.30 m pueden durar los 5 min completos (el tope)
             acc = rng.integers(0, len(E.CLASES), env.n)
             ap = rng.integers(0, E.N_ACC_PERSONA, env.n)
             r, rp, done, info = env.step(acc, ap)
@@ -89,9 +89,12 @@ class TestPolitica(unittest.TestCase):
         capas = p["capas"]
         self.assertEqual(len(capas), 3)
         dims = [np.array(c["W"]).shape for c in capas]
-        self.assertEqual(dims, [(128, E.OBS_DRON), (128, 128), (len(E.CLASES), 128)])
+        # V16: hasta que se entrene la V16, en Git sigue la política de la V15 (sin las N_OBS_V16 entradas nuevas)
+        n_in = dims[0][1]
+        self.assertIn(n_in, (E.OBS_DRON, E.OBS_DRON - E.N_OBS_V16))
+        self.assertEqual(dims, [(128, n_in), (128, 128), (len(E.CLASES), 128)])
         self.assertEqual(p["clases"], E.CLASES)
-        x = np.random.default_rng(0).normal(size=E.OBS_DRON)
+        x = np.random.default_rng(0).normal(size=n_in)
         for i, c in enumerate(capas):
             x = np.array(c["W"]) @ x + np.array(c["b"])
             if i < 2:
@@ -105,7 +108,8 @@ class TestPolitica(unittest.TestCase):
         from stable_baselines3 import PPO
         m = PPO.load(ruta, device="cpu")
         env = E.EntornoDronPersona(4, semilla=0)
-        acc, _ = m.predict(env.obs_dron().astype(np.float32), deterministic=True)
+        # base_v9.zip es de 192 entradas; las 3 de la V16 (cámara al piso) van al final
+        acc, _ = m.predict(env.obs_dron()[:, :m.observation_space.shape[0]].astype(np.float32), deterministic=True)
         self.assertEqual(acc.shape, (4,))
         self.assertTrue(((acc >= 0) & (acc < len(E.CLASES))).all())
 

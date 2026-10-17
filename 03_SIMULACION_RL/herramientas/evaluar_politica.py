@@ -18,6 +18,17 @@ Escenarios:
   detras_punta_4, detras_punta_65   (V15) lo mismo con muros de 4 m y de 6.5 m
   cambia_lado    (V15) se esconde detrás de un panel y gatea por detrás hasta el otro extremo
 
+V16 · ESCENARIOS FIJOS DE 2 PANELES (misión V16: posturas, salto con el brazo, civiles, sensores nuevos). El panel A va
+de (0, -3) a (0, 3) y el B de (7, -7) a (7, -2). Cada punto de la ruta puede llevar la POSTURA del ladrón y una ESPERA:
+  escape_muro        corre a esconderse detrás del panel A y sigue de pie ahí
+  agachado_muro      corre detrás del panel A y se agacha pegado a él
+  gateo_muros        se esconde detrás del panel A y después GATEA hasta detrás del panel B
+  recostado_ataque   se recuesta de espalda contra el panel A 8 s y después sale corriendo hacia el dron (y salta)
+  salto_debajo       corre a meterse debajo del dron y salta para agarrarlo
+  civiles_curiosos   camina en campo abierto con 2 civiles que cruzan cerca (lo miran, lo graban, lo esquivan...)
+Además de lo de siempre, mide la vista POR POSTURA del ladrón y POR ALTURA del dron, el punto ciego (tiempo con el reflejo
+activo) y la cámara al piso. Uso: --escenarios v16 (los 6) o una lista.
+
 Política determinista (la acción más probable). Partidas de hasta --max-seg segundos.
 
 Uso (desde simulacion\\):
@@ -67,6 +78,24 @@ ESCENARIOS = {
     "debajo": dict(dron=(0.0, 0.0, 0.0), ladron=(6.0, 0.0), paneles=[],
                    ruta=[("D", 6.0, CORRE), ("D", 15.0, E.VEL_CAMINAR)]),
 }
+# V16 · rutas con postura y espera: (x, y, rapidez[, postura[, espera_s]])
+PIE, AGA, REC, GAT = E.DE_PIE, E.AGACHADO, E.RECOSTADO, E.GATEANDO
+MUROS_V16 = [(0.0, -3.0, 0.0, 3.0), (7.0, -7.0, 7.0, -2.0)]
+ESCENARIOS_V16 = {
+    "escape_muro": dict(dron=(-15.0, 0.0, 0.0), ladron=(-10.0, 1.0), paneles=MUROS_V16, v16=True,
+                        ruta=[(-1.0, 4.5, CORRE), (1.5, 1.0, 2.0)]),
+    "agachado_muro": dict(dron=(-15.0, 0.0, 0.0), ladron=(-10.0, 1.0), paneles=MUROS_V16, v16=True,
+                          ruta=[(-1.0, 4.5, CORRE), (1.0, 3.2, 2.0, AGA), (0.6, 0.5, 1.0, AGA)]),
+    "gateo_muros": dict(dron=(-15.0, 0.0, 0.0), ladron=(-10.0, 1.0), paneles=MUROS_V16, v16=True,
+                        ruta=[(-1.0, 4.5, CORRE), (1.0, 2.0, 2.0, AGA, 3.0), (7.8, -4.5, 0.65, GAT)]),
+    "recostado_ataque": dict(dron=(-15.0, 0.0, 0.0), ladron=(-10.0, 1.0), paneles=MUROS_V16, v16=True,
+                             ruta=[(-1.0, 4.5, CORRE), (0.45, 0.5, 2.0, REC, 8.0), ("D", 8.0, CORRE, PIE)]),
+    "salto_debajo": dict(dron=(0.0, -12.0, 0.0), ladron=(6.0, -12.0), paneles=MUROS_V16, v16=True,
+                         ruta=[("D", 10.0, CORRE, PIE), ("D", 15.0, E.VEL_CAMINAR, PIE)]),
+    "civiles_curiosos": dict(dron=(-15.0, 10.0, 0.0), ladron=(-10.0, 10.0), paneles=MUROS_V16, v16=True, civiles=2,
+                             ruta=[(5.0, 14.0, E.VEL_CAMINAR), (12.0, 8.0, E.VEL_CAMINAR), (-5.0, 15.0, E.VEL_CAMINAR)]),
+}
+ESCENARIOS.update(ESCENARIOS_V16)
 RESULTADOS = ["cumplida", "perdido", "alcanzado", "choque_peaton", "panel", "geocerca", "no_encontrado", "tiempo"]
 
 
@@ -105,8 +134,25 @@ def preparar(env, esc, rng):
     env.tactico[:] = False
     env.salto_t[:] = env.salto_cd[:] = env.salto_h[:] = 0.0
     env.v_forzada[:] = np.nan
+    if esc.get("v16"):
+        # V16: el ladrón ya alerta (puede saltar), de pie; civiles realistas que cruzan cerca de él
+        env.l_alerta_t[:] = 0.0
+        env.pos[:] = env.pos0[:] = E.DE_PIE
+        env.pt[:] = 1.0
+        env.salto_f[:] = 0
+        env._avanzar_posturas()
+        for j in range(1, 1 + esc.get("civiles", 0)):
+            env.activa[:, j] = True
+            for i in range(n):
+                env._preparar_civil_v16(i, j)
+                ang = rng.uniform(-np.pi, np.pi)
+                env.px[i, j], env.py[i, j] = lx + 9.0 * np.cos(ang), ly + 9.0 * np.sin(ang)
+                env.g_wx[i, j], env.g_wy[i, j] = lx - 9.0 * np.cos(ang), ly - 9.0 * np.sin(ang)
     # misión: ya en FIJADO (el operador confirmó), cámara apuntando al ladrón
     env.reiniciar_mision(todos)
+    if esc.get("v16"):
+        env.alt_obj[:] = E.Z_NOMINAL
+        env.dz[:] = E.Z_NOMINAL - env.e_baro
     env.modo[:] = E.FIJADO
     env.visto_alguna[:] = True
     rx, ry = env.px[:, 0] - env.dx, env.py[:, 0] - env.dy
@@ -128,13 +174,24 @@ def preparar(env, esc, rng):
     env.phi = env._potencial()
 
 
-def velocidad_ladron(env, ruta, wp, t_wp, k_vel):
-    """Velocidad impuesta al ladrón según su punto de ruta actual (avanza de punto al llegar)."""
+def velocidad_ladron(env, ruta, wp, t_wp, k_vel, espera=None):
+    """Velocidad impuesta al ladrón según su punto de ruta actual (avanza de punto al llegar). V16: cada punto puede
+    llevar la postura del ladrón y una espera en él (s)."""
     n = env.n
     vx, vy = np.zeros(n), np.zeros(n)
+    espera = np.zeros(n) if espera is None else espera
+    pos_obj = np.full((n, E.N_PERS), -1)
     for i in range(n):
         while wp[i] < len(ruta):
-            a, b, v = ruta[wp[i]]
+            a, b, v = ruta[wp[i]][:3]
+            if len(ruta[wp[i]]) > 3:
+                pos_obj[i, 0] = ruta[wp[i]][3]
+            if espera[i] > 0:                              # quieto en el punto (por ejemplo, recostado)
+                espera[i] -= E.DT
+                if espera[i] <= 0:
+                    wp[i] += 1
+                    t_wp[i] = 0.0
+                break
             if a == "D":                                   # perseguir al dron durante b segundos
                 tx, ty = env.dx[i], env.dy[i]
                 if t_wp[i] >= b:
@@ -144,6 +201,10 @@ def velocidad_ladron(env, ruta, wp, t_wp, k_vel):
             else:
                 tx, ty = a, b
                 if np.hypot(tx - env.px[i, 0], ty - env.py[i, 0]) < 0.5:
+                    if len(ruta[wp[i]]) > 4 and t_wp[i] >= 0:
+                        espera[i] = ruta[wp[i]][4]
+                        t_wp[i] = -1.0                     # (marca: la espera de este punto ya empezó)
+                        break
                     wp[i] += 1
                     t_wp[i] = 0.0
                     continue
@@ -152,7 +213,9 @@ def velocidad_ladron(env, ruta, wp, t_wp, k_vel):
             if d > 1e-6:
                 vx[i], vy[i] = s * (tx - env.px[i, 0]) / d, s * (ty - env.py[i, 0]) / d
             break
-        t_wp[i] += E.DT
+        t_wp[i] += E.DT if t_wp[i] >= 0 else 0.0
+    if (pos_obj >= 0).any():
+        env._pedir_postura(pos_obj >= 0, np.maximum(pos_obj, 0))
     return vx, vy
 
 
@@ -171,12 +234,18 @@ def correr_escenario(modelo, nombre, n, semilla, max_seg, nivel):
 def _correr_escenario(modelo, nombre, n, semilla, max_seg, nivel):
     esc = ESCENARIOS[nombre]
     rng = np.random.default_rng(semilla)
-    env = E.EntornoDronPersona(n, semilla=semilla, nivel=E.N_NIVELES - 1)    # V14: escenarios propios, sin currículo
+    nivel_env = E.NIVEL_V16 if esc.get("v16") else E.N_NIVELES - 1           # V16: la física y los sensores de la V16
+    env = E.EntornoDronPersona(n, semilla=semilla, nivel=nivel_env)          # V14: escenarios propios, sin currículo
     env.nivel = nivel
     env.ap.reset(np.ones(n, bool), nivel)
     preparar(env, esc, rng)
     k_vel = rng.uniform(0.9, 1.1, n)
-    wp, t_wp = np.zeros(n, int), np.zeros(n)
+    wp, t_wp, espera = np.zeros(n, int), np.zeros(n), np.zeros(n)
+    # V16: vista por postura del ladrón y por banda de altura del dron; punto ciego y cámara al piso
+    BANDAS = (2.5, E.Z_SEGURA - 0.05)
+    t_pos, v_pos = np.zeros((n, 4)), np.zeros((n, 4))
+    t_alt, v_alt = np.zeros((n, 3)), np.zeros((n, 3))
+    t_ciego, t_piso = np.zeros(n), np.zeros(n)
     acc_p = np.full(n, E.N_ACC_PERSONA - 1)
     vivo = np.ones(n, bool)
     z = lambda: np.zeros(n)
@@ -196,7 +265,7 @@ def _correr_escenario(modelo, nombre, n, semilla, max_seg, nivel):
         acc = np.asarray(acc).astype(int)
         md = env.mascara_decision() & vivo
         acciones += np.bincount(acc[md], minlength=len(E.CLASES))
-        vx, vy = velocidad_ladron(env, esc["ruta"], wp, t_wp, k_vel)
+        vx, vy = velocidad_ladron(env, esc["ruta"], wp, t_wp, k_vel, espera)
         env.v_forzada[:, 0, 0], env.v_forzada[:, 0, 1] = vx, vy
         u_fis = env.u_prev_fis if hasattr(env, "u_prev_fis") else env.u_prev      # V12: jitter FÍSICO (todo lo que se movió)
         u_ant, mando_ant = u_fis.copy(), env.mando_prev.copy()
@@ -209,6 +278,15 @@ def _correr_escenario(modelo, nombre, n, semilla, max_seg, nivel):
         r_ctrl -= np.where(vivo, info["jitter"] + info["esfuerzo"], 0.0)
         pasos += vivo
         visto += vivo & info["visto"]
+        ar = np.arange(n)
+        pz = env.pos[:, 0]
+        t_pos[ar, pz] += vivo
+        v_pos[ar, pz] += vivo & info["visto"]
+        bz = np.digitize(env.dz + env.e_baro, BANDAS)
+        t_alt[ar, bz] += vivo
+        v_alt[ar, bz] += vivo & info["visto"]
+        t_ciego += vivo & env.ciego
+        t_piso += vivo & env.piso_obj
         perdio = vivo & info["pierde"]
         t_perdida = np.where(perdio & np.isnan(t_perdida), (paso + 1) * E.DT, t_perdida)
         pierde += perdio
@@ -225,7 +303,9 @@ def _correr_escenario(modelo, nombre, n, semilla, max_seg, nivel):
         if not vivo.any():
             break
     jit = dj / np.maximum(n_dj, 1)[:, None] * np.array([E.CAB_MAX, E.YAW_MAX, E.GIMBAL_VEL])
-    return dict(resultado=resultado, dur=pasos * E.DT, visto=visto / np.maximum(pasos, 1), pierde=pierde,
+    return dict(t_pos=t_pos, v_pos=v_pos, t_alt=t_alt, v_alt=v_alt, ciego=t_ciego / np.maximum(pasos, 1),
+                piso=t_piso / np.maximum(pasos, 1),
+                resultado=resultado, dur=pasos * E.DT, visto=visto / np.maximum(pasos, 1), pierde=pierde,
                 recupera=recupera, t_readq=t_readq, d_min=d_min, z_max=z_max, g_min=g_min, g_max=g_max,
                 r_tot=r_tot, r_ctrl=r_ctrl, jit=jit, con_jit=n_dj > 0, acciones=acciones / max(acciones.sum(), 1))
 
@@ -245,12 +325,24 @@ def resumir(res):
                 jit_yaw=float(res["jit"][cj, 1].mean()) if cj.any() else float("nan"),
                 jit_gimbal=float(res["jit"][cj, 2].mean()) if cj.any() else float("nan"),
                 acciones=res["acciones"])
+    # V16: fracción de la vista según la postura del ladrón y la altura del dron (None si nunca estuvo así)
+    tp, vp, ta, va = (res[k].sum(0) for k in ("t_pos", "v_pos", "t_alt", "v_alt"))
+    fila["vista_postura"] = [float(v / t) if t > 0 else float("nan") for v, t in zip(vp, tp)]
+    fila["tiempo_postura"] = [float(t / max(tp.sum(), 1)) for t in tp]
+    fila["vista_altura"] = [float(v / t) if t > 0 else float("nan") for v, t in zip(va, ta)]
+    fila["tiempo_altura"] = [float(t / max(ta.sum(), 1)) for t in ta]
+    fila["ciego"] = float(res["ciego"].mean())
+    fila["piso"] = float(res["piso"].mean())
     return fila
 
 
 def evaluar_modelo(ruta, n, semilla, max_seg, nivel, escenarios):
-    from stable_baselines3 import PPO
-    modelo = PPO.load(ruta, device="cpu")
+    if ruta.endswith(".json"):                             # V16: la política de la Jetson (sin los .zip, en la nube)
+        from politica_json import PoliticaJSON
+        modelo = PoliticaJSON(ruta, E.OBS_DRON)
+    else:
+        from stable_baselines3 import PPO
+        modelo = PPO.load(ruta, device="cpu")
     out = {}
     for k, nombre in enumerate(escenarios):
         out[nombre] = resumir(correr_escenario(modelo, nombre, n, semilla + 1000 * k, max_seg, nivel))
@@ -278,6 +370,18 @@ def tabla_modelo(out, titulo):
             f(x["dur"], 1), f(x["visto"]), f(x["pierde"]), f(x["recupera"]), f(x["t_readq"], 1), f(x["d_min"], 1),
             f(x["z_max"], 1), f(x["g_min"], 0), f(x["g_max"], 0), f(x["r_tot"], 1), f(x["r_ctrl"], 1),
             f(x["jit_pitch"], 2), f(x["jit_yaw"], 2), f(x["jit_gimbal"], 2)))
+    v16 = [k for k in out if k in ESCENARIOS_V16]
+    if v16:
+        L += ["", "V16 · vista por POSTURA del ladrón (fracción del tiempo a la vista en esa postura; entre paréntesis, fracción del "
+              "tiempo en esa postura) y por ALTURA del dron (según su barómetro), punto ciego y cámara al piso:", "",
+              "| Escenario | De pie | Agachado | Recostado | Gateando | < 2.5 m | 2.5-3.25 m | ≥ 3.25 m | Punto ciego | Cám. piso |",
+              "|---|" + "---:|" * 9]
+        for nombre in v16:
+            x = out[nombre]
+            cel = lambda v, t: "--" if t == 0 else "%s (%s)" % (f(v), f(t))
+            celdas = ([cel(v, t) for v, t in zip(x["vista_postura"], x["tiempo_postura"])]
+                      + [cel(v, t) for v, t in zip(x["vista_altura"], x["tiempo_altura"])] + [f(x["ciego"]), f(x["piso"])])
+            L.append("| %s | %s |" % (nombre, " | ".join(celdas)))
     L += ["", "Acciones elegidas con la IA al mando (fracción):", "",
           "| Escenario | " + " | ".join(E.CLASES) + " |", "|---|" + "---:|" * len(E.CLASES)]
     for nombre, x in out.items():
@@ -292,7 +396,7 @@ CAMPOS_CSV = ["modelo", "pasos", "escenario"] + RESULTADOS + ["dur", "visto", "p
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--modelo", action="append", help="ruta a un .zip de SB3 (se puede repetir)")
+    ap.add_argument("--modelo", action="append", help="ruta a un .zip de SB3 o a un .json de la Jetson (se puede repetir)")
     ap.add_argument("--barrido", type=float, default=0, help="evaluar base_v9 + un checkpoint cada tantos M pasos + el último")
     ap.add_argument("--version", default=None, help="nombre para los informes (por defecto, según el modelo)")
     ap.add_argument("--episodios", type=int, default=50)
@@ -306,6 +410,8 @@ def main():
     torch.set_num_threads(a.hilos)
     os.makedirs(INFORMES, exist_ok=True)
     escenarios = [s for s in a.escenarios.split(",") if s]
+    if escenarios == ["v16"]:
+        escenarios = list(ESCENARIOS_V16)
     modelos = list(a.modelo or [])
     if a.barrido:
         cks = sorted(glob.glob(os.path.join(CHECKPOINTS, "dron_master_*_steps.zip")), key=pasos_de)

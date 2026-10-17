@@ -2,6 +2,24 @@
 """
 Versión Master del entrenamiento: Stable-Baselines3 (PPO) con transferencia de aprendizaje y currículo continuo.
 
+V17 (docs/PLAN_V17_REFUERZO.md, avance y comandos en docs/PROGRESO_V17.md): la misión de la CANCHA (NIVEL_V17: zona de
+30 x 30 m, dos V de paneles de 2 m, 1 ladrón y 1 civil), desde la activación de la IA. La red tiene 7 botones que sí
+cambian algo con el objetivo fijado (QUEDARSE, RODEAR_IZQ/DER, ACERCARSE, ALEJARSE, SUBIR, BAJAR; la evasión la elige el
+árbitro) y aprende con MaskablePPO (sb3-contrib): en los pasos donde no decide solo queda QUEDARSE permitido (no le enseña
+nada ni suma entropía) y nunca se le ofrecen botones prohibidos. Arranca de cero; con --desde ZIP copia las capas ocultas
+(actor y crítico) de otro modelo SB3 y la salida de 7 botones arranca nueva. Bono de entropía --ent (R3: 0.003).
+
+V16 (docs/PLAN_V16_REALISMO.md, avance y comando en docs/PROGRESO_V16.md): UN SOLO CASO, la misión completa con 2 paneles
+(NIVEL_V16), sin currículo. Física humana (posturas, salto con el brazo), civiles realistas, sensores nuevos (cámara al
+piso, TF03 al chasis, TF-Luna, desenfoque, gimbal BaseCam o servo, GPS y barómetro con error) y recompensa con la
+custodia como número principal. La red tiene 3 entradas más (195): al arrancar desde la V15 sus pesos nuevos van en cero
+(la red empieza haciendo exactamente lo mismo que la V15) y aprenden; las conexiones de las 192 entradas viejas de la
+primera capa quedan congeladas (--congelar viejas, por defecto). Orden de arranque:
+  1. modelos_v16/ultimo.zip si existe (continúa);
+  2. si no, --desde ZIP o el checkpoint más nuevo de modelos_v15/ (modelo SB3 completo de la V15: actor y crítico);
+  3. si no hay ninguno, la política para la Jetson modelos/dron_politica.json (solo el actor; el crítico arranca de cero).
+El ladrón de la V16 es siempre el táctico: si no está ladron_congelado.pt, se usa una red al azar que no se usa.
+
 V15 (docs/PLAN_V15_CURRICULO.md): parte del último checkpoint de la V14 y empieza en el NIVEL 0. Cinco niveles (duelo
 abierto, duelo con civil, muro, muro y civil, misión completa) con criterios propios para subir (rendición, cenit,
 identidad, choques, re-adquisición). La misión se cumple cuando el ladrón se rinde; sin rendición en 5 min gana el ladrón.
@@ -50,6 +68,7 @@ Uso:  python entrenar_master.py --base modelos/ultimo.pt [--pasos 1e9]      (pri
 import argparse
 import json
 import os
+import sys
 import time
 
 import numpy as np
@@ -59,10 +78,12 @@ from gymnasium import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import VecEnv
+from sb3_contrib import MaskablePPO
 
 from collections import deque
 
 from entorno import (CLASES, DT, EJES_U, N_ACC_PERSONA, N_NIVELES, NIVELES, NOMBRE_ESTADO, OBS_DRON, OBS_PERSONA, R_COMP,
+                     NIVEL_V16, NOMBRE_V16, N_OBS_V16, NIVEL_V17, NOMBRE_V17, CLASES_V17,
                      ASOMO, CUSTODIA_S, INVESTIGAR, MURO_CANTO, PASOS_EPISODIO, PREDECIR, SIGUIENTE_OBSTACULO, T_RINDE_BASE,
                      T_RINDE_RESERVA, VENTAJA_ALTURA, EntornoDronPersona, resultado_de)
 
@@ -70,9 +91,11 @@ BUSQUEDA_V15 = (PREDECIR, INVESTIGAR, ASOMO, SIGUIENTE_OBSTACULO, VENTAJA_ALTURA
 from entrenar import ActorCritico, actuar, grabar_partida, guardar_json, sin_ahorro_de_energia
 from mision import grabar_mision
 
-VERSION = "V15"
-SALIDA, MODELOS, MASTER = "salida", "modelos", "modelos_v15"
-ORIGEN_PREVIO = "modelos_v14"    # checkpoints de la versión anterior (de aquí sale el punto de partida del fine-tuning)
+VERSION = "V17"
+SALIDA, MODELOS, MASTER = "salida", "modelos", "modelos_v17"
+NIVEL, NOMBRE, CLASES_ENT = NIVEL_V17, NOMBRE_V17, CLASES_V17   # V17: la cancha, 7 botones
+ORIGEN_PREVIO = "modelos_v15"    # checkpoints de la versión anterior (de aquí sale el punto de partida del fine-tuning)
+OBS_PREVIA = OBS_DRON - N_OBS_V16   # entradas de la red de la V15
 # V15 · criterios para subir de cada nivel (plan, sección 3), sobre las últimas `ventana` partidas del nivel
 CRITERIOS = {
     0: dict(rinde=0.85, cenit=0.70),                          # duelo abierto (las partidas de cenit cuentan)
@@ -91,7 +114,7 @@ class VecDron(VecEnv):
 
     def __init__(self, n, semilla, red_persona):
         self.env = EntornoDronPersona(n, semilla=semilla)
-        super().__init__(n, spaces.Box(-np.inf, np.inf, (OBS_DRON,), np.float32), spaces.Discrete(len(CLASES)))
+        super().__init__(n, spaces.Box(-np.inf, np.inf, (OBS_DRON,), np.float32), spaces.Discrete(len(CLASES_ENT)))
         self.red_p = red_persona
         self.acciones = np.zeros(n, int)
         z = lambda: np.zeros(n)
@@ -105,8 +128,8 @@ class VecDron(VecEnv):
     def vaciar(self):
         self.fin, self.jit, self.esf, self.mando = [], 0.0, 0.0, 0
         self.fin_x = []                                     # V15: datos extra de cada partida terminada (dict)
-        self.cuenta_dec = np.zeros(len(CLASES))
-        self.cuenta_busq = np.zeros(len(CLASES))
+        self.cuenta_dec = np.zeros(len(CLASES_ENT))
+        self.cuenta_busq = np.zeros(len(CLASES_ENT))
         self.du = np.zeros(len(EJES_U))                     # V12: jitter físico por eje (Σ|Δu| con la IA al mando)
         self.estados = np.zeros(len(NOMBRE_ESTADO))         # V12: pasos en cada estado de la máquina
         self.ciego = 0
@@ -119,12 +142,12 @@ class VecDron(VecEnv):
 
     def step_wait(self):
         e = self.env
-        ap, _, _, _ = actuar(self.red_p, e.obs_persona())
+        ap, _, _, _ = actuar(self.red_p, e.obs_persona())        # (en la V16 el ladrón táctico no la usa)
         md = e.mascara_decision()
         r, _, done, info = e.step(self.acciones, ap, auto_reset=False)
         obs = e.obs_dron().astype(np.float32)
-        self.cuenta_dec += np.bincount(self.acciones[md], minlength=len(CLASES))
-        self.cuenta_busq += np.bincount(self.acciones[info["busqueda_ia"]], minlength=len(CLASES))
+        self.cuenta_dec += np.bincount(self.acciones[md], minlength=len(CLASES_ENT))
+        self.cuenta_busq += np.bincount(self.acciones[info["busqueda_ia"]], minlength=len(CLASES_ENT))
         self.jit += float(info["jitter"].sum())
         self.esf += float(info["esfuerzo"].sum())
         self.mando += int(info["al_mando"].sum())
@@ -186,6 +209,8 @@ class VecDron(VecEnv):
         setattr(self.env, attr_name, value)
 
     def env_method(self, method_name, *args, indices=None, **kwargs):
+        if method_name == "action_masks":                   # V17 · MaskablePPO: una máscara por entorno
+            return list(self.env.action_masks())
         return [getattr(self.env, method_name)(*args, **kwargs)]
 
     def env_is_wrapped(self, wrapper_class, indices=None):
@@ -193,10 +218,13 @@ class VecDron(VecEnv):
 
 
 # ======================================================================= modelo SB3 y transferencia
-def nuevo_ppo(venv, lr):
-    return PPO("MlpPolicy", venv, learning_rate=lr, n_steps=128, batch_size=8192, n_epochs=4, gamma=0.99,
-               gae_lambda=0.95, clip_range=0.2, ent_coef=0.01, vf_coef=0.5, max_grad_norm=0.5, device="cpu", verbose=0,
-               policy_kwargs=dict(net_arch=dict(pi=[128, 128], vf=[128, 128]), activation_fn=nn.Tanh, ortho_init=False))
+def nuevo_ppo(venv, lr, ent=0.01, semilla=None):
+    """V17: MaskablePPO (sb3-contrib) con los hiperparámetros de siempre; ent = bono de entropía (R3)."""
+    return MaskablePPO("MlpPolicy", venv, learning_rate=lr, n_steps=128, batch_size=8192, n_epochs=4, gamma=0.99,
+                       gae_lambda=0.95, clip_range=0.2, ent_coef=ent, vf_coef=0.5, max_grad_norm=0.5, device="cpu",
+                       verbose=0, seed=semilla,
+                       policy_kwargs=dict(net_arch=dict(pi=[128, 128], vf=[128, 128]), activation_fn=nn.Tanh,
+                                          ortho_init=False))
 
 
 def crear_base(ruta_pt, venv, ruta_zip, lr):
@@ -287,7 +315,7 @@ def exportar(modelo, **extra):
     p = modelo.policy
     capas = [p.mlp_extractor.policy_net[0], p.mlp_extractor.policy_net[2], p.action_net]
     return dict({"capas": [{"W": c.weight.detach().numpy().round(6).tolist(), "b": c.bias.detach().numpy().round(6).tolist()}
-                           for c in capas], "activacion": "tanh", "clases": CLASES, "autor": AUTOR}, **extra)
+                           for c in capas], "activacion": "tanh", "clases": CLASES_ENT, "autor": AUTOR}, **extra)
 
 
 # ======================================================================= callbacks: métricas, repeticiones y currículo
@@ -490,6 +518,81 @@ class CurriculumCallback(BaseCallback):
                 "por_nivel": {k: resumen_nivel(list(v)) for k, v in self.xs_nivel.items() if v}}
 
 
+class CurriculoV16(BaseCallback):
+    """V16 · sin currículo: una sola partida (NIVEL_V16). Lleva las métricas de custodia y rendición de las últimas
+    `ventana` partidas y la competencia dron vs ladrón, con la misma interfaz que CurriculumCallback para el Maestro.
+    El "éxito" que gobierna la intensidad (viento, rapidez del ladrón) es la custodia de 60 s."""
+
+    def __init__(self, venv, ventana=1000):
+        super().__init__()
+        self.venv, self.ventana = venv, int(ventana)
+        self.nivel, self.pasos_inicio, self.historia = NIVEL, 0, []
+        self.xs = deque(maxlen=self.ventana)
+        self.duelo = deque(maxlen=self.ventana)
+        self.total = {"dron": 0, "ladron": 0, "otros": 0}
+        self.exito_iter = None
+        EntornoDronPersona.nivel_inicial = NIVEL
+        venv.env.current_level = NIVEL
+
+    def _on_step(self):
+        return True
+
+    def _on_rollout_end(self):
+        fx = getattr(self.venv, "fin_x", None) or [None] * len(self.venv.fin)
+        it_ = []
+        for f, x in zip(self.venv.fin, fx):
+            g = ganador(f, x)
+            self.total[g] += 1
+            self.duelo.append(g)
+            if x is not None:
+                self.xs.append(x)
+                it_.append(float(x["rinde"] or x["vista"] >= CUSTODIA_S[0]))
+        self.exito_iter = float(np.mean(it_)) if it_ else None
+
+    competencia = CurriculumCallback.competencia
+
+    def estado(self):
+        r = resumen_nivel(list(self.xs))
+        return {"nivel": NIVEL, "nombre": NOMBRE, "niveles": NIVELES + [NOMBRE_V16, NOMBRE_V17], "umbral": 0.0,
+                "ventana": self.ventana, "partidas": len(self.xs), "exito": r.get("custodia_%d" % CUSTODIA_S[0]),
+                "exito_cenit": None, "pasos_en_nivel": int(self.model.num_timesteps) if self.model else 0,
+                "min_pasos": 0, "paciencia": 0, "historia": [], "pasos_inicio": 0, "criterios": {}, "valores": {},
+                "por_nivel": {NIVEL: r} if r else {}}
+
+
+def _copiar_pesos(dst, src, n_viejas=None):
+    """Copia una capa lineal; si src tiene menos entradas (n_viejas), las columnas nuevas de dst quedan en cero."""
+    with torch.no_grad():
+        dst.bias.copy_(src.bias)
+        if src.weight.shape == dst.weight.shape:
+            dst.weight.copy_(src.weight)
+        else:
+            dst.weight.zero_()
+            dst.weight[:, :src.weight.shape[1]].copy_(src.weight)
+
+
+def desde_zip_v17(ruta, venv, lr, ent, semilla=None):
+    """V17: modelo nuevo de 7 botones con las capas OCULTAS (actor y crítico) y la salida del crítico de otro modelo SB3
+    (por ejemplo la V15: sus 192 entradas, las nuevas en cero). La salida de los botones arranca nueva: cambió su número."""
+    viejo = PPO.load(ruta, device="cpu", custom_objects={"learning_rate": lr})
+    modelo = nuevo_ppo(venv, lr, ent, semilla)
+    pv, pn = viejo.policy, modelo.policy
+    for a, b in ((pn.mlp_extractor.policy_net[0], pv.mlp_extractor.policy_net[0]),
+                 (pn.mlp_extractor.policy_net[2], pv.mlp_extractor.policy_net[2]),
+                 (pn.mlp_extractor.value_net[0], pv.mlp_extractor.value_net[0]),
+                 (pn.mlp_extractor.value_net[2], pv.mlp_extractor.value_net[2]), (pn.value_net, pv.value_net)):
+        _copiar_pesos(a, b)
+    return modelo
+
+
+def red_ladron(ruta):
+    """La red del ladrón congelada; en la V16 el ladrón es siempre el táctico y la red no se usa (si falta, una al azar)."""
+    red_p = ActorCritico(OBS_PERSONA, N_ACC_PERSONA)
+    if ruta and os.path.exists(ruta):
+        red_p.load_state_dict(torch.load(ruta, weights_only=False))
+    return red_p
+
+
 def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot):
     """V15: una partida con la política actual FORZADA a un nivel del currículo (para la pestaña de ese nivel)."""
     env = EntornoDronPersona(1, semilla=semilla, nivel=nivel)
@@ -498,6 +601,10 @@ def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot):
     for _ in range(PASOS_EPISODIO + 5):
         od, op = env.obs_dron(), env.obs_persona()
         ad, _, _, probs = actuar(red_d, od, codicioso=True)
+        if nivel == NIVEL_V17:                                   # V17: solo los botones permitidos
+            probs = probs * env.action_masks()
+            probs = probs / probs.sum(1, keepdims=True)
+            ad = probs.argmax(1)
         ap, _, _, _ = actuar(red_p, op, codicioso=False)
         foto = env.foto(0)
         foto["a"] = int(ad[0])
@@ -514,13 +621,16 @@ def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot):
             break
     return {"iteracion": iteracion, "pasos": pasos_tot, "adversaria": True, "guion": None, "paneles": env.paneles(0),
             "resultado": resultado, "maniobras": maniobras, "dt": DT, "cuadros": cuadros, "version": VERSION,
-            "nivel": int(nivel), "nombre_nivel": NIVELES[nivel], "t_rinde": [T_RINDE_BASE, T_RINDE_RESERVA],
+            "nivel": int(nivel), "nombre_nivel": {NIVEL_V16: NOMBRE_V16, NIVEL_V17: NOMBRE_V17}.get(nivel) or NIVELES[nivel],
+            "clases": CLASES_V17 if nivel == NIVEL_V17 else None,
+            "t_rinde": [T_RINDE_BASE, T_RINDE_RESERVA],
             "autor": AUTOR}
 
 
 class Maestro(BaseCallback):
     """Cada iteración (un rollout de 128 pasos x N entornos): métricas para el visor, currículo y, cada tanto,
     repeticiones, hitos, el último modelo y los pesos para la Jetson."""
+    cada_rep = 5                                          # V16: cada cuántas iteraciones se graban repeticiones (0 = nunca)
 
     def __init__(self, venv, red_p, objetivo, metricas, iteracion, t_previo, hitos, curriculo=None):
         super().__init__()
@@ -555,7 +665,7 @@ class Maestro(BaseCallback):
              "acciones_busqueda": [round(float(x), 4) for x in v.cuenta_busq / max(v.cuenta_busq.sum(), 1)],
              "dron": {"l_pi": float(lg.get("train/policy_gradient_loss", 0.0)), "l_v": float(lg.get("train/value_loss", 0.0)),
                       "entropia": -float(lg.get("train/entropy_loss", 0.0))},
-             "pasos_s": int(paso_it / max(dt_it, 1e-6)), "motor": "Stable-Baselines3 PPO", "autor": AUTOR, "version": VERSION,
+             "pasos_s": int(paso_it / max(dt_it, 1e-6)), "motor": "sb3-contrib MaskablePPO", "autor": AUTOR, "version": VERSION,
              "estados": {k: round(float(x), 4) for k, x in zip(NOMBRE_ESTADO, v.estados / max(v.estados.sum(), 1))},
              "ciego": round(v.ciego / max(v.estados.sum(), 1), 5)}
         cur = self.curriculo
@@ -579,12 +689,30 @@ class Maestro(BaseCallback):
                                                                "objetivo": self.objetivo, "t": time.time(), "nivel": m["nivel"],
                                                                "version": VERSION, "curriculo": m.get("curriculo"),
                                                                "competencia": m.get("competencia"),
-                                                               "replays_nivel": self.replays_nivel, "niveles": NIVELES})
+                                                               "replays_nivel": self.replays_nivel, "niveles": NIVELES + [NOMBRE_V16, NOMBRE_V17]})
         pol = PoliticaSB3(self.model)
         nv = cur.nivel if cur is not None else N_NIVELES - 1
         if nv != self.nivel_ant:
             self.it_ini_nivel, self.nivel_ant = it, nv
-        if it % 5 == 0 or it == 1:
+        rep_ok = self.cada_rep > 0
+        if nv == NIVEL_V17 and rep_ok and (it % self.cada_rep == 0 or it == 1):
+            # V17: la cancha (replay_v17.json; replay_adv.json para los visores viejos). La misión con piloto (mision.py)
+            # todavía usa los 10 botones de antes: no se graba con la red de 7
+            rep = grabar_nivel(pol, self.red_p, NIVEL_V17, it, it, pasos)
+            guardar_json(os.path.join(SALIDA, "replay_v17.json"), rep)
+            guardar_json(os.path.join(SALIDA, "replay_adv.json"), rep)
+            guardar_json(os.path.join(SALIDA, "replay_nivel_%d.json" % NIVEL_V17), rep)
+            self.replays_nivel["v17"] = self.replays_nivel[NIVEL_V17] = it
+        elif nv == NIVEL_V16 and rep_ok and (it % self.cada_rep == 0 or it == 1):
+            # V16: la misión de 2 paneles (replay_v16.json; replay_adv.json para los visores viejos) y la misión con piloto
+            rep = grabar_nivel(pol, self.red_p, NIVEL_V16, it, it, pasos)
+            guardar_json(os.path.join(SALIDA, "replay_v16.json"), rep)
+            guardar_json(os.path.join(SALIDA, "replay_adv.json"), rep)
+            guardar_json(os.path.join(SALIDA, "replay_nivel_%d.json" % NIVEL_V16), rep)   # el visor V15 lo muestra como nivel 5
+            self.replays_nivel["v16"] = self.replays_nivel[NIVEL_V16] = it
+            guardar_json(os.path.join(SALIDA, "replay_mision.json"), grabar_mision(pol, self.red_p, actuar, it, pasos, it + 2))
+            self.replays_nivel["mision"] = it
+        elif rep_ok and (it % 5 == 0 or it == 1):
             # V15: cada 5 iteraciones, el nivel actual y la misión; los niveles ya superados, uno por turno
             rep = grabar_nivel(pol, self.red_p, nv, it, it, pasos)
             guardar_json(os.path.join(SALIDA, "replay_nivel_%d.json" % nv), rep)
@@ -601,10 +729,10 @@ class Maestro(BaseCallback):
                                                                "objetivo": self.objetivo, "t": time.time(), "nivel": m["nivel"],
                                                                "version": VERSION, "curriculo": m.get("curriculo"),
                                                                "competencia": m.get("competencia"),
-                                                               "replays_nivel": self.replays_nivel, "niveles": NIVELES})
+                                                               "replays_nivel": self.replays_nivel, "niveles": NIVELES + [NOMBRE_V16]})
         # hitos del nivel actual: cada 5 iteraciones durante sus primeras 50, después cada 20; la misión cada 20
         en_nivel = it - self.it_ini_nivel
-        if (it % 5 == 0 and en_nivel <= 50) or it % 20 == 0 or it == 1:
+        if rep_ok and ((it % 5 == 0 and en_nivel <= 50) or it % 20 == 0 or it == 1) and nv != NIVEL_V17:
             nombre = "nivel%d_it%05d.json" % (nv, it)
             guardar_json(os.path.join(SALIDA, "hitos", nombre), grabar_nivel(pol, self.red_p, nv, 1000 + it, it, pasos))
             self.hitos.append({"archivo": nombre, "it": it, "pasos": pasos, "adversaria": True, "mision": False, "nivel": nv})
@@ -620,13 +748,22 @@ class Maestro(BaseCallback):
                 "current_level": cur.nivel if cur is not None else None,
                 "pasos_inicio_nivel": cur.pasos_inicio if cur is not None else None,
                 "historia_curriculo": cur.historia if cur is not None else []})
-            guardar_json(os.path.join(MODELOS, "dron_politica.json"), exportar(self.model, iteracion=it, pasos=pasos))
+            # V16/V17: archivo aparte (195 entradas); el de la Jetson (dron_politica.json, 192) no se toca hasta adaptar su código
+            guardar_json(os.path.join(MODELOS, "dron_politica_%s.json" % VERSION.lower()),
+                         exportar(self.model, iteracion=it, pasos=pasos))
         if it % 5 == 0 or it < 5:
             e = m["adv"] or {}
             c = control or {}
             f2 = lambda x: "--" if x is None else "%.2f" % x
             f3 = lambda x: "--" if x is None else "%.4f" % x
-            if cur is not None:
+            if isinstance(cur, CurriculoV16):
+                cc = m["competencia"]
+                r_ = m["curriculo"]["por_nivel"].get(NIVEL) or {}
+                print(texto_resumen_nivel(N_NIVELES - 1, r_).replace("N%d" % (N_NIVELES - 1), VERSION) +
+                      " | DOMINIO dron %s · ladrón %s" % ("--" if cc["dron"] is None else "%.0f %%" % (100 * cc["dron"]),
+                                                          "--" if cc["ladron"] is None else "%.0f %%" % (100 * cc["ladron"])),
+                      flush=True)
+            elif cur is not None:
                 ce, cc = m["curriculo"], m["competencia"]
                 vl = ce.get("valores") or {}
                 print("     criterios del nivel: " + (" · ".join("%s %s (meta %s)" % (k, "--" if vl.get(k) is None else
@@ -653,92 +790,93 @@ class Maestro(BaseCallback):
 def main():
     global SALIDA, MASTER, MODELOS
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default="modelos/ultimo.pt", help="red PPO propia (.pt) de la que sale la base SB3")
-    ap.add_argument("--continuar", action="store_true", help="retomar <dir-master>/ultimo.zip (la V12 lo hace sola si existe)")
-    ap.add_argument("--desde", default=None, help="modelo SB3 (.zip) desde el que arranca el fine-tuning V12 "
-                                                     "(por defecto, el checkpoint más nuevo de modelos_master/)")
-    ap.add_argument("--desde-pt", action="store_true", help="arrancar desde la red propia --base (.pt), como la V10")
+    ap.add_argument("--continuar", action="store_true", help="retomar <dir-master>/ultimo.zip (lo hace solo si existe)")
+    ap.add_argument("--desde", default=None, help="V17: modelo SB3 (.zip) del que se copian las capas ocultas del actor y "
+                                                     "del crítico (sin esto, la red arranca de cero)")
+    ap.add_argument("--ent", type=float, default=0.003, help="bono de entropía (R3: 0.003; la V15 usaba 0.01)")
+    ap.add_argument("--congelar", choices=["viejas", "capa", "nada"], default="nada",
+                    help="viejas: congela en la 1.a capa del actor las conexiones de las 192 entradas de la V15 (las 3 "
+                         "nuevas aprenden); capa: la 1.a capa entera (como la V12); nada: todo aprende")
     ap.add_argument("--pasos", type=float, default=1e9)
     ap.add_argument("--envs", type=int, default=512)
-    ap.add_argument("--lr", type=float, default=1e-4, help="tasa de aprendizaje del afinado (V12: 1e-4, menor que la de origen)")
+    ap.add_argument("--lr", type=float, default=1e-4, help="tasa de aprendizaje del afinado")
     ap.add_argument("--checkpoint", type=float, default=1e6, help="cada cuántos pasos se guarda un checkpoint")
+    ap.add_argument("--ventana", type=int, default=1000, help="partidas que se promedian en las métricas de custodia")
+    ap.add_argument("--hilos", type=int, default=8, help="hilos de torch")
+    ap.add_argument("--semilla", type=int, default=None)
+    ap.add_argument("--repeticiones", type=int, default=5, help="cada cuántas iteraciones se graban repeticiones e hitos "
+                                                                 "para el visor (0 = nunca, para corridas de prueba)")
+    ap.add_argument("--set", action="append", default=[], help="NOMBRE=VALOR: cambia una constante de entorno.py "
+                                                               "(comparaciones con y sin un término)")
     ap.add_argument("--salida", default=SALIDA)
-    ap.add_argument("--nivel-inicial", type=int, default=0, help="V14: nivel del currículo al empezar (0-3)")
-    ap.add_argument("--umbral", type=float, default=0.85, help="éxito en el nivel actual para subir")
-    ap.add_argument("--ventana", type=int, default=1000, help="partidas del nivel actual que se promedian (100 es muy ruidoso con 512 entornos)")
-    ap.add_argument("--min-pasos-nivel", type=float, default=2e6, help="pasos mínimos en un nivel antes de poder subir")
-    ap.add_argument("--paciencia", type=float, default=5e7, help="pasos máximos en un nivel sin superarlo (0 = sin límite)")
-    ap.add_argument("--repaso", type=float, default=0.25, help="fracción de partidas que repasan niveles ya superados")
     ap.add_argument("--dir-master", default=MASTER)
     ap.add_argument("--dir-modelos", default=MODELOS)
     a = ap.parse_args()
+    for f_ in (sys.stdout, sys.stderr):                     # V17: el log con ≥ y tildes no se cae en Windows
+        f_.reconfigure(encoding="utf-8", errors="replace")
     SALIDA, MASTER, MODELOS = a.salida, a.dir_master, a.dir_modelos
+    import entorno as E_
+    for kv in a.set:
+        k, v = kv.split("=", 1)
+        viejo = getattr(E_, k)
+        setattr(E_, k, v if isinstance(viejo, str) else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
+        print("constante cambiada: %s = %s" % (k, getattr(E_, k)), flush=True)
+    Maestro.cada_rep = a.repeticiones
     sin_ahorro_de_energia()
-    torch.set_num_threads(8)
+    torch.set_num_threads(a.hilos)
     for d in (os.path.join(SALIDA, "hitos"), MODELOS, os.path.join(MASTER, "checkpoints")):
         os.makedirs(d, exist_ok=True)
-    ruta_base, ruta_ultimo = os.path.join(MASTER, "base_v9.zip"), os.path.join(MASTER, "ultimo.zip")
+    ruta_ultimo = os.path.join(MASTER, "ultimo.zip")
     ruta_persona = os.path.join(MASTER, "ladron_congelado.pt")
+    semilla = a.semilla if a.semilla is not None else int(time.time()) % 10000
+    EntornoDronPersona.nivel_inicial = NIVEL
 
     metricas, it, t_previo, hitos = [], 0, 0.0, []
-    continuar = a.continuar or (not a.desde_pt and a.desde is None and os.path.exists(ruta_ultimo))
+    continuar = a.continuar or (a.desde is None and os.path.exists(ruta_ultimo))
     if continuar:
-        red_p = ActorCritico(OBS_PERSONA, N_ACC_PERSONA)
-        red_p.load_state_dict(torch.load(ruta_persona, weights_only=False))
-        venv = VecDron(a.envs, int(time.time()) % 10000, red_p)
-        modelo = PPO.load(ruta_ultimo, env=venv, device="cpu", custom_objects={"learning_rate": a.lr})
+        red_p = red_ladron(ruta_persona)
+        venv = VecDron(a.envs, semilla, red_p)
+        modelo = MaskablePPO.load(ruta_ultimo, env=venv, device="cpu",
+                                  custom_objects={"learning_rate": a.lr, "ent_coef": a.ent})
         est = json.load(open(os.path.join(MASTER, "estado_entrenamiento.json"), encoding="utf-8"))
         it, t_previo = est["it"], est["seg"]
         venv.set_attr("nivel", est.get("nivel", 0.0))
-        metricas = [m for m in json.load(open(os.path.join(SALIDA, "metricas.json"), encoding="utf-8")) if m["it"] <= it]
+        ruta_m = os.path.join(SALIDA, "metricas.json")
+        metricas = [m for m in json.load(open(ruta_m, encoding="utf-8")) if m["it"] <= it] if os.path.exists(ruta_m) else []
         ruta_h = os.path.join(SALIDA, "hitos", "lista.json")
         hitos = [h for h in json.load(open(ruta_h, encoding="utf-8")) if h["it"] <= it] if os.path.exists(ruta_h) else []
         print("continuando desde la iteración %d (%.1f M pasos)" % (it, modelo.num_timesteps / 1e6), flush=True)
-    elif not a.desde_pt:
-        # TRANSFER LEARNING desde el último checkpoint SB3 de la versión anterior (pesos completos) con su ladrón congelado
-        origen = a.desde or ultimo_checkpoint(ORIGEN_PREVIO)
+    else:
         archivar_salida_previa()
-        red_p = ActorCritico(OBS_PERSONA, N_ACC_PERSONA)
-        red_p.load_state_dict(torch.load(os.path.join(ORIGEN_PREVIO, "ladron_congelado.pt"), weights_only=False))
+        red_p = red_ladron(os.path.join(ORIGEN_PREVIO, "ladron_congelado.pt"))
         torch.save(red_p.state_dict(), ruta_persona)
-        venv = VecDron(a.envs, 12, red_p)
-        modelo = PPO.load(origen, env=venv, device="cpu", custom_objects={"learning_rate": a.lr})
+        venv = VecDron(a.envs, semilla, red_p)
+        if a.desde:
+            modelo = desde_zip_v17(a.desde, venv, a.lr, a.ent, semilla)
+            desde = a.desde + " (capas ocultas; salida de 7 botones nueva)"
+        else:
+            modelo = nuevo_ppo(venv, a.lr, a.ent, semilla)
+            desde = "cero"
         modelo.num_timesteps = 0
         modelo.save(os.path.join(MASTER, "base_%s.zip" % VERSION.lower()))
-        guardar_json(os.path.join(MASTER, "origen.json"), {"desde": origen.replace("\\", "/"), "fecha": time.strftime("%Y-%m-%d %H:%M")})
-        print("%s · fine-tuning desde %s" % (VERSION, origen), flush=True)
-    else:
-        ck = torch.load(a.base, weights_only=False)
-        red_p = ActorCritico(OBS_PERSONA, N_ACC_PERSONA)
-        red_p.load_state_dict(ck["persona"])
-        torch.save(red_p.state_dict(), ruta_persona)
-        venv = VecDron(a.envs, 7, red_p)
-        crear_base(a.base, venv, ruta_base, a.lr)
-        modelo = PPO.load(ruta_base, env=venv, device="cpu", custom_objects={"learning_rate": a.lr})
-    # V14 · currículo: nivel guardado (al continuar) o el inicial; repaso solo en el entorno de entrenamiento
-    nivel0, pasos0 = a.nivel_inicial, 0
-    if continuar:
-        nivel0 = est.get("current_level", nivel0) if est.get("current_level") is not None else nivel0
-        pasos0 = est.get("pasos_inicio_nivel") or 0
-    venv.env.p_repaso = a.repaso
-    curriculo = CurriculumCallback(venv, nivel0, a.umbral, a.ventana, a.min_pasos_nivel, a.paciencia, pasos0)
-    if continuar:
-        curriculo.historia = est.get("historia_curriculo", [])
-    venv.env.reset(np.ones(venv.num_envs, bool))
-    print(VERSION + " · currículo: nivel %d (%s) · umbral %.0f %% en %d partidas · mínimo %.0f M pasos por nivel · paciencia %.0f M · "
-          "repaso %.0f %%" % (curriculo.nivel, NIVELES[curriculo.nivel], 100 * a.umbral, a.ventana, a.min_pasos_nivel / 1e6,
-                              a.paciencia / 1e6, 100 * a.repaso), flush=True)
+        guardar_json(os.path.join(MASTER, "origen.json"), {"desde": str(desde).replace("\\", "/"),
+                                                           "fecha": time.strftime("%Y-%m-%d %H:%M")})
+        print("%s · arranca desde %s · %d entradas · %d botones · bono de entropía %.4f" % (
+            VERSION, desde, OBS_DRON, len(CLASES_ENT), a.ent), flush=True)
     for prm in red_p.parameters():
         prm.requires_grad_(False)
-    if a.desde_pt:
-        congelar_capas_inferiores(modelo)
-    else:
+    if a.congelar == "viejas":
+        congelar_capas_inferiores(modelo, OBS_PREVIA)
+    elif a.congelar == "capa":
         congelar_capas_fisicas(modelo)
+    curriculo = CurriculoV16(venv, a.ventana)
+    venv.env.reset(np.ones(venv.num_envs, bool))
     cbs = [CheckpointCallback(save_freq=max(int(a.checkpoint // a.envs), 1), save_path=os.path.join(MASTER, "checkpoints"),
                               name_prefix="dron_master"),
            curriculo, Maestro(venv, red_p, a.pasos, metricas, it, t_previo, hitos, curriculo)]
-    print(VERSION + " · Control jerárquico híbrido + currículo progresivo · Stable-Baselines3 PPO · %d entornos · objetivo %.0f M pasos · checkpoint cada %.1f M · autor: %s"
-          % (a.envs, a.pasos / 1e6, a.checkpoint / 1e6, AUTOR), flush=True)
+    print(VERSION + " · %s · sb3-contrib MaskablePPO · %d entornos · objetivo %.0f M pasos · checkpoint cada %.1f M · "
+          "congelar: %s · semilla %d · autor: %s" % (NOMBRE, a.envs, a.pasos / 1e6, a.checkpoint / 1e6, a.congelar, semilla,
+                                                     AUTOR), flush=True)
     modelo.learn(total_timesteps=int(a.pasos), callback=cbs, reset_num_timesteps=not continuar)
 
 
