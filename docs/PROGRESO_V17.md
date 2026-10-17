@@ -14,7 +14,62 @@ Sesión **Simulación V17** (dueña de `03_SIMULACION_RL/`), encargo `docs/ENCAR
 4. **Medido: con la custodia como la define el plan (60 s seguidos a la vista), todas las líneas base dan ~1 %**: "solo
    reglas", azar y la regla de posicionamiento empatan. La cancha, con el ladrón escondiéndose detrás de las V, nunca deja
    60 s seguidos. Hay que decidir con qué número se mide (le pregunté al Arquitecto; ver abajo).
-5. **Nada se entrenó** más allá de pruebas de humo. Los comandos de las corridas de 10 M están al final.
+5. **Entrenando (17-oct, 09:05):** la corrida "todo" de 10 M pasos (~50 min), aprobada por Brahian vía el Supervisor,
+   para ver si el colapso a "quedarse" sigue. El de 50 M y las otras 6 corridas esperan a que Brahian decida la M1.
+6. **Lo único que se separa de "quedarse" es SUBIR**: racha ≥ 30 s 61.9 % contra 51.8 % (ver "Botones fijos").
+
+## Entrenamiento en marcha (17-oct)
+
+- **Comando** (en la pestaña "V17 todo 10M" del panel Terminal, desde `03_SIMULACION_RL`), inicio **2026-10-17 09:05**:
+  `.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --repeticiones 5 --salida salida_v17_todo --dir-master modelos_v17_todo --dir-modelos modelos_v17_todo *> modelos_v17_todo.log`
+- **Carpetas:** `modelos_v17_todo\` (checkpoints cada 1 M, `ultimo.zip`), `salida_v17_todo\` (métricas y repeticiones). No
+  toca `modelos_v15`.
+- **Avance:** `modelos_v17_todo.log` (en UTF-16, lo escribe PowerShell; se abre bien con el Bloc de notas): una línea `it …`
+  por iteración con pasos, pasos/s y entropía. Va a ~3 300 pasos/s: termina hacia las 10:00.
+- **Detener:** Ctrl+C en esa pestaña. **Medirlo al terminar:**
+  `.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol b0,modelos_v17_todo\ultimo.zip --n 512 --salida informes\v17_todo_10M.json`
+- Otra forma de lanzar el entrenamiento principal (cuando se decida): doble clic en `03_SIMULACION_RL\LANZAR_V17.bat`.
+
+## Botones fijos (pedido del Arquitecto, 17-oct)
+
+La red reemplazada por **un solo botón siempre**, mismas 512 partidas y semilla que la línea base
+(`informes/v17/fijo_<botón>.json`). Margen de error ±4.3 puntos en la racha ≥ 30 s. Un botón no permitido en ese paso se
+toma como QUEDARSE (por eso BAJAR, siempre prohibido a la altura segura, da exactamente lo mismo que QUEDARSE).
+
+| Botón fijo | Racha ≥ 30 s | M1 60 s | Vista total (s) | Racha media (s) | M2 ≤ 10 s | Re-adq. (s) | M3 rendición | Alcanzado | Decide en % del FIJADO |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| QUEDARSE (= B0) | 51.8 % | 1.2 % | 108.9 | 31.4 | 76.2 % | 6.6 | 15.6 % | 0 % | 46 % |
+| RODEAR_IZQ | 49.0 % | 0.2 % | 110.6 | 31.3 | 76.6 % | 6.5 | 14.6 % | 0 % | 48 % |
+| RODEAR_DER | 54.7 % | 0.2 % | 113.3 | 31.6 | 77.1 % | 6.4 | 13.3 % | 0.2 % | 48 % |
+| ACERCARSE | 42.6 % | 0.4 % | 106.3 | 28.9 | 77.1 % | 6.5 | 12.9 % | 0.2 % | 39 % |
+| ALEJARSE | 53.3 % | 0.8 % | 108.9 | 31.7 | 75.9 % | 6.5 | 16.2 % | 0.2 % | 46 % |
+| **SUBIR** (a 5.5 m) | **61.9 %** | 0 % | 100.9 | 33.9 | **83.4 %** | **5.1** | **24.4 %** | 0.2 % | 65 % |
+| BAJAR | 51.8 % | 1.2 % | 108.9 | 31.4 | 76.2 % | 6.6 | 15.6 % | 0 % | 46 % |
+
+Choques con peatones, paneles y geocerca: 0 en todas; gimbal siempre dentro de −45..+15°.
+
+- **SUBIR sí cambia algo, fuera del ruido:** +10 puntos de racha ≥ 30 s, M2 de 76 a 83 %, re-adquisición de 6.6 a 5.1 s y
+  rendición de 16 a 24 %; ve por encima de las V. A cambio, menos vista total (101 s contra 109): desde 5.5 m lo pierde más
+  veces por el borde de la imagen, pero lo recupera antes. ACERCARSE empeora (−9 puntos). Rodear y alejarse no se separan.
+- **Cuánto decide de verdad la red:** en el 46 % del tiempo FIJADO (con QUEDARSE; el resto lo tiene oculto, en la memoria
+  del tracker o con una maniobra), ~21 % de todo el tiempo de la partida.
+- **Cuánto dura cada vez que lo ve:** mediana **0.5 s**, media 1.1 s seguidos con `visto` encendido. Ojo: no es el tiempo
+  hasta que se esconde, porque `visto` parpadea por las pérdidas de detección de YOLO de un cuadro; lo que dura de verdad
+  a la vista se ve mejor en la racha media del contador (~31 s, que tolera parpadeos).
+- **Conclusión:** una palanca sí alcanza (la altura). Entonces el colapso a QUEDARSE del humo no se explica porque "no hay
+  nada que ganar": SUBIR gana. Lo más probable es que la recompensa no lo pague. La recompensa por paso premia "a la vista"
+  y la distancia de 3.5-5 m, y SUBIR baja la vista total. Además, con SUBIR la cámara cae fuera del rango del gimbal cuando
+  está cerca, y eso tiene multa (R6).
+
+## Opciones para Brahian (no se cambió nada de esto)
+
+| Opción | Qué cambia | Costo | Recomendación |
+|---|---|---|---|
+| A. M1 = racha ≥ 30 s | Solo la medida del criterio "la IA aporta" | Nada de código (ya se mide: `custodia30`) | **Sí.** Es la única que separa: B0 51.8 %, SUBIR fijo 61.9 % |
+| B. Recompensa por racha (el contador) en vez de por paso a la vista | Paga mantenerlo, no solo verlo en el cuadro | ~1 h + pruebas + re-medir; cambia lo que aprende | **Sí, junto con A**: hoy la red aprende que moverse baja la vista por paso aunque suba la custodia |
+| C. Que la búsqueda no reinicie el contador al segundo de perderlo (por ejemplo, pausarlo hasta 4 s como en RECONFIRMAR) | Más rachas largas para todos | Toca la regla 3 (búsqueda determinista): la decide Brahian | Solo si A y B no alcanzan; sube la vara de B0 sin que la IA haga nada |
+| D. Ladrón más visible (más tiempo fuera del escondite) | Escenario más fácil | Toca el ladrón; hay que re-medir todo | No por ahora: SUBIR ya muestra que hay margen |
+| E. Quitar o bajar la multa del ángulo del gimbal (R6) en la V17 | Deja de castigar mirar desde arriba | `--set R_ANGULO_GMB=0`, ya existe | Medirla en las corridas de 5.2 (es la corrida "sin R6") |
 
 ## Paso 1 · E1 · Código de la V16 (17-oct)
 
