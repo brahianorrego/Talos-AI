@@ -1,15 +1,34 @@
 <div align="center">
 
-# Dron IA · Vigilancia
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/portada/banner.png" width="100%" alt="Dron IA Vigilancia: detecta personas, evita obstáculos y decide con una red neuronal cuándo frenar y subir">
 
-**Cuadricóptero que detecta personas, evita obstáculos y decide con una red neuronal cuándo frenar y subir**
+<br>
 
-Proyecto de grado · Ingeniería Aeronáutica · Universidad de San Buenaventura
-Autor: **Brahian Andrés Orrego Osorio**
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.14-EE4C2C?logo=pytorch&logoColor=white)
+![Stable-Baselines3](https://img.shields.io/badge/Stable--Baselines3-PPO-0A7BBB)
+![ArduPilot](https://img.shields.io/badge/ArduPilot-4.7-6CA43A)
+![NVIDIA Jetson](https://img.shields.io/badge/NVIDIA-Jetson%20Orin%20Nano-76B900?logo=nvidia&logoColor=white)
+![YOLO](https://img.shields.io/badge/YOLO26n-TensorRT%20FP16-00FFFF)
+![Pruebas](https://img.shields.io/badge/pruebas-88%20pasan-brightgreen)
+![Estado](https://img.shields.io/badge/estado-pruebas%20de%20campo-orange)
+![Ayuda](https://img.shields.io/badge/se%20buscan-colaboradores-ff69b4)
 
-<img src="08_EVIDENCIA_Y_DIAGRAMAS/fotos/09_dron_completo_arriba.webp" width="420" alt="El dron armado visto desde arriba: Jetson en caja transparente, GPS, cuatro motores con hélices y gimbal con cámara">
+**[El dron](#el-dron)** · **[Arquitectura](#arquitectura-percepción--decisión--control)** · **[Resultados](#resultados-en-simulación)** · **[IA de refuerzo](#-plus-ia-de-refuerzo-para-mantener-a-la-vista-a-un-sospechoso)** · **[Reprodúcelo](#cómo-reproducirlo)** · **[¿Quieres ayudar?](#-quieres-ayudar)**
 
-`Jetson Orin Nano` · `Pixhawk 2.4.8 + ArduPilot 4.7` · `YOLO26n (TensorRT)` · `LiDAR TF03` · `Gimbal BaseCam` · `Stable-Baselines3 PPO`
+</div>
+
+> **En una frase:** el piloto vuela; una Jetson a bordo mira con una cámara y un LiDAR, y una red neuronal decide en
+> milisegundos si hay que **frenar y subir a 3.30 m** para no chocar con una persona o un obstáculo. Las reglas de
+> seguridad y el piloto siempre tienen la última palabra.
+
+<div align="center">
+
+| 🎯 **100 %** | 🚫 **0** | 🧠 **−28 %** | ⚡ **9-11 ms** |
+|:---:|:---:|:---:|:---:|
+| éxito en 1300 vuelos del protocolo del comité | activaciones falsas en 300 vuelos donde no debía actuar | choques de la IA frente a las reglas (39 → 28 en 3 840 vuelos de prueba) | por cuadro de YOLO en la Jetson |
+
+<sub>Simulación con ruido de sensores y 100 ms de retardo · fuentes en <code>03_SIMULACION_RL/informes/</code></sub>
 
 </div>
 
@@ -59,7 +78,7 @@ controlados.
 | Energía | LiPo 4S 6200 mAh · Power Module · buck 12 V para la Jetson | |
 | Enlace Jetson ↔ Pixhawk | TELEM2 a 115200 baudios, MAVLink 2 | Sin 5 V (el USB retroalimentaba) |
 
-Fuente: [`05_HARDWARE_Y_VARIANTES/hardware.md`](05_HARDWARE_Y_VARIANTES/hardware.md). Peso medido en báscula: 2 371 g
+Fuente: [`05_HARDWARE_Y_VARIANTES/hardware.md`](05_HARDWARE_Y_VARIANTES/hardware.md). Peso total en vuelo (con batería, Jetson, gimbal y LiDAR), medido en báscula: **2 371 g**
 ([foto](08_EVIDENCIA_Y_DIAGRAMAS/fotos/12_peso_bascula.webp)).
 
 <img src="08_EVIDENCIA_Y_DIAGRAMAS/diagramas/09_conexiones.png" width="640" alt="Diagrama de conexiones eléctricas y de datos">
@@ -186,7 +205,7 @@ Clasificador en el conjunto de prueba: AUC-ROC 0.974, precisión 97.0 %, falsos 
 | 0 | Inventario del código de la Jetson | ✅ |
 | 1 | Percepción + registro en banco (`registro_minimo.py`) | ✅ |
 | 2 | Gimbal con pitch fijo por AUX1 (−5°, 1444 µs) | ✅ |
-| 3 | Intervención por MAVLink en banco, sin hélices (`intervencion_banco.py`) | Falta documentar el resultado |
+| 3 | Intervención por MAVLink en banco, sin hélices (`intervencion_banco.py`) | Sábado 17 oct |
 | 4 | Datos reales con el dron en un carrito, escenarios E0-E6 (`campo.py`) | Próximo |
 | 5 | Decisor en "modo sombra" (decide y registra, no manda) | Pendiente |
 | 6 | Vuelos: panel de cartón → maniquí → persona | Pendiente |
@@ -209,6 +228,11 @@ humano es quien dice cuál persona es el sospechoso.
 - **Reglas alrededor**: búsqueda determinista tras perderlo, reflejo de punto ciego, árbitro y geocerca.
 - **Currículo de 5 niveles**: duelo abierto → con civil → muro → muro y civil → misión completa.
 
+<div align="center">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/visor_plus_mision_completa.png" width="100%" alt="Visor 3D de la simulación: el dron verifica a una persona marcada como posible objetivo; a la derecha la cámara del dron con la detección y abajo el mapa LiDAR">
+<sub>Visor 3D de la estación de tierra (three.js): el dron encontró a una persona y espera que el operador la confirme. A la derecha, lo que ve su cámara; abajo, el mapa del LiDAR.</sub>
+</div>
+
 **Con honestidad:** en la V15 la red decide casi al azar (su acción preferida tiene en promedio 17 % de probabilidad;
 al azar sería 10 %). Los buenos resultados vienen sobre todo de las reglas que la rodean. La V17 se diseña para
 corregirlo, con criterios medibles de "la IA aporta".
@@ -230,6 +254,33 @@ corregirlo, con criterios medibles de "la IA aporta".
 | V17 | — | Diagnóstico de la política y misión completa con paneles reales (en plan) |
 
 Detalle: [`docs/BITACORA.md`](docs/BITACORA.md) y [`docs/DECISIONES.md`](docs/DECISIONES.md).
+
+## 🙌 ¿Quieres ayudar?
+
+Este proyecto está abierto. Si sabes de drones, visión por computador, aprendizaje por refuerzo, three.js o diseño 3D,
+hay trabajo interesante y concreto:
+
+| | Reto | Por qué importa |
+|---|---|---|
+| 🧠 | **Hacer que la red PPO aprenda de verdad** (hoy decide casi al azar) | Es la diferencia entre "reglas con una red al lado" y una IA que aporta |
+| 🛩️ | **Llevar el decisor a la Jetson en modo sombra** | Primer paso para validar la IA con datos reales |
+| 🎮 | **Visor más realista**: personas animadas, cámara del dron fiel | Lo que ve el operador en vuelo, en virtual |
+| 🔩 | **Soportes 3D**: pan-tilt de servos, TF-Luna en el gimbal | Libera el pitch del gimbal (hoy trabado en −10° por un cable) |
+| 🌎 | **README en inglés** | Que lo entienda más gente |
+
+Lee la guía [`CONTRIBUTING.md`](CONTRIBUTING.md), abre un *issue* con tu idea y ¡a volar! ⭐ Si te gusta, dale una
+estrella: ayuda a que más gente lo encuentre.
+
+### Hoja de ruta
+
+- [x] Hardware integrado y probado en banco (Pixhawk, Jetson, LiDAR, gimbal, cámara)
+- [x] Simulación del mínimo y decisor MLP (congelados)
+- [x] IA de refuerzo V15 entrenada (229 M pasos)
+- [ ] Paso 3: intervención por MAVLink en banco (sábado 17 oct)
+- [ ] Paso 4: datos reales en campo (escenarios E0-E6)
+- [ ] Pasos 5-7: modo sombra, vuelos y protocolo del comité en campo
+- [ ] V17: diagnóstico del PPO y misión con paneles reales
+- [ ] Visor realista y variantes de hardware
 
 ## Cómo reproducirlo
 
