@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DRON-IA · Estación de tierra</title>
+<!-- Visor V16 (sesión B del plan docs/PLAN_V16_REALISMO.md). El visor técnico de la V15 quedó en index_v20.html. -->
+<script type="importmap">
+{ "imports": { "three": "./recursos/three/three.module.min.js", "three/addons/": "./recursos/three/addons/" } }
+</script>
+<style>
+  :root {
+    --fondo: #0d0f12; --panel: #14171b; --panel2: #191d22; --borde: #262b32; --texto: #d9dee4; --suave: #8b949e; --tenue: #5b636d;
+    --ok: #3cc46e; --aviso: #f0a623; --peligro: #ec4d4d; --info: #6aa9d8;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; --mono: Consolas, "Roboto Mono", ui-monospace, monospace;
+    --lat: 380px; --barra: 44px; --pie: 96px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fondo); color: var(--texto); font: 13px var(--sans); }
+  #lienzo { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  button, select { font: inherit; color: var(--texto); background: var(--panel2); border: 1px solid var(--borde); border-radius: 4px; padding: 4px 9px; cursor: pointer; }
+  button:hover, select:hover { border-color: #3a414b; }
+  button.activo { background: #2a3038; border-color: #4a525d; }
+  .ui { position: fixed; z-index: 2; }
+
+  /* ---------- barra superior */
+  #barra { left: 0; right: 0; top: 0; height: var(--barra); display: flex; align-items: center; gap: 14px; padding: 0 12px;
+           background: var(--panel); border-bottom: 1px solid var(--borde); }
+  .marca { font-weight: 600; letter-spacing: .4px; white-space: nowrap; }
+  .marca small { color: var(--suave); font-weight: 400; margin-left: 6px; }
+  #autoria { color: var(--suave); font-size: 12px; white-space: nowrap; }
+  #autoria b { color: var(--texto); font-weight: 600; }
+  #barra .der { margin-left: auto; display: flex; gap: 8px; align-items: center; min-width: 0; }
+  #selector { max-width: 420px; }
+
+  /* ---------- vistas (el lienzo WebGL dibuja detrás de estos marcos) */
+  .vista { position: fixed; z-index: 1; border: 1px solid var(--borde); background: transparent; overflow: hidden; }
+  .vista .tit { position: absolute; left: 8px; top: 6px; z-index: 3; font-size: 11px; color: #e8ecf0; text-shadow: 0 1px 2px #000; letter-spacing: .3px; pointer-events: none; }
+  .vista .tit span { color: #aab3bd; }
+  .vista canvas.sobre { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+  .vista.chica { cursor: pointer; }
+  .vista.chica:hover { border-color: #4a525d; }
+  #v-grande { left: 0; top: var(--barra); right: var(--lat); bottom: var(--pie); border: none; }
+  #v-1 { right: 0; top: var(--barra); width: var(--lat); height: calc(var(--lat) * 9 / 16); }
+  #v-piso { right: 0; top: calc(var(--barra) + var(--lat) * 9 / 16); width: var(--lat); height: calc(var(--lat) * 3 / 4); }
+  #mapa-caja { right: 0; top: calc(var(--barra) + var(--lat) * 9 / 16 + var(--lat) * 3 / 4); bottom: var(--pie); width: var(--lat); background: var(--panel); }
+  #mapa { width: 100%; height: 100%; display: block; }
+  .botones-vista { position: absolute; right: 6px; top: 4px; z-index: 3; display: flex; gap: 3px; }
+  .botones-vista button { font-size: 11px; padding: 2px 7px; background: rgba(15, 17, 20, .72); }
+
+  .sello { display: none; position: absolute; left: 50%; top: 16px; transform: translateX(-50%); z-index: 3; padding: 8px 16px; text-align: center;
+           background: rgba(14, 16, 19, .78); border: 1px solid var(--aviso); color: var(--aviso); border-radius: 4px; font-weight: 700; letter-spacing: 1px; pointer-events: none; }
+  .sello small { display: block; font-weight: 400; letter-spacing: 0; color: var(--suave); margin-top: 3px; font-size: 11.5px; }
+  body.previa .sello { display: block; }
+
+  /* ---------- pie: telemetría y reproductor */
+  #pie { left: 0; right: 0; bottom: 0; height: var(--pie); background: var(--panel); border-top: 1px solid var(--borde);
+         display: grid; grid-template-rows: 1fr 34px; }
+  #telemetria { display: flex; align-items: stretch; gap: 0; overflow: hidden; }
+  .dato { padding: 6px 14px; border-right: 1px solid var(--borde); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .dato span { color: var(--suave); font-size: 11px; white-space: nowrap; }
+  .dato b { font: 600 16px var(--mono); white-space: nowrap; }
+  .dato b small { font-size: 11px; color: var(--suave); font-weight: 400; }
+  #d-obj { flex: 1; min-width: 220px; }
+  #d-obj b { font-family: var(--sans); font-size: 15px; }
+  .bateria { display: inline-block; width: 26px; height: 11px; border: 1.5px solid currentColor; border-radius: 2px; position: relative; vertical-align: -1px; margin-right: 6px; }
+  .bateria i { position: absolute; left: 1px; top: 1px; bottom: 1px; background: currentColor; }
+  #reproductor { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-top: 1px solid var(--borde); }
+  #pista { flex: 1; height: 18px; position: relative; cursor: pointer; }
+  #pista .fondo { position: absolute; left: 0; right: 0; top: 8px; height: 3px; background: #2a2f36; border-radius: 2px; }
+  #pista .hecho { position: absolute; left: 0; top: 8px; height: 3px; background: #7d8896; border-radius: 2px; }
+  #pista .ev { position: absolute; top: 4px; width: 2px; height: 11px; border-radius: 1px; opacity: .85; }
+  #reloj { font: 12px var(--mono); color: var(--suave); min-width: 96px; text-align: right; }
+
+  /* ---------- avisos al operador */
+  #aviso { left: calc((100vw - var(--lat)) / 2); top: calc(var(--barra) + 46px); transform: translateX(-50%); padding: 7px 14px; border-radius: 4px;
+           background: rgba(14, 16, 19, .9); border: 1px solid var(--borde); border-left: 3px solid var(--c, var(--aviso)); font-size: 14px;
+           opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 70vw; }
+  #aviso.ver { opacity: 1; }
+  #confirmar { left: calc((100vw - var(--lat)) / 2); bottom: calc(var(--pie) + 16px); transform: translateX(-50%); display: none; gap: 8px; align-items: center;
+               padding: 8px 12px; background: rgba(14, 16, 19, .92); border: 1px solid var(--aviso); border-radius: 4px; }
+  #confirmar.ver { display: flex; }
+
+  /* ---------- modo ingeniería (plegado por defecto) */
+  #ingenieria { left: 0; top: var(--barra); bottom: var(--pie); width: 400px; background: rgba(17, 19, 23, .97); border-right: 1px solid var(--borde);
+                transform: translateX(-100%); transition: transform .2s; overflow-y: auto; padding: 10px 14px 20px; z-index: 4; }
+  #ingenieria.abierto { transform: none; }
+  #ingenieria h4 { margin: 14px 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .8px; color: var(--suave); text-transform: uppercase; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: 12px; }
+  .kv span { color: var(--suave); }
+  .kv b { font: 12px var(--mono); text-align: right; font-weight: 400; }
+  #bitacora div { font-size: 12px; padding: 2px 0; border-bottom: 1px solid #1d2126; color: var(--suave); }
+  #bitacora div b { font: 11px var(--mono); color: var(--tenue); margin-right: 6px; font-weight: 400; }
+  .fila-op { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+  .nota { color: var(--tenue); font-size: 11.5px; line-height: 1.45; margin-top: 6px; }
+  a { color: var(--info); }
+  #cargando { position: fixed; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center; background: var(--fondo); color: var(--suave); font-size: 14px; }
+
+  @media (max-width: 1280px) { :root { --lat: 320px; } .dato { padding: 6px 9px; } .dato.opc { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="lienzo"></canvas>
+<div id="cargando">Cargando la estación de tierra…</div>
+
+<header id="barra" class="ui">
+  <div class="marca">DRON-IA <small>Estación de tierra · proyecto de grado</small></div>
+  <div id="autoria">Desarrollado por <b>Brahian Andrés Orrego Osorio</b></div>
+  <div class="der">
+    <select id="escenario" title="Escenario">
+      <option value="mision">Misión · 2 paneles</option>
+      <option value="hangar">Vista previa · hangar (no entrenado)</option>
+      <option value="campo">Vista previa · campo con árboles (no entrenado)</option>
+    </select>
+    <select id="selector" title="Repetición"></select>
+    <button id="b-ing" title="Estados, árbitro, recompensas y curvas (tecla I)">Ingeniería</button>
+  </div>
+</header>
+
+<div id="v-grande" class="vista"><div class="tit" id="t-grande"></div><canvas class="sobre" id="s-grande"></canvas><div class="sello">VISTA PREVIA · NO ENTRENADO<small>Escenario futuro para planear. La IA no se ha entrenado aquí. Cámara libre: arrastre, rueda y teclas W A S D (Q/E bajar y subir).</small></div></div>
+<div id="v-1" class="vista chica" title="Clic para verla en grande">
+  <div class="tit" id="t-1"></div><canvas class="sobre" id="s-1"></canvas>
+  <div class="botones-vista" id="modos-ext">
+    <button data-cam="cine" class="activo" title="Cámara automática">Auto</button><button data-cam="seguir">Seguir</button><button data-cam="libre">Libre</button><button data-cam="arriba">Arriba</button>
+  </div>
+</div>
+<div id="v-piso" class="vista"><div class="tit">Cámara al piso <span>· IMX219 · 62.2° · recta abajo</span></div><canvas class="sobre" id="s-piso"></canvas></div>
+<div id="mapa-caja" class="ui"><canvas id="mapa"></canvas></div>
+
+<div id="aviso" class="ui"></div>
+<div id="confirmar" class="ui">
+  <span id="confirmar-txt">¿Es el sospechoso? Haga clic sobre la persona en la cámara.</span>
+</div>
+
+<footer id="pie" class="ui">
+  <div id="telemetria">
+    <div class="dato"><span>Modo</span><b id="d-modo">–</b></div>
+    <div class="dato"><span>Altura</span><b id="d-alt">–</b></div>
+    <div class="dato"><span>Batería</span><b id="d-bat">–</b></div>
+    <div class="dato opc"><span>Velocidad</span><b id="d-vel">–</b></div>
+    <div class="dato opc"><span>Cámara</span><b id="d-gmb">–</b></div>
+    <div class="dato" id="d-obj"><span>Objetivo</span><b id="d-obj-b">–</b></div>
+    <div class="dato"><span>A la vista</span><b id="d-cus">–</b></div>
+  </div>
+  <div id="reproductor">
+    <button id="b-pausa" title="Pausa (barra espaciadora)">❚❚</button>
+    <select id="velocidad"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+    <div id="pista"><div class="fondo"></div><div class="hecho" id="hecho"></div><div id="marcas"></div></div>
+    <span id="reloj">00:00 / 00:00</span>
+    <button id="b-operador" class="activo" title="MANUAL: la repetición espera su clic sobre el sospechoso. AUTO: el clic lo hace el operador simulado.">Operador: manual</button>
+  </div>
+</footer>
+
+<aside id="ingenieria" class="ui">
+  <h4>Rendimiento</h4>
+  <div class="kv"><span>Cuadros por segundo</span><b id="i-fps">–</b><span>Calidad</span><b><select id="calidad"><option value="auto">automática</option><option value="alta">alta</option><option value="media">media</option><option value="baja">baja</option></select></b>
+    <span>Cielo</span><b><select id="cielo"><option value="amanecer">amanecer</option><option value="mediodia">mediodía</option></select></b></div>
+  <div class="fila-op"><button id="b-ayudas" class="activo" title="Geocerca, rastro y autoría en la vista externa">Ayudas en la vista externa</button><button id="b-lenta" class="activo" title="La vista externa pasa a cámara lenta durante el salto">Cámara lenta en el salto</button></div>
+  <h4>Estado del sistema</h4>
+  <div class="kv" id="i-estado"></div>
+  <h4>Árbitro de seguridad</h4>
+  <div class="kv" id="i-arbitro"></div>
+  <h4>Personas (verdad del simulador)</h4>
+  <div class="kv" id="i-personas"></div>
+  <h4>Recompensa</h4>
+  <div class="kv" id="i-recompensa"></div>
+  <h4>Bitácora</h4>
+  <div id="bitacora"></div>
+  <p class="nota">La estación muestra lo mismo que verá el operador en vuelo: las dos cámaras, el mapa y la telemetría. Lo técnico
+    vive aquí. El visor técnico completo de la V15 (máquina de estados, mapa SLAM, curvas de entrenamiento) sigue en
+    <a href="index_v20.html">index_v20.html</a>.</p>
+</aside>
+
+<script type="module" src="visor/principal.js"></script>
+</body>
+</html>

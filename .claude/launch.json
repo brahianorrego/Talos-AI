@@ -6,6 +6,12 @@
       "runtimeExecutable": "03_SIMULACION_RL/.venv/Scripts/python.exe",
       "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "03_SIMULACION_RL"],
       "port": 8765
+    },
+    {
+      "name": "visor-v16",
+      "runtimeExecutable": "03_SIMULACION_RL/.venv/Scripts/python.exe",
+      "runtimeArgs": ["04_VISOR_Y_MOTOR_GRAFICO/v16/simulacion/servidor_visor.py", "--puerto", "8766"],
+      "port": 8766
     }
   ]
 }
