@@ -17,14 +17,21 @@ Por eso, aquí: **no se usa SSH con la Jetson, no se toca `01_MINIMO_INDISPENSAB
 | Sesión | Rol | Modelo / esfuerzo | Es dueña de | Estado |
 |---|---|---|---|---|
 | **Arquitecto** | La cabeza: ordena las ideas de Brahian, decide el plan V17, reparte encargos, revisa lo que entregan las otras y lleva las decisiones a Brahian | Opus · alto | `docs/` (planes, decisiones, este tablero) | Plan V17 entregado el 17-oct (`docs/PLAN_V17_REFUERZO.md`, diagnóstico en `03_SIMULACION_RL/informes/diagnostico_v17_ia_aporta.md`). Brahian aprobó D-049 a D-054 el 17-oct |
-| **Visor y motor gráfico** | Trae el visor V16 al PC, mide los cuadros por segundo, compara three.js / Unreal 5 / Godot-Unity y diseña la interfaz de la estación de tierra | Opus · alto para decidir | `04_VISOR_Y_MOTOR_GRAFICO/` | Activa |
-| **Hardware y variantes** | Matriz de variantes (cámaras, gimbal o pan-tilt, LiDAR), piezas 3D en OpenSCAD y su configuración para la simulación | Sonnet · medio | `05_HARDWARE_Y_VARIANTES/` | Por abrir |
+| **Visor y motor gráfico** | Trae el visor V16 al PC, mide los cuadros por segundo, compara three.js / Unreal 5 / Godot-Unity y diseña la interfaz de la estación de tierra | Opus · alto para decidir | `04_VISOR_Y_MOTOR_GRAFICO/` | Plan entregado el 17-oct (`04_VISOR_Y_MOTOR_GRAFICO/PLAN_MOTOR_GRAFICO.md`): V16 a 144 cps con la RTX (24 con la Intel); recomienda three.js + Blender para video. Espera decisión de Brahian (V16 a `main`, fases V1-V6) |
+| **Hardware y variantes** | Matriz de variantes (cámaras, gimbal o pan-tilt, LiDAR), piezas 3D en OpenSCAD y su configuración para la simulación | Sonnet · medio | `05_HARDWARE_Y_VARIANTES/` | Entregó el 17-oct (`05_HARDWARE_Y_VARIANTES/VARIANTES.md`, commit ebc3b9f): variante C primero y D de plan B (D-055, D-056 aprobadas) |
+| **Supervisor** | Mientras Brahian no está: reanuda las sesiones cortadas por el límite de uso, las mantiene trabajando **solo en lo ya aprobado por Brahian**, deja en cola lo que necesite su decisión y escribe el resumen en `docs/RESUMEN_PARA_BRAHIAN.md`. **No aprueba nada nuevo** | Opus · alto | `docs/RESUMEN_PARA_BRAHIAN.md` | Activa (desde el 17 oct) |
 | **Simulación V17** | Implementa en `entorno.py` y el entrenamiento lo que el Arquitecto y Brahian aprueben, con pruebas | Opus o Sonnet | `03_SIMULACION_RL/` | Activa desde el 17-oct con `docs/ENCARGO_SIMULACION_V17.md` (D-049 a D-054 aprobadas) |
 
 **Supervisor:** no es una sesión aparte. Es el agente `supervisor-rl` (`.claude/agents/`), que el Arquitecto llama
 después de cada entrenamiento o cada vez que haya un resumen nuevo (`herramientas/resumir_metricas.py`). Diagnostica y
 propone máximo 3 cambios; no toca código. Mientras un entrenamiento corre, el Arquitecto programa una revisión cada
 pocas horas (no vigila en bucle: entrenar no gasta tokens).
+
+## Cuando Brahian no está
+
+El **Supervisor** no decide por Brahian. Las sesiones siguen solo con lo que Brahian aprobó (en `docs/DECISIONES.md`
+dice "aprobada por Brahian"; al 17 oct: D-049 a D-056). Toda pregunta nueva va a la cola "Espera a Brahian" de
+`docs/RESUMEN_PARA_BRAHIAN.md`, y la sesión sigue con otra parte ya aprobada o se detiene.
 
 ## Cómo se comunican
 
@@ -58,3 +65,4 @@ flowchart TD
 | Arquitecto | `local_a88942b1-0fa7-4d2c-ad06-c18f47cdb352` |
 | Visor y motor gráfico | `local_1ade7139-ae14-476c-917f-8957fafb96ba` |
 | Simulación V17 | `local_1cf33de1-65ce-4ed0-bd28-2b631d0cfb22` |
+| Supervisor | `local_9a5e8c40-52b6-4b79-848b-04b64bf107af` |
