@@ -7,6 +7,7 @@ import { Mundo, CAPA_AYUDAS } from "./escena.js";
 import { Dron } from "./dron.js";
 import { Partida, listarRepeticiones, cargarJSON } from "./datos.js";
 import { Personas } from "./personas.js";
+import { FiguraGLTF, cargarPersonas } from "./personas_gltf.js";
 import { Interfaz } from "./interfaz.js";
 import { SensorCamara, cajaDe, dibujarDetecciones, confianza } from "./camaras.js";
 import { Previa } from "./previa.js";
@@ -402,6 +403,8 @@ export { bucle };
 // ------------------------------------------------------------------------------------------------ arranque
 export async function arrancar() {
   await M.ponerCielo("amanecer");
+  // personas vestidas de Quaternius (V2); con ?personas=codigo se ven las figuras hechas con código (humano.js)
+  if (new URLSearchParams(location.search).get("personas") !== "codigo" && await cargarPersonas()) personas.Clase = FiguraGLTF;
   const ruta = await llenarSelector();
   if (ruta) await cargarPartida(ruta);
   $("cargando").style.display = "none";

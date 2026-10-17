@@ -93,3 +93,23 @@ lo autorizado.
 Nota: `descarga.zip` (15.9 MB), que apareció en la raíz del proyecto el 17-oct a las 9:04, era una copia repetida de la
 Universal Animation Library [Standard]. La bajó el navegador interno cuando se probó el botón "Download" de itch.io. Se
 movió a `recursos_quaternius\_duplicados\` (no se borró) y no entró a Git.
+
+## V2 · Personas vestidas en el visor (2026-10-17)
+
+- `v16/simulacion/visor/personas_gltf.js` (`FiguraGLTF`): misma interfaz que `Humano`, con los modelos y animaciones de
+  `v16/simulacion/recursos/personas/` (4.4 MB, CC0; los exporta `blender/exportar_personas_glb.py`). El ladrón es
+  `Casual_Hoodie`; los civiles, `Worker`, `Casual_2`, `Suit` y `Farmer` según su ID.
+- Animación según la postura de `foto()`: de pie (quieto, caminar, trotar, correr, acelerando con la velocidad),
+  agachado (quieto o avanzando), recostado (brazos cruzados), salto (impulso, aire, caída) y civil grabando (celular).
+  **Gatear usa por ahora la marcha agachada** (no hay animación de gateo gratis).
+- Para ver las figuras de antes (hechas con código): `http://127.0.0.1:8766/?personas=codigo`.
+- Medido con la RTX en la cancha V17: 126 cps (con el render de Blender usando la misma tarjeta), sin errores; las cajas
+  de YOLO se ajustan a las personas nuevas.
+
+## V6 · Video de la cancha V17 en Blender (2026-10-17)
+
+- `blender/video_cancha_v17.py` arma la escena (cancha, V de 90°, árboles, arbustos y matas de pasto de Quaternius,
+  dron, ladrón y civil con la coreografía de la vista previa "cancha") y renderiza con Cycles en la RTX, cuadro por cuadro
+  (si se corta, se relanza y sigue). `blender/unir_video.py` une los cuadros en MP4.
+- Medido: ~28 s por cuadro a 1920 × 1080 con 32 muestras (el video completo de 80 s serían ~15 h). Se renderiza el
+  tramo de 20 a 60 s a 1280 × 720 (~3-4 h), fuera del repositorio, en la carpeta `Videos\dron_ia` del usuario.

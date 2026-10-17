@@ -10,3 +10,11 @@
 Las personas, el dron, los árboles y los escenarios de la vista previa se construyen con código en `visor/` (sin modelos
 descargados). Desde la nube no hubo acceso a ambientCG, Kenney ni Quaternius; si más adelante se quieren texturas o
 modelos de esos sitios, van en esta carpeta y se anotan en esta tabla.
+
+## Agregado el 2026-10-17 (fase V2, personas vestidas)
+
+| Archivo | Origen | Licencia |
+|---|---|---|
+| `three/addons/loaders/GLTFLoader.js`, `three/addons/utils/SkeletonUtils.js` | three.js 0.185.1 (npm `three`, vía cdn.jsdelivr.net) | MIT |
+| `personas/Casual_Hoodie.glb`, `Worker.glb`, `Casual_2.glb`, `Suit.glb`, `Farmer.glb` | Quaternius, "Ultimate Modular Characters" (quaternius.com), sin animaciones, exportados con Blender | CC0 |
+| `personas/animaciones.glb` | Quaternius, "Universal Animation Library" 1 y 2 (14 animaciones), redirigidas a los personajes con `04_VISOR_Y_MOTOR_GRAFICO/blender/redirigir_animaciones.py` | CC0 |
