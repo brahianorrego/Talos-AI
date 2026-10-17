@@ -29,9 +29,11 @@ pocas horas (no vigila en bucle: entrenar no gasta tokens).
 
 ## Cuando Brahian no está
 
-El **Supervisor** no decide por Brahian. Las sesiones siguen solo con lo que Brahian aprobó (en `docs/DECISIONES.md`
-dice "aprobada por Brahian"; al 17 oct: D-049 a D-056). Toda pregunta nueva va a la cola "Espera a Brahian" de
-`docs/RESUMEN_PARA_BRAHIAN.md`, y la sesión sigue con otra parte ya aprobada o se detiene.
+**Cambio del 17-oct (D-060):** Brahian delegó las decisiones del plus. Las toma el **Supervisor** con el Arquitecto, sin
+esperarlo. Cada una queda en `docs/DECISIONES.md` como "Decidida por el Supervisor", con su motivo, y Brahian la revisa en
+la noche (puede revertirla). Si una opción no funciona, se vuelve atrás y se prueba la siguiente.
+Las preguntas de las sesiones se le mandan al Supervisor, no a Brahian. Lo único que sigue necesitando a Brahian: cambiar
+una regla dura, `git push` o GitHub, y lo físico (dron, Jetson, `01_`, `02_`, `07_`). Todo se escribe en español.
 
 ## Cómo se comunican
 
