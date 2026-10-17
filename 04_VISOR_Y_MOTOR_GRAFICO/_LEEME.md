@@ -52,3 +52,26 @@ los campos nuevos de `foto()` de la Simulación V17.
 - **Dónde quedó:** en la carpeta `Programas\Blender` del usuario (fuera del repositorio, 925 MB). Se abre con
   `blender.exe`; en consola: `blender.exe --background --version`.
 - **Gráfica:** Cycles ve la RTX 3050 por OptiX y por CUDA (para renderizar el video con la tarjeta).
+
+## Paquetes de Quaternius (CC0), bajados el 2026-10-17 con permiso de Brahian
+
+Fuera del repositorio, en la carpeta `Programas\recursos_quaternius` del usuario (≈ 375 MB descomprimidos). Bajados de
+la página oficial de cada paquete en `quaternius.itch.io` (versión gratis "Standard", sin cuenta). Cada uno trae su
+licencia: **CC0 1.0** (dominio público). Se pueden usar y subir al repositorio, pero se dejan fuera por tamaño.
+
+| Paquete | Qué trae (versión gratis) |
+|---|---|
+| Universal Base Characters | 2 cuerpos (hombre y mujer) con esqueleto de 65 huesos, 6 peinados, cejas; **sin ropa** (en ropa interior) |
+| Universal Animation Library 1 | 43 animaciones: `Idle_Loop`, `Walk_Loop`, `Jog_Fwd_Loop`, `Sprint_Loop`, `Crouch_Idle_Loop`, `Crouch_Fwd_Loop`, `Jump_Start/Loop/Land`, `Roll`, `Interact`… |
+| Universal Animation Library 2 | 43 más: `Idle_TalkingPhone_Loop`, `LayToIdle` (de acostado a de pie), `ClimbUp_1m`, `NinjaJump_*`, `Slide_*`, `Idle_FoldArms_Loop`, `Idle_Rail_Loop`… |
+| Stylized Nature MegaKit | 68 modelos: árboles, arbustos, flores, piedras, pasto (glTF, FBX, OBJ) |
+
+Todo usa el **mismo esqueleto**: las animaciones se ponen directo en los personajes (comprobado en Blender con
+`blender/listar_anim.py`). Prueba de render con la RTX (Cycles + OptiX, 1280 × 720, 64 muestras, ~12 s en total):
+`blender/prueba_render.py` → `mediciones/capturas/blender_prueba_quaternius.jpg`.
+
+**Qué falta para las animaciones de la sección 4 de `PLAN_MOTOR_GRAFICO.md`:** gatear, recostarse contra el panel,
+rendirse (manos arriba) y grabar con el celular no vienen en la versión gratis (hay parecidas: `LayToIdle`,
+`Idle_Rail_Loop`, `Idle_TalkingPhone_Loop`); se arman con código sobre los mismos huesos. **Falta ropa:** sugerencia,
+el paquete gratis CC0 "Ultimate Modular Characters" de Quaternius (personas vestidas); no se bajó porque no estaba en
+lo autorizado.
