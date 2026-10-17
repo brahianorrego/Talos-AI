@@ -213,10 +213,16 @@ Impresión sugerida: PETG, 0.2 mm de capa, 3 perímetros, 30–40 % de relleno. 
 8. **Parámetros de ArduPilot 4.7 para montura y telémetro, y los FPS con 3 cámaras.**
 9. Cualquier cifra de peso marcada como estimación.
 
-## 8. Decisiones que necesita el Arquitecto / Brahian
+## 8. Decisiones
 
-1. ¿Se adopta **C primero, D como plan B**, y se entrena con `GIMBAL_TIPO = "mixto"`?
-2. Rango del **pan** (propuesta ±60°) y si es regla dura nueva. ¿Pan bloqueado en el primer entrenamiento?
-3. Pedir a la parte física, cuando termine el mínimo: pesar BaseCam, TF03 y cámara USB; medir si el pod baja a −45° sin
-   el TF03; confirmar overlay de dos IMX219 y el puerto libre de la Pixhawk.
-4. ¿Se compra/imprime D por adelantado como plan B? (costo bajo, pero es decisión de Brahian).
+**Aprobadas por Brahian (2026-10-17):**
+
+- **D-055:** C primero, D como plan B, y se entrena con `GIMBAL_TIPO = "mixto"`.
+- **D-056:** el pan queda **bloqueado** en la V17 (`PAN_ACTIVO_EN_ENTRENAMIENTO = false`); ±60° es solo un parámetro, no una regla dura, hasta que se construya D con topes mecánicos.
+
+**Siguen abiertas:**
+
+1. Pedir a la parte física (cuando termine el mínimo): pesar BaseCam, TF03 y cámara USB; medir si el pod baja a −45° sin el TF03; confirmar el overlay de dos IMX219 y el puerto libre de la Pixhawk. Quedó en `docs/PEDIDOS_A_LA_PARTE_FISICA.md`.
+2. ¿Se compra o imprime D por adelantado como plan B? (costo bajo, decisión de Brahian).
+3. Color real de los paneles (alcance del TF-Luna, §5).
+4. El mapeo de los nombres `LIDAR_*` lo hace la sesión Simulación V17 al traer el código de la V16.
