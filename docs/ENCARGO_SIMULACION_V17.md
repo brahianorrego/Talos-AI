@@ -1,6 +1,6 @@
 # Encargo para la sesión "Simulación V17"
 
-Del Arquitecto, 2026-10-17. **Empezar solo cuando Brahian apruebe D-049 a D-054** (`docs/DECISIONES.md`). Antes de
+Del Arquitecto, 2026-10-17. Brahian aprobó D-049 a D-054 el 17-oct (`docs/DECISIONES.md`). Antes de
 programar, leer: `CLAUDE.md`, `docs/EQUIPO_Y_SESIONES.md`, `docs/PLAN_V17_REFUERZO.md` (sobre todo las secciones 2, 4 y 5)
 y `03_SIMULACION_RL/informes/diagnostico_v17_ia_aporta.md`.
 

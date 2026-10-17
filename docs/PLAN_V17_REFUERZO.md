@@ -1,7 +1,7 @@
 # Plan V17 · Que la IA de refuerzo aporte de verdad, en la misión real de la cancha
 
-Arquitecto, 2026-10-17. **Solo plan: no se ha cambiado el entorno ni se ha entrenado nada.** Las decisiones nuevas
-(D-049 a D-054, `docs/DECISIONES.md`) esperan la aprobación de Brahian. Base: `docs/IDEAS_BRAHIAN_2026-10-16.md`,
+Arquitecto, 2026-10-17. **Solo plan: no se ha cambiado el entorno ni se ha entrenado nada.** Brahian aprobó las decisiones nuevas
+(D-049 a D-054, `docs/DECISIONES.md`) el 17-oct. Base: `docs/IDEAS_BRAHIAN_2026-10-16.md`,
 `docs/PLAN_V16_REALISMO.md` y lo que ya programó la V16 en la rama `v16-simulacion` (repo viejo, `docs/PROGRESO_V16.md`).
 
 ## 0. En cinco líneas (para Brahian)

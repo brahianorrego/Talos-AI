@@ -26,7 +26,7 @@ Actualizado: 2026-10-16 (noche), migración a la carpeta `Dron-IA-Proyecto` (ses
   decisión (`informes/diagnostico_v17_ia_aporta.md`).
 - Plan `docs/PLAN_V17_REFUERZO.md`: 7 botones con efecto, máscara de acciones, criterio "la IA aporta", cancha con dos V de
   90° a 10 m (paneles ~2.0 m, `docs/v17_zona_ia.png`), reglas una por una, 50 M pasos con regla de parada. Decisiones
-  D-049 a D-054 **abiertas**. Encargo para la sesión de simulación: `docs/ENCARGO_SIMULACION_V17.md`.
+  D-049 a D-054 **aprobadas por Brahian** (17-oct). Encargo para la sesión de simulación: `docs/ENCARGO_SIMULACION_V17.md`.
 
 ### Hallazgos de la revisión (para decidir)
 
