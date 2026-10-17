@@ -163,6 +163,38 @@ V15; la salida de 7 botones arranca nueva) en `modelos_v17_desde_v15`.
 .venv\Scripts\python.exe -u entrenar_master.py --pasos 5e7 --envs 512 --salida salida_v17 --dir-master modelos_v17
 ```
 
+## Variantes de hardware → constantes del entorno (pedido del Arquitecto)
+
+Claves de `05_HARDWARE_Y_VARIANTES/config_sim/variante_A..F.json` (solo leídas) y su constante en `03_SIMULACION_RL`.
+**D-055/D-056 (aprobadas por Brahian):** la V17 entrena con `GIMBAL_TIPO = "mixto"`, LiDAR como la variante C (TF03 al chasis
+a +1°, TF-Luna en el gimbal, 3-8 m) y cámara al piso activa, sin pan. **Son exactamente los valores por defecto de la V16
+que ya usa la V17**: no hubo que cambiar nada.
+
+| Clave del JSON | Constante del entorno | Nota |
+|---|---|---|
+| `GIMBAL_TIPO` / `GIMBAL_TIPO_EQUIVALENTE_V16` | `entorno.GIMBAL_TIPO` ("basecam", "servo", "mixto") | Usar la equivalente V16 |
+| `GIMBAL_MIN`, `GIMBAL_MAX`, `GIMBAL_TOPE_FISICO_MIN` | `GIMBAL_MIN`, `GIMBAL_MAX`; `control.GimbalBaseCam.MIN/MAX` | Regla dura: −45..+15, no se cambia |
+| `GIMBAL_VEL_DPS` | `GIMBAL_VEL` (lógica) y `control.GimbalBaseCam.VEL_MAX` (BaseCam), `control.GimbalMixto.SERVO_VEL` (servo) | |
+| `GIMBAL_RETARDO_S` | `control.GimbalMixto.RETARDO` (servo); BaseCam: `control.GimbalBaseCam.TAU_ESTAB` | |
+| `GIMBAL_ZONA_MUERTA_DEG` | `control.GimbalMixto.SERVO_BANDA` | Solo servo |
+| `GIMBAL_ESTABILIZA`, `GIMBAL_TOPES_MECANICOS` | implícitos en el tipo (BaseCam inercial / servo con topes) | **Falta** como constante propia |
+| `CAM_PRINCIPAL_HFOV`, `CAM_PRINCIPAL_VFOV` | `HFOV`, `VFOV` | |
+| `CAM_PRINCIPAL_TIPO`, `CAM_PRINCIPAL_MONTAJE` | — | **Falta** (siempre USB en el gimbal) |
+| `CAM_PISO_HFOV`, `CAM_PISO_VFOV`, `CAM_PISO_PITCH` | igual nombre | |
+| `CAM_PISO_ACTIVA` | — | **Falta**: hoy siempre activa en V16/V17 |
+| `CAM_PISO_EJE_LARGO`, `CAM_PISO_PUERTO` | — | No afectan la simulación |
+| `CAM_FRONTAL_ANCHA_*` | — | **Falta** (no hay cámara frontal ancha en el entorno) |
+| `LIDAR_TF03_PITCH_DEG` | `TF03_PITCH` | |
+| `LIDAR_TF03_ALCANCE_M` | `LIDAR_MAX` | |
+| `LIDAR_TF03_MONTAJE`, `LIDAR_TF03_SIGUE_GIMBAL` | implícito: V16+ al chasis, V15 en el gimbal (por nivel) | **Falta** como constante |
+| `LIDAR_DESCARTE_SUELO_CON_ACTITUD` | implícito (siempre en V16+) | **Falta** como constante |
+| `LIDAR_LUNA_ALCANCE_M` | `LUNA_MAX` | |
+| `LIDAR_LUNA_MONTAJE` | implícito (gimbal) | **Falta** |
+| `LIDAR_LUNA_PISO_ALTIMETRO` | `ALTIMETRO` ("baro" / "luna") | false → "baro" |
+| `PAN_*` | — | **Falta** (sin pan; D-056 lo deja bloqueado) |
+| `YOLO_FPS_PRINCIPAL`, `YOLO_FPS_PISO` | — | **Falta**: el entorno decide a 10 Hz (`DT = 0.1`) |
+| `MASA_SUMA_G`, `MASA_QUITA_G` | — | **Falta** (la dinámica no depende de la masa) |
+
 ## Pendiente
 
 - **Decisión del Arquitecto/Brahian:** qué M1 usar (racha ≥ 30 s, custodia de la V16 o ablandar al ladrón) antes de lanzar

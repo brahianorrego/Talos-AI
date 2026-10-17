@@ -34,7 +34,7 @@ class Fija(object):
     def __init__(self, a):
         self.a = a
 
-    def predict(self, obs, deterministic=True):
+    def predict(self, obs, env=None, deterministic=True):
         return np.full(len(obs), self.a), None
 
 
@@ -164,6 +164,8 @@ class Red17(object):
 def cargar17(nombre):
     if nombre in ("b0", "b1", "b2"):
         return {"b0": B0, "b1": B1, "b2": B2}[nombre]()
+    if nombre.upper() in E.CLASES_V17:                      # un botón fijo (si no está permitido, el entorno usa QUEDARSE)
+        return Fija(E.CLASES_V17.index(nombre.upper()))
     return Red17(nombre.replace("-est", ""), nombre.endswith("-est"))
 
 
@@ -182,6 +184,7 @@ def v17(pol, n, semilla, max_pasos):
     ent_hecho = np.zeros(n, bool)
     mapeo = []                                             # E7: fracción de las 2 V que el LiDAR mapeó en el 360° de entrada
     t_bajo8_ent = t_bajo8_est = 0
+    t_fij, run_vis, tramos = 0, np.zeros(n, int), []
     datos = lambda i, src: dict(racha=float(src["racha"][i]), vista=float(src["t_vista_ac"][i]), gmin=float(src["gmb_min"][i]),
                                 nr=int(src["n_readq"][i]), tr=float(src["t_readq_sum"][i]), np_=int(src["n_perd"][i]),
                                 n10=int(src["n_readq10"][i]), rul=int(src["ruleta"][i]), esc=int(src["escudo"][i]))
@@ -212,6 +215,12 @@ def v17(pol, n, semilla, max_pasos):
             t_bajo8_est += int((r8 & (env.dz_est < E.Z_SEGURA - 0.05)).sum())
             reconf += int((info["reconf"] & vivo).sum())
             cambio_nodet += int((info["cambio_nodet"] & vivo).sum())
+            # cuánto del tiempo FIJADO decide la red, y cuánto dura cada vez que lo ve (seguido) antes de perderlo
+            t_fij += int(((env.modo == E.FIJADO) & vivo).sum())
+            ve_ = info["visto"] & vivo
+            corta = (run_vis > 0) & ~ve_
+            tramos.extend((run_vis[corta] * E.DT).tolist())
+            run_vis = np.where(ve_, run_vis + 1, 0)
             for i in np.where(done & vivo)[0]:
                 res[i] = E.resultado_de(info, i)
                 fin[i] = datos(i, info)
@@ -243,7 +252,9 @@ def v17(pol, n, semilla, max_pasos):
                bajo_330_8m_en_entrada=float(t_bajo8_ent / max(t_real8_bajo, 1)),
                bajo_330_pedida_con_persona_8m=float(t_bajo8_est / max(t_real8, 1)),     # sin el error del barómetro
                mapeo_entrada=float(np.mean(mapeo)) if mapeo else float("nan"),
-               frac_decide=float(t_dec / max(t_tot, 1)), reconf_partida=float(reconf / n), cambio_nodet=cambio_nodet,
+               frac_decide=float(t_dec / max(t_tot, 1)), frac_decide_en_fijado=float(t_dec / max(t_fij, 1)),
+               tramo_visto_medio_s=float(np.mean(tramos)) if tramos else float("nan"),
+               tramo_visto_mediana_s=float(np.median(tramos)) if tramos else float("nan"), reconf_partida=float(reconf / n), cambio_nodet=cambio_nodet,
                ruleta_partidas=float(np.mean([f["rul"] > 0 for f in F])), escudo_partidas=float(np.mean([f["esc"] > 0 for f in F])),
                acciones={c: round(float(x), 3) for c, x in zip(E.CLASES_V17, acc_cnt / max(acc_cnt.sum(), 1))})
     if isinstance(pol, Red17) and pol.P:
