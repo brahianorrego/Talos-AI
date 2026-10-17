@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Mundo, CAPA_AYUDAS } from "./escena.js";
 import { Dron } from "./dron.js";
-import { Partida, listarRepeticiones, cargarJSON } from "./datos.js";
+import { Partida, listarRepeticiones, cargarJSON, conectarVivo } from "./datos.js";
 import { Personas } from "./personas.js";
 import { FiguraGLTF, cargarPersonas } from "./personas_gltf.js";
 import { VistaDron } from "./vista_dron.js";
@@ -155,7 +155,23 @@ export const repro = {
   },
 };
 
+let fuenteVivo = null;
+function prepararPartida() {
+  t = 0; esperaClic = null; confirmados = new Set(); vistaDron.reiniciar();
+  M.ponerParedes(P.paneles);
+  personas.limpiar();
+  ui.ponerPartida(P);
+  tiemposSalto.length = 0;
+  M.renderer.shadowMap.needsUpdate = true;
+  document.title = "DRON-IA · " + (P.d.titulo || P.d.version || "Estación de tierra");
+}
 async function cargarPartida(ruta) {
+  if (fuenteVivo) { fuenteVivo.close(); fuenteVivo = null; }
+  if (ruta === "vivo") {
+    fuenteVivo = conectarVivo("http://127.0.0.1:8767/vivo", nueva => { P = nueva; prepararPartida(); },
+                              () => ui.aviso("Sin conexión con la simulación en vivo: corra en_vivo.py (04_VISOR_Y_MOTOR_GRAFICO)", "peligro", 6));
+    return;
+  }
   try {
     const datos = await cargarJSON(ruta);
     P = new Partida(datos, ruta);
@@ -163,14 +179,8 @@ async function cargarPartida(ruta) {
     ui.aviso("No se encontró la repetición " + ruta, "peligro", 5);
     return;
   }
-  t = 0; esperaClic = null; confirmados = new Set(); vistaDron.reiniciar();
-  M.ponerParedes(P.paneles);
-  personas.limpiar();
-  ui.ponerPartida(P);
-  tiemposSalto.length = 0;
+  prepararPartida();
   P.eventos.filter(v => v.salto).forEach(v => tiemposSalto.push(v.k * P.dt));
-  M.renderer.shadowMap.needsUpdate = true;
-  document.title = "DRON-IA · " + (P.d.titulo || P.d.version || "Estación de tierra");
 }
 
 async function llenarSelector() {
@@ -379,7 +389,8 @@ function bucle(ahora) {
     else t = tn;
   }
   if (P.previa_ && t >= P.total) t = 0;          // la escena de la vista previa se repite
-  if (t >= P.total) {
+  if (P.vivo) t = Math.max(0, P.total - P.dt);     // en vivo: un cuadro detrás del último (para interpolar)
+  if (t >= P.total && !P.vivo) {
     t = P.total;
     if (!cargandoSig && !pausa) {
       cargandoSig = true;

@@ -27,12 +27,28 @@ export async function listarRepeticiones() {
   }
   if (hitos.length) grupos.push({ grupo: "Hitos del entrenamiento", opciones: hitos.slice().reverse().slice(0, 30).map(h => ({
     valor: "salida/hitos/" + h.archivo, texto: `${h.nivel !== undefined && !h.mision ? `Nivel ${h.nivel} · ` : ""}it ${h.it} · ${(h.pasos / 1e6).toFixed(1)} M${h.mision ? " · misión" : ""}` })) });
+  grupos.push({ grupo: "En vivo (V5)", opciones: [{ valor: "vivo", texto: "Simulación en vivo · en_vivo.py (puerto 8767)" }] });
   if (pruebas.length) grupos.push({ grupo: "V16 · repeticiones de prueba", opciones: pruebas.map(p => ({ valor: "replays_prueba/" + p.archivo, texto: p.titulo })) });
   grupos.push({ grupo: "Proyecto de grado · mínimo indispensable", opciones: [
     ["replay_protocolo", "Protocolo del comité"], ["replay_protocolo_reglas", "Decisor: reglas"], ["replay_protocolo_ia", "Decisor: IA sola"],
     ["replay_protocolo_ia_env", "Decisor: IA + envolvente"], ["replay_protocolo_ia_env_estricta", "Decisor: IA + envolvente estricta"]]
     .map(([a, t]) => ({ valor: `minimo_tesis/replay/${a}.json`, texto: t })) });
   return grupos;
+}
+
+// ------------------------------------------------------------------------------------------------ en vivo (V5)
+// Se conecta a 04_VISOR_Y_MOTOR_GRAFICO/en_vivo.py: cada mensaje es la cabecera de una partida nueva o un cuadro de foto().
+// alNueva(P) se llama con cada partida nueva; los cuadros se agregan a esa misma P.
+export function conectarVivo(url, alNueva, alError) {
+  const fuente = new EventSource(url);
+  let P = null;
+  fuente.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.tipo === "partida") { P = new Partida({ ...m, cuadros: [] }, "vivo"); P.vivo = true; alNueva(P); return; }
+    if (m.tipo === "cuadro" && P) { P.agregar(m.c); if (P.C.length % 10 === 0) P.eventos = calcularEventos(P); }
+  };
+  fuente.onerror = () => alError && alError();
+  return fuente;
 }
 
 // ------------------------------------------------------------------------------------------------ partida
@@ -58,6 +74,14 @@ export class Partida {
     this.eventos = calcularEventos(this);
   }
   clave(p) { return p.id !== undefined ? "id" + p.id : p._k; }
+  // un cuadro más (partida en vivo): misma normalización que en el constructor
+  agregar(c) {
+    if (!c.pers) c.pers = [];
+    if (!c.fase) c.fase = 2;
+    c.pers.forEach((p, j) => { if (p.id === undefined) p._k = (p.rol || "p") + j; });
+    this.C.push(c);
+    this.total = Math.max(0, (this.C.length - 1) * this.dt);
+  }
 
   // estado interpolado en el instante t (s)
   muestra(t) {

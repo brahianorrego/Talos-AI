@@ -142,3 +142,17 @@ partida `sim_v16_semilla3` a 4× (con el render de Blender en la misma tarjeta),
 - Se probó el arbusto `Bush_Common` y se quitó: su textura es de hojas rojas de otoño.
 - Shortcut: los árboles nuevos no tapan a las personas en la prueba de visibilidad de la vista previa (sería muy lenta con
   hojas detalladas); si hiciera falta, usar cilindros simples para esa prueba.
+
+## V5 · Simulación en vivo (2026-10-17)
+
+- **Cómo verla:** doble clic en `ABRIR_EN_VIVO.bat` (abre la simulación, el visor y Chrome en `?r=vivo`). O a mano:
+  `03_SIMULACION_RL\.venv\Scripts\python.exe 04_VISOR_Y_MOTOR_GRAFICO\en_vivo.py` y, en el visor, la repetición
+  "Simulación en vivo".
+- `en_vivo.py` corre una partida del entorno de `03_SIMULACION_RL` (solo lo importa, no lo cambia) a tiempo real y manda
+  cada `foto()` al navegador apenas ocurre (Server-Sent Events, solo biblioteca estándar, puerto 8767). Al terminar
+  una partida empieza otra con la semilla siguiente. Opciones: `--nivel` (por defecto el de la V17), `--semilla`,
+  `--velocidad` y `--politica modelos/dron_politica.json` (si no, acción 0: deciden las reglas). Mientras no haya una
+  política V17 entrenada, lo honesto es mostrar las reglas.
+- En el visor (`datos.js` → `conectarVivo`, `principal.js`), la partida crece con cada cuadro y la imagen va un cuadro
+  detrás del último. Probado: 126 cps con la RTX, sin errores; la pestaña "1 Dron" muestra `cmd` y `arb` reales.
+  Captura: `mediciones/capturas/v5_en_vivo_dron.jpg`.
