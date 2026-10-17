@@ -89,3 +89,7 @@ lo autorizado.
   Unos 10 s por librería.
 - **Prueba:** `blender/prueba_vestidos.py` → `mediciones/capturas/blender_prueba_vestidos.jpg` (correr, agachado junto
   al panel, salto). Revisado a ojo en un cuadro; falta ver las animaciones en movimiento (pies que patinan, manos).
+
+Nota: `descarga.zip` (15.9 MB), que apareció en la raíz del proyecto el 17-oct a las 9:04, era una copia repetida de la
+Universal Animation Library [Standard]. La bajó el navegador interno cuando se probó el botón "Download" de itch.io. Se
+movió a `recursos_quaternius\_duplicados\` (no se borró) y no entró a Git.
