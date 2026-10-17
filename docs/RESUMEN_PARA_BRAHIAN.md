@@ -5,6 +5,20 @@ Lo escribe el **Supervisor nocturno**. No aprueba nada: las sesiones solo siguen
 
 ---
 
+## 10:00 a. m. · Hardware entregó
+
+- **Guía para ti:** `05_HARDWARE_Y_VARIANTES/GUIA_PARA_BRAHIAN.md`, con un dibujo de dónde va cada cosa en C y en D
+  (`dibujo_C_y_D.svg`), la lista de compra y una comparación con diseños gratuitos de internet (commit `096f304`).
+- **Pan-tilt listo para imprimir:** los 7 archivos de diseño compilan y los `.stl` están en
+  `05_HARDWARE_Y_VARIANTES/piezas_3d/stl/`. En el modelo, los topes paran la cuna en −44° y +14°, dentro de la regla
+  dura de −45°..+15°. **Nada está impreso ni probado.** Las medidas del servo MG90D, de la cámara IMX219 y del TF03 hay
+  que verificarlas con calibrador antes de imprimir. Los precios son aproximados, sin comprobar. OpenSCAD quedó
+  instalado fuera del repositorio.
+- El TF03 a −3° (D-064) ya está en las configuraciones.
+- **Turno del Visor:** video corto en Blender y luego las personas animadas en el visor.
+
+---
+
 ## 9:40 a. m. · Decisiones que tomé yo (me lo pediste). Revísalas en la noche
 
 Desde hoy no te pregunto: decido, anoto el motivo y tú me dices si algo no te gusta (D-060). Todo queda en `docs/DECISIONES.md`.
