@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 1720" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+<!-- Boceto de la estación de tierra con 3 modos (plan en PLAN_MOTOR_GRAFICO.md, sección 5). No es el diseño final. -->
+<style>
+  .fondo{fill:#15171c} .marco{fill:#22252c;stroke:#3a3f4a} .cam{fill:#2d4a2f;stroke:#5c8a5f}
+  .t{fill:#e8eaed} .s{fill:#9aa0a6;font-size:11px} .h{fill:#e8eaed;font-size:17px;font-weight:600}
+  .yolo{fill:none;stroke:#3ddc5a;stroke-width:2} .alerta{fill:#f2a33a} .rojo{fill:#e5534b}
+  .tab{fill:#2b2f38;stroke:#3a3f4a} .tabon{fill:#3d6fd8}
+</style>
+<rect width="980" height="1720" fill="#0e0f12"/>
+
+<!-- ============ MODO 1 · VISTA DEL DRON ============ -->
+<text x="20" y="30" class="h">Modo 1 · Vista del dron (lo que ve y manda la Jetson)</text>
+<rect x="20" y="42" width="940" height="520" class="fondo"/>
+<rect x="20" y="42" width="940" height="34" class="marco"/>
+<text x="32" y="64" class="t">DRON-IA · Brahian Andrés Orrego Osorio</text>
+<rect x="560" y="48" width="120" height="22" rx="4" class="tabon"/><text x="574" y="64" class="t">1 Vista del dron</text>
+<rect x="686" y="48" width="130" height="22" rx="4" class="tab"/><text x="698" y="64" class="t">2 Estación de tierra</text>
+<rect x="822" y="48" width="90" height="22" rx="4" class="tab"/><text x="834" y="64" class="t">3 Ingeniería</text>
+<rect x="916" y="48" width="38" height="22" rx="4" class="tab"/><text x="922" y="64" class="s">clás.</text>
+
+<rect x="30" y="86" width="440" height="300" class="cam"/>
+<text x="40" y="104" class="t">CAM0 · CSI frontal en el gimbal · 640×480 · 30 cps</text>
+<rect x="200" y="170" width="46" height="120" class="yolo"/><text x="200" y="164" fill="#3ddc5a">ID 03 · 0.92 · 7.4 m</text>
+<rect x="340" y="200" width="30" height="80" class="yolo"/><text x="330" y="194" fill="#3ddc5a">ID 07 · 0.71</text>
+<text x="40" y="378" class="rojo">29.8 FPS · YOLO26n</text>
+<rect x="480" y="86" width="230" height="145" class="cam"/>
+<text x="490" y="104" class="t">CAM1 · CSI al piso (−90°)</text>
+<text x="490" y="120" class="s">punto ciego bajo el dron</text>
+<rect x="720" y="86" width="230" height="145" class="cam"/>
+<text x="730" y="104" class="t">USB · respaldo / variante</text>
+<text x="730" y="120" class="s">se oculta si la variante no la tiene</text>
+
+<rect x="480" y="241" width="470" height="145" class="marco"/>
+<text x="490" y="259" class="t">Mapa de puntos del LiDAR (vista desde arriba)</text>
+<circle cx="715" cy="330" r="5" fill="#4fc3f7"/><path d="M715 330 L790 290 L790 370 Z" fill="#4fc3f7" opacity=".15"/>
+<g fill="#f2a33a"><circle cx="760" cy="300" r="2"/><circle cx="765" cy="306" r="2"/><circle cx="770" cy="312" r="2"/><circle cx="775" cy="318" r="2"/><circle cx="640" cy="350" r="2"/><circle cx="646" cy="352" r="2"/><circle cx="652" cy="354" r="2"/></g>
+<text x="490" y="378" class="s">TF03 chasis (naranja) · TF-Luna gimbal (azul) · cuadros de 5 m</text>
+
+<rect x="30" y="396" width="920" height="156" class="marco"/>
+<text x="40" y="416" class="t">Órdenes que manda la Jetson a la Pixhawk (MAVLink), en vivo</text>
+<text x="40" y="442" class="s">QUIÉN MANDA</text><text x="40" y="462" class="alerta" font-size="16">IA (PPO) · árbitro OK</text>
+<text x="230" y="442" class="s">vx / vy / vz</text><text x="230" y="462" class="t" font-size="16">+1.2  −0.3  0.0 m/s</text>
+<text x="420" y="442" class="s">yaw</text><text x="420" y="462" class="t" font-size="16">+18 °/s</text>
+<text x="520" y="442" class="s">gimbal (−45..+15)</text><text x="520" y="462" class="t" font-size="16">−27° → PWM 1200</text>
+<text x="700" y="442" class="s">modo ArduPilot</text><text x="700" y="462" class="t" font-size="16">GUIDED</text>
+<text x="830" y="442" class="s">CH8 parada</text><text x="830" y="462" class="t" font-size="16">libre</text>
+<text x="40" y="495" class="s">Historial de 10 s (una línea por canal) · el canal que tocó el árbitro o el LiDAR se pinta en rojo</text>
+<polyline points="40,530 120,520 200,528 280,510 360,515 440,540 520,535 600,520 680,525 760,518 840,522 940,520" fill="none" stroke="#4fc3f7"/>
+<polyline points="40,540 200,540 280,545 440,545 520,546 940,540" fill="none" stroke="#e5534b"/>
+
+<!-- ============ MODO 2 · ESTACIÓN DE TIERRA ============ -->
+<text x="20" y="610" class="h">Modo 2 · Estación de tierra (lo del operador en vuelo)</text>
+<rect x="20" y="622" width="940" height="520" class="fondo"/>
+<rect x="20" y="622" width="940" height="34" class="marco"/>
+<text x="32" y="644" class="t">DRON-IA</text>
+<rect x="560" y="628" width="120" height="22" rx="4" class="tab"/><text x="574" y="644" class="t">1 Vista del dron</text>
+<rect x="686" y="628" width="130" height="22" rx="4" class="tabon"/><text x="698" y="644" class="t">2 Estación de tierra</text>
+<rect x="822" y="628" width="90" height="22" rx="4" class="tab"/><text x="834" y="644" class="t">3 Ingeniería</text>
+
+<rect x="30" y="666" width="600" height="380" class="cam"/>
+<text x="40" y="684" class="t">Cámara principal (clic en una caja = elegir sospechoso)</text>
+<rect x="280" y="770" width="60" height="160" class="yolo" stroke-width="3"/>
+<text x="250" y="762" fill="#3ddc5a">ID 03 · 0.92</text>
+<rect x="150" y="960" width="340" height="70" rx="6" fill="#111" stroke="#f2a33a"/>
+<text x="165" y="985" class="alerta">Persona ID 03 en cámara: ¿es el sospechoso?</text>
+<rect x="165" y="996" width="120" height="26" rx="4" fill="#2e7d32"/><text x="180" y="1014" class="t">Sí, es él (Enter)</text>
+<rect x="295" y="996" width="120" height="26" rx="4" fill="#444"/><text x="318" y="1014" class="t">No (Esc)</text>
+
+<rect x="640" y="666" width="310" height="180" class="cam"/>
+<text x="650" y="684" class="t">Vista externa / cámara al piso</text>
+<text x="650" y="700" class="s">(se intercambia con la grande)</text>
+<rect x="640" y="856" width="310" height="190" class="marco"/>
+<text x="650" y="874" class="t">Mapa: geocerca 25 m, paneles, ruta</text>
+<rect x="680" y="890" width="230" height="140" fill="none" stroke="#f2a33a" stroke-dasharray="6 4"/>
+<line x1="720" y1="930" x2="760" y2="930" stroke="#ddd" stroke-width="3"/><line x1="840" y1="960" x2="840" y2="1000" stroke="#ddd" stroke-width="3"/>
+<circle cx="790" cy="975" r="5" fill="#3ddc5a"/><circle cx="805" cy="945" r="6" fill="#f2a33a"/>
+
+<rect x="20" y="1056" width="940" height="86" class="marco"/>
+<text x="32" y="1078" class="s">MODO</text><text x="32" y="1100" class="t" font-size="18">GUIDED · IA</text>
+<text x="190" y="1078" class="s">ALTURA</text><text x="190" y="1100" class="t" font-size="18">3.30 m</text>
+<text x="300" y="1078" class="s">BATERÍA</text><text x="300" y="1100" class="t" font-size="18">15.6 V · 78 %</text>
+<text x="450" y="1078" class="s">OBJETIVO</text><text x="450" y="1100" fill="#3ddc5a" font-size="18">ID 03 a la vista · 4.1 m</text>
+<text x="720" y="1078" class="s">A LA VISTA</text><text x="720" y="1100" class="t" font-size="18">01:24</text>
+<rect x="830" y="1066" width="120" height="40" rx="6" fill="#b3261e"/><text x="846" y="1092" class="t">Soltar objetivo</text>
+<text x="32" y="1130" class="s">Avisos grandes y pocos: "Amenaza: persona a 2.4 m", "Bloqueo frontal LiDAR", "Objetivo perdido: búsqueda automática"</text>
+
+<!-- ============ MODO 3 · INGENIERÍA ============ -->
+<text x="20" y="1190" class="h">Modo 3 · Ingeniería (para el jurado y para depurar)</text>
+<rect x="20" y="1202" width="940" height="500" class="fondo"/>
+<rect x="20" y="1202" width="940" height="34" class="marco"/>
+<text x="32" y="1224" class="t">DRON-IA</text>
+<rect x="822" y="1208" width="90" height="22" rx="4" class="tabon"/><text x="834" y="1224" class="t">3 Ingeniería</text>
+
+<rect x="30" y="1246" width="290" height="446" class="marco"/>
+<text x="40" y="1266" class="t">Máquina de estados</text>
+<g class="s"><text x="50" y="1290">PERSECUCIÓN</text><text x="50" y="1310" fill="#f2a33a">▶ PÉRDIDA (1.2 s)</text><text x="50" y="1330">FLANQUEO_PROFUNDO</text><text x="50" y="1350">GIRO_360</text><text x="50" y="1370">SIGUIENTE_OBSTÁCULO</text><text x="50" y="1390">ALTURA_TÁCTICA</text></g>
+<text x="40" y="1430" class="t">Árbitro de seguridad</text>
+<g class="s"><text x="50" y="1452">Persona &lt; 3 m: no</text><text x="50" y="1472">&lt; 8 m acercándose: SÍ (6.2 m, 1.4 m/s)</text><text x="50" y="1492">LiDAR &lt; 3 m: no · CH8: libre</text><text x="50" y="1512">Gimbal: −27° (límites −45 / +15)</text></g>
+<text x="40" y="1552" class="t">Personas (verdad del simulador)</text>
+<g class="s"><text x="50" y="1574">03 ladrón · agachado · oculto</text><text x="50" y="1594">07 civil · graba con el celular</text></g>
+
+<rect x="330" y="1246" width="300" height="220" class="marco"/>
+<text x="340" y="1266" class="t">Recompensa por componente</text>
+<g fill="#4fc3f7"><rect x="345" y="1285" width="180" height="14"/><rect x="345" y="1310" width="60" height="14"/><rect x="345" y="1335" width="110" height="14"/></g>
+<g fill="#e5534b"><rect x="345" y="1360" width="40" height="14"/><rect x="345" y="1385" width="25" height="14"/></g>
+<g class="s"><text x="530" y="1297">custodia</text><text x="410" y="1322">rendición</text><text x="460" y="1347">coberturas</text><text x="390" y="1372">sacudida</text><text x="375" y="1397">geocerca</text></g>
+
+<rect x="640" y="1246" width="310" height="220" class="marco"/>
+<text x="650" y="1266" class="t">Curvas del entrenamiento</text>
+<polyline points="660,1440 700,1420 740,1400 780,1395 820,1370 860,1350 900,1352 940,1330" fill="none" stroke="#3ddc5a"/>
+<polyline points="660,1300 700,1305 740,1310 780,1320 820,1318 860,1325 900,1330 940,1328" fill="none" stroke="#f2a33a"/>
+<text x="650" y="1458" class="s">custodia (verde) · entropía (naranja) · nivel del currículo</text>
+
+<rect x="330" y="1476" width="620" height="216" class="marco"/>
+<text x="340" y="1496" class="t">Vista 3D libre + capas: rayos del LiDAR, cono de la cámara, nube de partículas, rutas</text>
+<text x="340" y="1516" class="s">Rendimiento: cuadros por segundo, calidad (alta/media/baja), gráfica que usa el navegador</text>
+</svg>

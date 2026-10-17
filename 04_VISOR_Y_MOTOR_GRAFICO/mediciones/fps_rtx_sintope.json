@@ -1,0 +1,36 @@
+{
+ "etiqueta": "rtx_sintope",
+ "extra": [
+  "--force_high_performance_gpu",
+  "--disable-gpu-vsync",
+  "--disable-frame-rate-limit"
+ ],
+ "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 6GB Laptop GPU (0x000025AC) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "w": 1540,
+ "h": 788,
+ "dpr": 1.25,
+ "vis": "visible",
+ "calidades": {
+  "alta": {
+   "fps": 202.3,
+   "ms_mediana": 4.5,
+   "ms_p95": 8.8,
+   "panel": "203 cps · alta",
+   "t_partida": 17.061100000000234
+  },
+  "media": {
+   "fps": 203.3,
+   "ms_mediana": 4.3,
+   "ms_p95": 8.8,
+   "panel": "215 cps · media",
+   "t_partida": 31.89130000000069
+  },
+  "baja": {
+   "fps": 227.5,
+   "ms_mediana": 4,
+   "ms_p95": 7.6,
+   "panel": "246 cps · baja",
+   "t_partida": 43.30022000000079
+  }
+ }
+}

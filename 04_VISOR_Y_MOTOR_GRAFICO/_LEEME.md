@@ -6,10 +6,13 @@
 
 | Qué | Dónde |
 |---|---|
+| **Plan del motor gráfico y de la interfaz de 3 modos** (Fase D1-D2) | `PLAN_MOTOR_GRAFICO.md` |
+| Boceto de la estación de tierra | `boceto_interfaz.svg` (y `.png`) |
+| Cuadros por segundo del visor V16 en el portátil, capturas y el script que mide | `mediciones/` |
+| Visor V16 traído de las ramas `v16-visor` y `v16-simulacion` (fuera de Git hasta que Brahian decida) | `v16/` (configuración `visor-v16` de `.claude/launch.json`, puerto 8766) |
 | Visor vigente | `03_SIMULACION_RL/index.html` |
 | Versiones anteriores (v4 a v19) | `_archivo_versiones/codigo/index_v*.html` |
 | Visor de la cámara real (en la Jetson) | `02_JETSON_A_BORDO/visor_web.py` |
-| Visor realista V16 (three.js, en la nube, sin entrenar) | ramas `v16-visor` y `v16-simulacion` del repositorio `Tesis-IA-Drone` en GitHub |
-| Contrato de datos simulación → visor (`foto()`) | `docs/PLAN_V16_REALISMO.md`, sección 3, fase A5 |
+| Contrato de datos simulación → visor (`foto()`) | `docs/PLAN_V16_REALISMO.md` (fase A5) y `v16/docs/PROGRESO_V16.md` |
 
-Aquí irá el plan del motor gráfico y de la interfaz de tres modos (Fase D, solo plan; no se construye todavía).
+Para ver el V16 con la RTX: Chrome tiene que usar la gráfica NVIDIA (ver `PLAN_MOTOR_GRAFICO.md`, sección 2).
