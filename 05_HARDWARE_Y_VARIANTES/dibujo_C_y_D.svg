@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" font-family="Arial, sans-serif" font-size="14">
+  <rect width="900" height="420" fill="#ffffff"/>
+  <text x="450" y="24" text-anchor="middle" font-size="18" font-weight="bold">El dron visto de lado (el frente está a la derecha) — dibujo esquemático, no a escala</text>
+
+  <!-- ===== Variante C ===== -->
+  <text x="225" y="56" text-anchor="middle" font-size="17" font-weight="bold" fill="#1b5e20">VARIANTE C · se queda el gimbal</text>
+  <rect x="75" y="170" width="300" height="26" rx="4" fill="#9e9e9e" stroke="#444"/>
+  <text x="225" y="188" text-anchor="middle" fill="#fff">cuerpo del dron (chasis)</text>
+  <rect x="150" y="145" width="80" height="25" fill="#cfd8dc" stroke="#444"/>
+  <text x="190" y="162" text-anchor="middle" font-size="12">Jetson</text>
+  <!-- TF03 al chasis -->
+  <rect x="335" y="150" width="45" height="18" fill="#e53935" stroke="#444"/>
+  <text x="357" y="140" text-anchor="middle" fill="#e53935" font-size="12">① LiDAR TF03</text>
+  <text x="357" y="127" text-anchor="middle" fill="#e53935" font-size="11">fijo, mira un poco abajo (−3°)</text>
+  <!-- gimbal -->
+  <rect x="285" y="200" width="46" height="38" rx="8" fill="#ffb300" stroke="#444"/>
+  <text x="308" y="224" text-anchor="middle" font-size="11">gimbal</text>
+  <rect x="331" y="206" width="30" height="22" fill="#1e88e5" stroke="#444"/>
+  <text x="346" y="252" text-anchor="middle" fill="#1e88e5" font-size="12">② cámara USB</text>
+  <rect x="331" y="230" width="30" height="8" fill="#8e24aa" stroke="#444"/>
+  <text x="400" y="272" text-anchor="middle" fill="#8e24aa" font-size="12">③ LiDAR TF-Luna (junto a la cámara)</text>
+  <!-- cámara al piso -->
+  <rect x="215" y="196" width="26" height="10" fill="#43a047" stroke="#444"/>
+  <text x="228" y="226" text-anchor="middle" fill="#43a047" font-size="12">④ cámara al piso</text>
+  <text x="228" y="240" text-anchor="middle" fill="#43a047" font-size="11">(mira recto abajo)</text>
+  <line x1="228" y1="208" x2="228" y2="258" stroke="#43a047" stroke-width="2" stroke-dasharray="4 3"/>
+
+  <!-- ===== Variante D ===== -->
+  <text x="675" y="56" text-anchor="middle" font-size="17" font-weight="bold" fill="#0d47a1">VARIANTE D · se quita el gimbal</text>
+  <rect x="525" y="170" width="300" height="26" rx="4" fill="#9e9e9e" stroke="#444"/>
+  <text x="675" y="188" text-anchor="middle" fill="#fff">cuerpo del dron (chasis)</text>
+  <rect x="600" y="145" width="80" height="25" fill="#cfd8dc" stroke="#444"/>
+  <text x="640" y="162" text-anchor="middle" font-size="12">Jetson</text>
+  <rect x="785" y="150" width="45" height="18" fill="#e53935" stroke="#444"/>
+  <text x="807" y="140" text-anchor="middle" fill="#e53935" font-size="12">① LiDAR TF03</text>
+  <text x="807" y="127" text-anchor="middle" fill="#e53935" font-size="11">fijo, mira un poco abajo (−3°)</text>
+  <!-- pan-tilt -->
+  <rect x="722" y="198" width="26" height="30" fill="#fdd835" stroke="#444"/>
+  <text x="735" y="216" text-anchor="middle" font-size="10">giro</text>
+  <rect x="750" y="214" width="26" height="30" fill="#fdd835" stroke="#444"/>
+  <text x="763" y="232" text-anchor="middle" font-size="10">sube</text>
+  <text x="705" y="262" text-anchor="middle" font-size="12" fill="#795548">⑤ soporte de 2 servomotores (impreso)</text>
+  <text x="705" y="276" text-anchor="middle" font-size="11" fill="#795548">"giro" = izquierda-derecha · "sube" = arriba-abajo</text>
+  <rect x="778" y="218" width="28" height="16" fill="#1e88e5" stroke="#444"/>
+  <text x="866" y="238" text-anchor="middle" fill="#1e88e5" font-size="12">② cámara USB</text>
+  <rect x="778" y="236" width="28" height="8" fill="#8e24aa" stroke="#444"/>
+  <text x="868" y="256" text-anchor="middle" fill="#8e24aa" font-size="12">③ TF-Luna</text>
+  <rect x="640" y="196" width="26" height="10" fill="#43a047" stroke="#444"/>
+  <text x="653" y="226" text-anchor="middle" fill="#43a047" font-size="12">④ cámara al piso</text>
+  <line x1="653" y1="208" x2="653" y2="258" stroke="#43a047" stroke-width="2" stroke-dasharray="4 3"/>
+  <rect x="540" y="146" width="40" height="22" fill="#fb8c00" stroke="#444"/>
+  <text x="560" y="140" text-anchor="middle" fill="#fb8c00" font-size="12">⑥ fuente de 5-6 V</text>
+  <text x="560" y="127" text-anchor="middle" fill="#fb8c00" font-size="11">solo para los servos</text>
+
+  <!-- leyenda -->
+  <line x1="40" y1="310" x2="860" y2="310" stroke="#bbb"/>
+  <text x="40" y="334">① TF03: mide la distancia al frente (frena el dron). ② Cámara USB: la que mira a la persona.</text>
+  <text x="40" y="354">③ TF-Luna: otro medidor de distancia, muy liviano, apunta donde mira la cámara. ④ Cámara al piso: ve lo que queda debajo del dron.</text>
+  <text x="40" y="374">⑤ Soporte de 2 servomotores: mueve cámara y TF-Luna; hace de gimbal, pero sin estabilizar solo (lo ayuda la Pixhawk).</text>
+  <text x="40" y="394">⑥ Fuente aparte para los servos. En D el soporte lleva topes de plástico en −45° y +15° (regla dura).</text>
+</svg>

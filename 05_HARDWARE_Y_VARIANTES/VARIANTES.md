@@ -44,7 +44,7 @@ existe un overlay para **dos** IMX219 (hoy solo está aplicado el de CAM0).
 |---|---|---|---|---|
 | **A** (actual) | USB en el gimbal | BaseCam 2 ejes (pitch real ≥ −10°) | TF03 en el pod | — |
 | **B** | A + **CSI al piso** (CAM0, −90°) | igual | igual | CSI + cable plano 15→22 pines + soporte |
-| **C** | B | BaseCam **liberada** | **TF03 fijo al chasis** (+1°) + **TF-Luna en el pod** | B + TF-Luna + soporte LiDAR |
+| **C** | B | BaseCam **liberada** | **TF03 fijo al chasis** (−3°, D-064) + **TF-Luna en el pod** | B + TF-Luna + soporte LiDAR |
 | **D** | USB en el pan-tilt + CSI piso | **Pan-tilt 2 servos, sin BaseCam**, Pixhawk estabiliza el tilt | TF03 chasis + TF-Luna en el pan-tilt | C + 2 servos MG90D + BEC + piezas impresas |
 | **E** | igual que D | **Pan-tilt sobre la BaseCam**: la BaseCam sostiene el horizonte, el servo da el ángulo | igual que D | D, pero conservando la BaseCam |
 | **F** | USB en pan-tilt + CSI piso (CAM0) + **CSI frontal ancha fija** (CAM1) | como D | como D + **TF-Luna al piso** (altímetro) | D + 1 CSI + 1 TF-Luna |
@@ -62,7 +62,7 @@ cuadro; la simulación lo modela con el retardo de compensación del gimbal.
   suelo a 3.30/tan 59.9° = 1.91 m. **Empalman** (cálculo mío). Con el lado largo cruzado, el borde llega a 1.50 m y queda
   un hueco de 0.4 m. A la altura de la cabeza (1.8 m más abajo) los bordes están en 1.04 m (principal) y 1.09 m (piso):
   también empalman. Parámetro `CAM_PISO_EJE_LARGO`.
-- **TF03:** fijo al chasis, mirando al frente a +1° (como pide el plan V16), en un soporte en el morro, **fuera del
+- **TF03:** fijo al chasis, mirando al frente a −3° (D-064; el plan V16 decía +1°), en un soporte en el morro, **fuera del
   barrido de las hélices de 10″**. **TF-Luna:** al lado de la cámara, en el pod o en el pan-tilt (la separación de
   ~3 cm da 0.5° de paralaje a 3.5 m, menor que el haz de 2°).
 
@@ -130,7 +130,7 @@ Los dos puertos CSI son los únicos de la Jetson (CAM0 y CAM1).
 
 ## 5. LiDAR: la recomendación del supervisor (V16 §6) revisada
 
-- **TF03 fijo al chasis, horizontal, +1°:** la **valido**. Es el sensor de frenado y quita la palanca del cable del pod.
+- **TF03 fijo al chasis, a −3° (D-064; el plan V16 decía +1°):** la **valido**. Es el sensor de frenado y quita la palanca del cable del pod.
   Corrección: es un cambio que **sí obliga a re-simular el mínimo** (el decisor se entrenó con el TF03 alineado a la
   cámara a −5°).
 - **TF-Luna en el pod, coaxial con la cámara:** la **valido**. Alcance de hoja de datos (de memoria): ~8 m con blanco
@@ -200,9 +200,7 @@ Impresión sugerida: PETG, 0.2 mm de capa, 3 perímetros, 30–40 % de relleno. 
 
 ### Qué no se puede verificar sin la pieza (ni sin OpenSCAD)
 
-1. **Los `.scad` no se compilaron ni se imprimieron:** OpenSCAD no está instalado en este equipo y no descargué nada.
-   Primer paso: abrir cada archivo y pulsar F5/F6; si hay un error de sintaxis, es mío. Revisé a mano la geometría de
-   las rotaciones y la ranura del tope, pero eso no sustituye la prueba.
+1. **Los `.scad` ya compilan** (OpenSCAD 2021.01, sin errores; STL en `piezas_3d/stl/`; los topes se comprobaron por intersección en el modelo, ver `piezas_3d/ESTADO_IMPRESION.md`). **Ninguna pieza se ha impreso.**
 2. **Medidas del servo MG90D, su cuerno y los separadores:** de hoja de datos/memoria. Con calibrador en mano.
 3. **Medidas de la IMX219 de la Jetson (clones distintos), de la cámara USB y del TF03:** provisionales.
 4. **Agujeros del chasis** (ranuras M3 genéricas) y el espacio libre respecto a las hélices: no conozco la geometría.

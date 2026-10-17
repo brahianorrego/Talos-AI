@@ -1,5 +1,5 @@
 // Pan-tilt de 2 servos (MG90D) para el plus: variantes D, E y F de 05_HARDWARE_Y_VARIANTES/VARIANTES.md
-// OpenSCAD 2021.01 o más nuevo. NO COMPILADA NI IMPRESA: ver "Qué no se puede verificar" en VARIANTES.md.
+// OpenSCAD 2021.01 o más nuevo. COMPILADA (2021.01), NO IMPRESA: ver "Qué no se puede verificar" en VARIANTES.md.
 //
 // Ejes (como el dron): X = adelante, Y = izquierda, Z = arriba. Cabeceo POSITIVO = la cámara mira hacia ARRIBA.
 // Tres piezas para imprimir (cambia `parte`, F5 para ver, F6 y exportar STL):

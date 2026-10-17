@@ -43,7 +43,7 @@
   "YOLO_FPS_FUENTE": "ESTIMADO, no medido (45.6 FPS totales medidos con 2 cámaras / 3; el piso a 10 FPS a propósito)",
   "LIDAR_TF03_MONTAJE": "chasis",
   "LIDAR_TF03_SIGUE_GIMBAL": false,
-  "LIDAR_TF03_PITCH_DEG": 1.0,
+  "LIDAR_TF03_PITCH_DEG": -3.0,
   "LIDAR_TF03_ALCANCE_M": 30.0,
   "LIDAR_DESCARTE_SUELO_CON_ACTITUD": true,
   "LIDAR_LUNA_MONTAJE": "pantilt",

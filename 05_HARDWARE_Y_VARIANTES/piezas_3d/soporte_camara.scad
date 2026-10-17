@@ -1,4 +1,4 @@
-// Soporte de cámara (IMX219 CSI o cámara USB) — NO COMPILADO NI IMPRESO (ver VARIANTES.md).
+// Soporte de cámara (IMX219 CSI o cámara USB) — COMPILADO (OpenSCAD 2021.01), NO IMPRESO (ver VARIANTES.md).
 // Ejes: X = adelante, Y = izquierda, Z = arriba.
 //
 // mira = "frente": placa base con la cuadrícula M2 de 10 mm de la cuna del pan-tilt (x = 15, 25, 35; y = -20..20)

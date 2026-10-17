@@ -43,7 +43,7 @@
   "YOLO_FPS_FUENTE": "medido (2 cámaras con YOLO en paralelo: USB 24.2, CSI 21.4)",
   "LIDAR_TF03_MONTAJE": "chasis",
   "LIDAR_TF03_SIGUE_GIMBAL": false,
-  "LIDAR_TF03_PITCH_DEG": 1.0,
+  "LIDAR_TF03_PITCH_DEG": -3.0,
   "LIDAR_TF03_ALCANCE_M": 30.0,
   "LIDAR_DESCARTE_SUELO_CON_ACTITUD": true,
   "LIDAR_LUNA_MONTAJE": "gimbal",

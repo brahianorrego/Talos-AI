@@ -1,17 +1,17 @@
-// Soporte de LiDAR (TF-Luna o TF03) — NO COMPILADO NI IMPRESO (ver VARIANTES.md).
+// Soporte de LiDAR (TF-Luna o TF03) — COMPILADO (OpenSCAD 2021.01), NO IMPRESO (ver VARIANTES.md).
 // Ejes: X = adelante (el frente del sensor mira a +X), Y = izquierda, Z = arriba. Cabeceo + = frente hacia arriba.
 //
 // Cuna abierta por arriba y por el frente (las lentes quedan libres), pared trasera baja con muesca para el cable,
 // y ranuras para amarras plásticas que sujetan el sensor sin depender de sus agujeros de montaje.
 // fijacion = "cuadricula": base con agujeros M2 de 10 mm para la cuna del pan-tilt (x = 15, 25, 35; y = -20..20).
-// fijacion = "chasis"    : base con 4 ranuras M3 para el chasis; `cabeceo_deg` inclina el sensor (cuña) para dejarlo a +1°.
+// fijacion = "chasis"    : base con 4 ranuras M3 para el chasis; `cabeceo_deg` inclina el sensor (cuña) para dejarlo a -3° (D-064: nariz del sensor hacia abajo; el signo no se ha probado).
 //
 // MEDIR: las medidas del sensor son de hoja de datos recordada (TF-Luna 35 x 18 x 21 mm) o PROVISIONALES (TF03).
 // Pesa tu unidad y mídela con calibrador antes de imprimir; solo cambian 3 números.
 
 modelo = "luna";                 // "luna" | "tf03"
 fijacion = "cuadricula";         // "cuadricula" | "chasis"
-cabeceo_deg = 0;                 // solo "chasis": inclinación del sensor (+1 en la variante C/D/E/F del TF03)
+cabeceo_deg = -3;                // solo "chasis": inclinación del sensor (-3 en las variantes C a F del TF03, D-064)
 $fn = 40;
 
 dims = (modelo == "luna") ? [35, 18, 21] : [77, 40, 40];   // largo (X), ancho (Y), alto (Z) — TF03 PROVISIONAL
