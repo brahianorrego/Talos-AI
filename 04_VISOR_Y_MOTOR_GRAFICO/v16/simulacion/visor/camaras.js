@@ -206,8 +206,10 @@ export function dibujarDetecciones(lienzo, fr, dets, op = {}) {
     const ty = Math.max(oy + 15 * esc, y - 6 * esc);
     g.strokeText(txt, x, ty);
     g.fillStyle = col; g.fillText(txt, x, ty);
-    if (d.esperando) {
-      const t2 = "¿Es el sospechoso? clic aquí";
+    const t2 = d.esperando ? "¿Es el sospechoso? clic aquí" : d.nota;      // quién confirmó (regla dura 4)
+    if (t2) {
+      g.font = `${Math.round(13 * esc)}px "Segoe UI", Arial, sans-serif`;
+      if (!d.esperando) g.fillStyle = d.objetivo ? "rgb(120,255,150)" : "rgb(255,190,40)";
       g.strokeText(t2, x, y + h + 17 * esc); g.fillText(t2, x, y + h + 17 * esc);
     }
     cajas.push({ id: d.id, clave: d.clave, x0: x / dpr + r.left, y0: y / dpr + r.top, x1: (x + w) / dpr + r.left, y1: (y + h) / dpr + r.top, esperando: d.esperando });

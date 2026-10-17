@@ -112,8 +112,11 @@ function superposiciones(e) {
     const f = personas.figura(p.clave);
     const c = f && cajaDe(sensorP, f);
     if (!c) return;
-    dets.push({ c, id: p.id !== undefined ? pad2(p.id) : "--", clave: p.clave, conf: confianza(p), objetivo: p.rol === "ladron" && e.modo >= 2,
-                esperando: esperaClic !== null && p.cand });
+    const objetivo = p.rol === "ladron" && e.modo >= 2, esperando = esperaClic !== null && p.cand;
+    // regla dura 4: al sospechoso lo confirma una persona con un clic, nunca la IA; la pantalla lo dice siempre
+    const nota = objetivo ? (operadorManual && !P.vivo ? "Confirmado por el operador" : "Confirmado por el operador (simulado)")
+               : p.cand && !esperando ? "Esperando confirmación del operador" : null;
+    dets.push({ c, id: p.id !== undefined ? pad2(p.id) : "--", clave: p.clave, conf: confianza(p), objetivo, esperando, nota });
   });
   cajasActuales = dibujarDetecciones(lienzoCam, aPagina(bucle.rCam), dets, { nariz: true, fps: sensorP.fps, hfov: CAM.hfov });
   // cámara al piso: sus propias detecciones (cam_piso) o, si la repetición no las trae, las personas que caen en su imagen

@@ -156,3 +156,10 @@ partida `sim_v16_semilla3` a 4× (con el render de Blender en la misma tarjeta),
 - En el visor (`datos.js` → `conectarVivo`, `principal.js`), la partida crece con cada cuadro y la imagen va un cuadro
   detrás del último. Probado: 126 cps con la RTX, sin errores; la pestaña "1 Dron" muestra `cmd` y `arb` reales.
   Captura: `mediciones/capturas/v5_en_vivo_dron.jpg`.
+
+## Regla dura 4 en la pantalla (revisión del Arquitecto, punto 9; 2026-10-17)
+
+Debajo de la caja de YOLO del candidato se lee quién decide: **"Esperando confirmación del operador"** (amarillo), **"¿Es
+el sospechoso? clic aquí"** cuando la repetición espera el clic, y **"Confirmado por el operador"** (verde) después; si el
+clic lo dio el operador simulado (modo automático o en vivo), dice **"(simulado)"**. La IA nunca aparece como quien
+confirma. Captura: `mediciones/capturas/regla4_esperando_operador.jpg`.
