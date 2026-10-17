@@ -43,6 +43,11 @@ Las hace **la parte física**, después de terminar los pasos 4 a 7 del mínimo.
    - **Si baja a −45°: variante C.** Montar el TF03 en el chasis (−3°), el TF-Luna junto a la cámara y la cámara CSI al piso. Como el TF03 cambia de lugar, **primero se vuelve a simular el mínimo** con esa posición.
    - **Si no baja: variante D.** Montar el pan-tilt impreso con los dos servos, la fuente aparte y los topes de plástico, y pasar el pitch a la Pixhawk (ella lo estabiliza).
 3. **En banco, sin hélices** (solo variante D): servos con su fuente aparte, medir el recorrido real y comprobar que el tope de plástico para el soporte antes de −45° y de +15°.
+   **Prueba de banco obligatoria antes de volar con el pan-tilt:** con un transportador, medir el ángulo real del soporte
+   cuando se le ordena −45°, 0° y +15° y comprobar que cumple la fórmula `pwm = 1500 + θ·500/45` (−45° = 1000 µs,
+   0° = 1500 µs, +15° ≈ 1667 µs). Luego ordenar más allá (por ejemplo 900 µs y 1750 µs) y comprobar que los topes de
+   plástico **no dejan pasar de −45° ni de +15°** (deben parar en −44° y +14°, el margen de 1° es a propósito). Si el ángulo
+   no cuadra, se corrige con `SERVO9_TRIM`, no con el diseño. Esta prueba la hace la parte física; sin ella no se vuela.
 4. **Cámara del piso** (en C y en D): conectarla, comprobar que se ve en la Jetson y medir su campo de visión real (hoy solo existe el valor del fabricante, 62.2°).
 5. **Vuelo corto atado o a muy poca altura**, para ver que el peso extra no cambia el equilibrio, y volver a probar el freno por LiDAR.
 
