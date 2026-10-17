@@ -113,3 +113,20 @@ movió a `recursos_quaternius\_duplicados\` (no se borró) y no entró a Git.
   (si se corta, se relanza y sigue). `blender/unir_video.py` une los cuadros en MP4.
 - Medido: ~28 s por cuadro a 1920 × 1080 con 32 muestras (el video completo de 80 s serían ~15 h). Se renderiza el
   tramo de 20 a 60 s a 1280 × 720 (~3-4 h), fuera del repositorio, en la carpeta `Videos\dron_ia` del usuario.
+
+## V4 · Interfaz de 3 modos (2026-10-17)
+
+Pestañas arriba a la derecha (o teclas **1**, **2** y **3**; la **I** abre y cierra ingeniería), y el modo elegido se
+recuerda. Boceto: `boceto_interfaz.svg`. Capturas: `mediciones/capturas/v4_modo_*.jpg`.
+
+| Modo | Qué muestra |
+|---|---|
+| **1 Dron** | Cámara del dron con YOLO, cámara al piso, espacio para la cámara USB (solo si la variante la lleva), **mapa de puntos del LiDAR** (impactos del TF03 en naranja y del TF-Luna en azul, acumulados; los viejos se apagan) y **órdenes de la Jetson**: quién manda, vx/vy/vz, giro, gimbal en grados y en PWM de AUX1, altura pedida, modo de ArduPilot y 10 s de historial (`visor/vista_dron.js`) |
+| **2 Tierra** | La estación del operador, como antes: cámara grande con el clic de confirmación, vista externa, cámara al piso, mapa y telemetría |
+| **3 Ingeniería** | Vista externa grande con el panel de estados, árbitro, personas, recompensa y bitácora |
+| **clásico ↗** | Abre el visor de siempre (`03_SIMULACION_RL`, en el puerto 8765 con `ABRIR_VISOR.bat`) |
+
+**Pendiente de la simulación:** las repeticiones no traen la nube de puntos ni las órdenes. La nube se arma acumulando
+`lh`/`luna`, y las órdenes se **aproximan con la telemetría**, y así lo dice la pantalla. Cuando `foto()` traiga `cmd`
+y `arb` (encargo a Simulación V17), `vista_dron.js` ya usa `cmd` sin más cambios. Medido con la RTX: 73-85 cps en la
+partida `sim_v16_semilla3` a 4× (con el render de Blender en la misma tarjeta), sin errores.

@@ -8,6 +8,7 @@ import { Dron } from "./dron.js";
 import { Partida, listarRepeticiones, cargarJSON } from "./datos.js";
 import { Personas } from "./personas.js";
 import { FiguraGLTF, cargarPersonas } from "./personas_gltf.js";
+import { VistaDron } from "./vista_dron.js";
 import { Interfaz } from "./interfaz.js";
 import { SensorCamara, cajaDe, dibujarDetecciones, confianza } from "./camaras.js";
 import { Previa } from "./previa.js";
@@ -161,7 +162,7 @@ async function cargarPartida(ruta) {
     ui.aviso("No se encontró la repetición " + ruta, "peligro", 5);
     return;
   }
-  t = 0; esperaClic = null; confirmados = new Set();
+  t = 0; esperaClic = null; confirmados = new Set(); vistaDron.reiniciar();
   M.ponerParedes(P.paneles);
   personas.limpiar();
   ui.ponerPartida(P);
@@ -194,7 +195,7 @@ async function ponerEscenario(nombre) {
     return;
   }
   P = previa.activar(nombre);
-  t = 0; esperaClic = null; confirmados = new Set(); tiemposSalto.length = 0;
+  t = 0; esperaClic = null; confirmados = new Set(); vistaDron.reiniciar(); tiemposSalto.length = 0;
   M.ponerParedes([]);
   ui.ponerPartida(P);
   if (vistas.grande !== "externa") intercambiar();
@@ -238,7 +239,22 @@ $("b-operador").addEventListener("click", ev => {
   ev.currentTarget.classList.toggle("activo", operadorManual);
   if (!operadorManual) repro.confirmar();
 });
-$("b-ing").addEventListener("click", () => { $("ingenieria").classList.toggle("abierto"); $("b-ing").classList.toggle("activo"); });
+// ------------------------------------------------------------------------------------------------ modos (V4)
+// 1 "dron": cámaras, LiDAR y órdenes de la Jetson · 2 "tierra": el operador en vuelo · 3 "ing": estados, árbitro, recompensas
+const vistaDron = new VistaDron();
+let modo = "tierra";
+function ponerModo(m) {
+  modo = m;
+  ["dron", "tierra", "ing"].forEach(k => document.body.classList.toggle("modo-" + k, k === m));
+  document.querySelectorAll("[data-modo]").forEach(b => b.classList.toggle("activo", b.dataset.modo === m));
+  $("ingenieria").classList.toggle("abierto", m === "ing");
+  const grande = m === "ing" ? "externa" : "camara";
+  if (vistas.grande !== grande) intercambiar();
+  try { localStorage.setItem("v16-modo", m); } catch (e) {}
+}
+// otro clic en "Ingeniería" la cierra (vuelve a la estación de tierra), como el botón de antes; también la tecla I
+document.querySelectorAll("[data-modo]").forEach(b => b.addEventListener("click", () => ponerModo(modo === "ing" && b.dataset.modo === "ing" ? "tierra" : b.dataset.modo)));
+try { ponerModo(localStorage.getItem("v16-modo") || "tierra"); } catch (e) { ponerModo("tierra"); }
 $("b-ayudas").addEventListener("click", ev => { ayudas = !ayudas; ev.currentTarget.classList.toggle("activo", ayudas); ayudas ? camExt.layers.enable(CAPA_AYUDAS) : camExt.layers.disable(CAPA_AYUDAS); });
 $("b-lenta").addEventListener("click", ev => { lenta = !lenta; ev.currentTarget.classList.toggle("activo", lenta); });
 $("calidad").value = calidadSel;
@@ -253,6 +269,8 @@ addEventListener("keydown", ev => {
   if (ev.target.tagName === "SELECT") return;
   if (ev.code === "Space") { ev.preventDefault(); alternarPausa(); }
   if (ev.code === "KeyI") $("b-ing").click();
+  const n = { Digit1: "dron", Digit2: "tierra", Digit3: "ing" }[ev.code];
+  if (n) ponerModo(n);
   if (ev.code === "KeyV" && modoCam !== "libre") intercambiar();
 });
 function ponerCalidad(q) {
@@ -396,6 +414,8 @@ function bucle(ahora) {
   bucle.rPiso = camarasDron.piso(rectDe($("v-piso")), e, dtReal);
   superposiciones(e);
   ui.actualizar(e, t, ahora, { fps, calidad });
+  vistaDron.acumular(e, t);
+  if (modo === "dron") vistaDron.actualizar(e);
   if (bucle.alDibujar) bucle.alDibujar(e, dtReal);
 }
 export { bucle };

@@ -31,7 +31,8 @@
   #autoria { color: var(--suave); font-size: 12px; white-space: nowrap; }
   #autoria b { color: var(--texto); font-weight: 600; }
   #barra .der { margin-left: auto; display: flex; gap: 8px; align-items: center; min-width: 0; }
-  #selector { max-width: 420px; }
+  #selector { max-width: 300px; }
+  #escenario { max-width: 230px; }
 
   /* ---------- vistas (el lienzo WebGL dibuja detrás de estos marcos) */
   .vista { position: fixed; z-index: 1; border: 1px solid var(--borde); background: transparent; overflow: hidden; }
@@ -96,6 +97,30 @@
   a { color: var(--info); }
   #cargando { position: fixed; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center; background: var(--fondo); color: var(--suave); font-size: 14px; }
 
+
+  /* ---------- modos (V4): 1 vista del dron, 2 estación de tierra, 3 ingeniería */
+  .pestanas { display: flex; gap: 4px; }
+  .pestanas button { padding: 4px 10px; white-space: nowrap; }
+  .pestanas button.activo { background: #2d4f86; border-color: #4f78bd; }
+  .pestanas a { align-self: center; font-size: 12px; color: var(--suave); text-decoration: none; padding: 0 4px; }
+  #v-usb, #lidar-caja, #ordenes { display: none; }
+  body.modo-dron { --ord: 128px; }
+  body.modo-dron #v-1, body.modo-dron #mapa-caja { display: none; }
+  body.modo-dron #v-grande { bottom: calc(var(--pie) + var(--ord)); }
+  body.modo-dron #v-piso { top: var(--barra); }
+  body.modo-dron #v-usb { display: flex; align-items: center; justify-content: center; right: 0; top: calc(var(--barra) + var(--lat) * 3 / 4); width: var(--lat); height: 64px;
+                          color: var(--tenue); font-size: 12px; text-align: center; padding: 0 12px; background: var(--panel); }
+  body.modo-dron #lidar-caja { display: block; right: 0; top: calc(var(--barra) + var(--lat) * 3 / 4 + 64px); bottom: var(--pie); width: var(--lat); background: var(--panel); border-left: 1px solid var(--borde); }
+  body.modo-dron #ordenes { display: grid; left: 0; right: var(--lat); bottom: var(--pie); height: var(--ord); background: var(--panel); border-top: 1px solid var(--borde);
+                            grid-template-columns: repeat(6, auto) 1fr; grid-template-rows: auto auto; align-content: start; gap: 6px 18px; padding: 8px 12px; overflow: hidden; }
+  body.modo-dron #aviso, body.modo-dron #confirmar { left: calc((100vw - var(--lat)) / 2); }
+  body.modo-dron #confirmar { bottom: calc(var(--pie) + var(--ord) + 16px); }
+  #ordenes .dato { border: none; padding: 0; }
+  #ordenes .titulo { grid-column: 1 / -1; color: var(--suave); font-size: 11px; display: flex; justify-content: space-between; }
+  #o-graf-caja { grid-row: 2; grid-column: 7; min-width: 200px; position: relative; height: calc(var(--ord) - 40px); }
+  #o-graf-caja canvas { position: absolute; inset: 0; }
+  #o-graf, #lidar { width: 100%; height: 100%; display: block; }
+
   @media (max-width: 1280px) { :root { --lat: 320px; } .dato { padding: 6px 9px; } .dato.opc { display: none; } }
 </style>
 </head>
@@ -114,7 +139,12 @@
       <option value="cancha">Vista previa · cancha V17, dos V de 90° (no entrenado)</option>
     </select>
     <select id="selector" title="Repetición"></select>
-    <button id="b-ing" title="Estados, árbitro, recompensas y curvas (tecla I)">Ingeniería</button>
+    <div class="pestanas" id="pestanas">
+      <button data-modo="dron" title="Lo que ven las cámaras del dron y lo que manda la Jetson (tecla 1)">1 Dron</button>
+      <button data-modo="tierra" title="Lo que ve el operador en vuelo (tecla 2)">2 Tierra</button>
+      <button data-modo="ing" id="b-ing" title="Estados, árbitro, recompensas y curvas (tecla 3 o I)">3 Ingeniería</button>
+      <a href="http://127.0.0.1:8765/" target="_blank" title="El visor de siempre (03_SIMULACION_RL, se abre con ABRIR_VISOR.bat)">clásico ↗</a>
+    </div>
   </div>
 </header>
 
@@ -127,6 +157,18 @@
 </div>
 <div id="v-piso" class="vista"><div class="tit">Cámara al piso <span>· IMX219 · 62.2° · recta abajo</span></div><canvas class="sobre" id="s-piso"></canvas></div>
 <div id="mapa-caja" class="ui"><canvas id="mapa"></canvas></div>
+<div id="v-usb" class="ui">Cámara USB · se muestra solo si la variante de hardware la lleva (05_HARDWARE_Y_VARIANTES)</div>
+<div id="lidar-caja" class="ui"><canvas id="lidar"></canvas></div>
+<div id="ordenes" class="ui">
+  <div class="titulo"><span>Órdenes que manda la Jetson a la Pixhawk (MAVLink)</span><span id="o-fuente"></span></div>
+  <div class="dato"><span>Quién manda</span><b id="o-quien">–</b></div>
+  <div class="dato"><span>vx / vy / vz</span><b id="o-vel">–</b></div>
+  <div class="dato"><span>Giro (yaw)</span><b id="o-yaw">–</b></div>
+  <div class="dato"><span>Gimbal (−45..+15)</span><b id="o-gmb">–</b></div>
+  <div class="dato"><span>Altura pedida</span><b id="o-alt">–</b></div>
+  <div class="dato"><span>Modo ArduPilot</span><b id="o-modo">–</b></div>
+  <div id="o-graf-caja"><canvas id="o-graf"></canvas></div>
+</div>
 
 <div id="aviso" class="ui"></div>
 <div id="confirmar" class="ui">
