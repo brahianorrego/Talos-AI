@@ -9,6 +9,7 @@ import { Partida, listarRepeticiones, cargarJSON } from "./datos.js";
 import { Personas } from "./personas.js";
 import { FiguraGLTF, cargarPersonas } from "./personas_gltf.js";
 import { VistaDron } from "./vista_dron.js";
+import { cargarNaturaleza, reemplazarArboles, sembrar } from "./naturaleza.js";
 import { Interfaz } from "./interfaz.js";
 import { SensorCamara, cajaDe, dibujarDetecciones, confianza } from "./camaras.js";
 import { Previa } from "./previa.js";
@@ -424,7 +425,15 @@ export { bucle };
 export async function arrancar() {
   await M.ponerCielo("amanecer");
   // personas vestidas de Quaternius (V2); con ?personas=codigo se ven las figuras hechas con código (humano.js)
-  if (new URLSearchParams(location.search).get("personas") !== "codigo" && await cargarPersonas()) personas.Clase = FiguraGLTF;
+  const pide = new URLSearchParams(location.search);
+  if (pide.get("personas") !== "codigo" && await cargarPersonas()) personas.Clase = FiguraGLTF;
+  // árboles y pasto de Quaternius (V3); con ?naturaleza=codigo se ven los árboles hechos con código
+  if (pide.get("naturaleza") !== "codigo" && await cargarNaturaleza()) {
+    reemplazarArboles(M.decorado);
+    sembrar(M.decorado);
+    Object.values(previa.grupos).forEach(g => reemplazarArboles(g));
+    renderer.shadowMap.needsUpdate = true;
+  }
   const ruta = await llenarSelector();
   if (ruta) await cargarPartida(ruta);
   $("cargando").style.display = "none";

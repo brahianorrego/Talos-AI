@@ -18,3 +18,4 @@ modelos de esos sitios, van en esta carpeta y se anotan en esta tabla.
 | `three/addons/loaders/GLTFLoader.js`, `three/addons/utils/SkeletonUtils.js` | three.js 0.185.1 (npm `three`, vía cdn.jsdelivr.net) | MIT |
 | `personas/Casual_Hoodie.glb`, `Worker.glb`, `Casual_2.glb`, `Suit.glb`, `Farmer.glb` | Quaternius, "Ultimate Modular Characters" (quaternius.com), sin animaciones, exportados con Blender | CC0 |
 | `personas/animaciones.glb` | Quaternius, "Universal Animation Library" 1 y 2 (14 animaciones), redirigidas a los personajes con `04_VISOR_Y_MOTOR_GRAFICO/blender/redirigir_animaciones.py` | CC0 |
+| `naturaleza/` (CommonTree_1, CommonTree_3, CommonTree_5, Pine_2, Grass_Common_Short, con sus texturas; corteza reducida a 512 px) | Quaternius, "Stylized Nature MegaKit" (quaternius.com), copia de `LICENCIA_Quaternius.txt` | CC0 |

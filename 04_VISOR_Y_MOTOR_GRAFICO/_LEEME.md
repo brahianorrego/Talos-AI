@@ -130,3 +130,15 @@ recuerda. Boceto: `boceto_interfaz.svg`. Capturas: `mediciones/capturas/v4_modo_
 `lh`/`luna`, y las órdenes se **aproximan con la telemetría**, y así lo dice la pantalla. Cuando `foto()` traiga `cmd`
 y `arb` (encargo a Simulación V17), `vista_dron.js` ya usa `cmd` sin más cambios. Medido con la RTX: 73-85 cps en la
 partida `sim_v16_semilla3` a 4× (con el render de Blender en la misma tarjeta), sin errores.
+
+## V3 · Árboles y pasto de verdad en el visor (2026-10-17)
+
+- `v16/simulacion/visor/naturaleza.js`: los árboles hechos con código (misión, campo y cancha) se cambian por 4 árboles
+  del "Stylized Nature MegaKit" de Quaternius (CC0) en las mismas posiciones, y se siembran 22 000 matas de pasto en
+  60 × 60 m alrededor de la zona. Todo con instancias. Recursos: `v16/simulacion/recursos/naturaleza/` (2 MB).
+- Para ver los árboles de antes: `?naturaleza=codigo`.
+- **Medido con la RTX, sin tope de pantalla** (misión de prueba, 1540 × 788): alta 134 cps, media 184, baja 258; cancha
+  V17 con tope: 128 cps. Meta ≥ 60: cumplida. Sin errores. Capturas: `mediciones/capturas/v3_*.jpg`.
+- Se probó el arbusto `Bush_Common` y se quitó: su textura es de hojas rojas de otoño.
+- Shortcut: los árboles nuevos no tapan a las personas en la prueba de visibilidad de la vista previa (sería muy lenta con
+  hojas detalladas); si hiciera falta, usar cilindros simples para esa prueba.

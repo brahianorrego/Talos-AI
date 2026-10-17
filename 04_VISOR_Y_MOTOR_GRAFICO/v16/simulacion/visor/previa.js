@@ -33,7 +33,7 @@ export class Previa {
   }
   // en la cancha los árboles del decorado (anillo desde 34 m) caerían sobre el campo, y la geocerca es de 30 × 30 m
   ponerCancha(si) {
-    this.M.decorado.children.forEach(o => { if (o.isInstancedMesh) o.visible = !si; });
+    this.M.decorado.children.forEach(o => { if (o.isInstancedMesh || o.userData.arbol) o.visible = !si; });   // el pasto se queda
     const geoc = this.M.ayudas.getObjectByName("geocerca");
     if (geoc) geoc.visible = !si;
   }
