@@ -16,10 +16,10 @@ Por eso, aquí: **no se usa SSH con la Jetson, no se toca `01_MINIMO_INDISPENSAB
 
 | Sesión | Rol | Modelo / esfuerzo | Es dueña de | Estado |
 |---|---|---|---|---|
-| **Arquitecto** | La cabeza: ordena las ideas de Brahian, decide el plan V17, reparte encargos, revisa lo que entregan las otras y lleva las decisiones a Brahian | Opus · alto | `docs/` (planes, decisiones, este tablero) | Activa |
+| **Arquitecto** | La cabeza: ordena las ideas de Brahian, decide el plan V17, reparte encargos, revisa lo que entregan las otras y lleva las decisiones a Brahian | Opus · alto | `docs/` (planes, decisiones, este tablero) | Plan V17 entregado el 17-oct (`docs/PLAN_V17_REFUERZO.md`, diagnóstico en `03_SIMULACION_RL/informes/diagnostico_v17_ia_aporta.md`). Espera que Brahian apruebe D-049 a D-054 |
 | **Visor y motor gráfico** | Trae el visor V16 al PC, mide los cuadros por segundo, compara three.js / Unreal 5 / Godot-Unity y diseña la interfaz de la estación de tierra | Opus · alto para decidir | `04_VISOR_Y_MOTOR_GRAFICO/` | Activa |
 | **Hardware y variantes** | Matriz de variantes (cámaras, gimbal o pan-tilt, LiDAR), piezas 3D en OpenSCAD y su configuración para la simulación | Sonnet · medio | `05_HARDWARE_Y_VARIANTES/` | Por abrir |
-| **Simulación V17** | Implementa en `entorno.py` y el entrenamiento lo que el Arquitecto y Brahian aprueben, con pruebas | Opus o Sonnet | `03_SIMULACION_RL/` | Por abrir (tras el plan V17) |
+| **Simulación V17** | Implementa en `entorno.py` y el entrenamiento lo que el Arquitecto y Brahian aprueben, con pruebas | Opus o Sonnet | `03_SIMULACION_RL/` | Por abrir: encargo listo en `docs/ENCARGO_SIMULACION_V17.md` (empieza cuando Brahian apruebe D-049 a D-054) |
 
 **Supervisor:** no es una sesión aparte. Es el agente `supervisor-rl` (`.claude/agents/`), que el Arquitecto llama
 después de cada entrenamiento o cada vez que haya un resumen nuevo (`herramientas/resumir_metricas.py`). Diagnostica y
@@ -55,5 +55,5 @@ flowchart TD
 
 | Sesión | Id |
 |---|---|
-| Arquitecto | (se completa al crearla) |
-| Visor y motor gráfico | (se completa al crearla) |
+| Arquitecto | `local_a88942b1-0fa7-4d2c-ad06-c18f47cdb352` |
+| Visor y motor gráfico | `local_1ade7139-ae14-476c-917f-8957fafb96ba` |

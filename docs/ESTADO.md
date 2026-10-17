@@ -17,6 +17,17 @@ Actualizado: 2026-10-16 (noche), migración a la carpeta `Dron-IA-Proyecto` (ses
 - Fase B: `GUIA_DE_ARCHIVOS.md`, `COMO_FUNCIONA_EL_CODIGO.md`, `DEMOSTRACION_PARA_EL_INGENIERO.md`,
   `06_REDES_NEURONALES_Y_MODELOS/ver_redes.py` (15 s) y `_LEEME` en 01, 04 y 06.
 
+### Plan V17 (Arquitecto, 2026-10-17)
+
+- **Medido: la política PPO de la V15 no aporta.** Misión completa del nivel 4, 256 partidas: custodia ≥ 60 s 11.3 % (V15),
+  10.2 % (siempre MANTENER), 7.8 % (azar); cumplida 33.2 / 34.0 / 32.8 %. Escenarios fijos iguales; barrido de
+  checkpoints V15 plano (0.96-0.97 de 7 a 230 M, `informes/barrido_v15.md`, reemplaza la tabla de la V10 de
+  `resumen_v15-231M.md`). Causa: 9 de 10 botones hacen lo mismo con el ladrón a la vista y PPO aprende de pasos sin
+  decisión (`informes/diagnostico_v17_ia_aporta.md`).
+- Plan `docs/PLAN_V17_REFUERZO.md`: 7 botones con efecto, máscara de acciones, criterio "la IA aporta", cancha con dos V de
+  90° a 10 m (paneles ~2.0 m, `docs/v17_zona_ia.png`), reglas una por una, 50 M pasos con regla de parada. Decisiones
+  D-049 a D-054 **abiertas**. Encargo para la sesión de simulación: `docs/ENCARGO_SIMULACION_V17.md`.
+
 ### Hallazgos de la revisión (para decidir)
 
 1. **Este ESTADO estaba desactualizado:** decía "V15 entrenando". La V15 se detuvo el 12-oct en 229.4 M pasos, en el
