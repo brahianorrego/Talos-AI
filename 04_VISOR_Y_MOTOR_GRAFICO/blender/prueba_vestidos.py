@@ -22,11 +22,7 @@ def persona(archivo, accion, x, y, giro, cuadro):
     arm.animation_data_create().action = a
     if a.slots:
         arm.animation_data.action_slot = a.slots[0]
-    # cada persona en su propio cuadro de la animación
-    arm.animation_data.action_extrapolation = "HOLD"
-    for fc in getattr(a, "fcurves", []):
-        pass
-    arm["cuadro"] = cuadro
+    arm["cuadro"] = cuadro                       # cada persona en su propio cuadro de la animación (abajo, con NLA)
     return arm
 
 
