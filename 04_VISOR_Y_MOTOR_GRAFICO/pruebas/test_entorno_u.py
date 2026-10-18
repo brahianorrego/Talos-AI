@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Pruebas del entorno de la universidad (entorno/entorno_u.py). Desde la raíz del proyecto:
+r"""Pruebas del entorno de la universidad (entorno/entorno_u.py). Desde la raíz del proyecto:
    03_SIMULACION_RL\.venv\Scripts\python.exe -m unittest discover -s 04_VISOR_Y_MOTOR_GRAFICO/pruebas"""
 import json
 import math
