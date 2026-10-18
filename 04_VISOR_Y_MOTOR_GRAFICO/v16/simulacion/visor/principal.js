@@ -438,11 +438,11 @@ export { bucle };
 // ------------------------------------------------------------------------------------------------ arranque
 export async function arrancar() {
   await M.ponerCielo("amanecer");
-  // personas vestidas de Quaternius (V2); con ?personas=codigo se ven las figuras hechas con código (humano.js)
+  // personas vestidas de Quaternius (V2): solo con ?personas=quaternius; por defecto, las figuras de la V16 (humano.js)
   const pide = new URLSearchParams(location.search);
-  if (pide.get("personas") !== "codigo" && await cargarPersonas()) personas.Clase = FiguraGLTF;
-  // árboles y pasto de Quaternius (V3); con ?naturaleza=codigo se ven los árboles hechos con código
-  if (pide.get("naturaleza") !== "codigo" && await cargarNaturaleza()) {
+  if (pide.get("personas") === "quaternius" && await cargarPersonas()) personas.Clase = FiguraGLTF;   // D-065
+  // árboles y pasto de Quaternius (V3): solo con ?naturaleza=quaternius; por defecto, los árboles de la V16
+  if (pide.get("naturaleza") === "quaternius" && await cargarNaturaleza()) {   // D-065
     reemplazarArboles(M.decorado);
     sembrar(M.decorado);
     Object.values(previa.grupos).forEach(g => reemplazarArboles(g));

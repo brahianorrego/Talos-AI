@@ -163,3 +163,9 @@ Debajo de la caja de YOLO del candidato se lee quién decide: **"Esperando confi
 el sospechoso? clic aquí"** cuando la repetición espera el clic, y **"Confirmado por el operador"** (verde) después; si el
 clic lo dio el operador simulado (modo automático o en vivo), dice **"(simulado)"**. La IA nunca aparece como quien
 confirma. Captura: `mediciones/capturas/regla4_esperando_operador.jpg`.
+
+## D-065 · El visor web vuelve al aspecto de la V16 (2026-10-17)
+
+Brahian rechazó el aspecto de Quaternius. **Por defecto** el visor usa otra vez las personas, los árboles y el cielo de la
+V16. Quaternius quedó como opción apagada, sin borrar nada: `?personas=quaternius` y `?naturaleza=quaternius`. El mundo
+realista pasa a Unreal Engine 5 (`PLAN_UNREAL.md`).
