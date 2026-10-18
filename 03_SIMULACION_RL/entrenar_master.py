@@ -820,7 +820,8 @@ def main():
     for kv in a.set:
         k, v = kv.split("=", 1)
         viejo = getattr(E_, k)
-        setattr(E_, k, v if isinstance(viejo, str) else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
+        setattr(E_, k, v if isinstance(viejo, str) else tuple(float(x) for x in v.split(",")) if isinstance(viejo, tuple)
+                else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
         print("constante cambiada: %s = %s" % (k, getattr(E_, k)), flush=True)
     Maestro.cada_rep = a.repeticiones
     sin_ahorro_de_energia()

@@ -557,8 +557,8 @@ N_OBS_V16 = 3                  # entradas nuevas de la red: cámara al piso (ve 
 NIVEL_V17 = 6
 NOMBRE_V17 = "Misión V17 (cancha, 2 V)"
 ARENA_V17 = 15.0               # medio lado de la zona (geocerca)
-ANCHO_PANEL_V17 = 1.0          # m de cada ala (provisional: Brahian lo mide con cinta)
-ALTO_PANEL_V17 = (1.9, 2.2)    # m, medido en la foto (plan, 3.2)
+ANCHO_PANEL_V17 = 1.5          # m de cada ala (D-066: medido por Brahian; hasta la V17.2 fue 1.0)
+ALTO_PANEL_V17 = (2.2, 2.3)    # m (D-066: medido por Brahian; hasta la V17.2 fue 1.9-2.2, de la foto)
 SEP_V17 = 10.0                 # m entre los vértices de las dos V
 AZAR_POS_V17, AZAR_ANG_V17 = 2.0, 20.0
 # E5 · LA PARTIDA EMPIEZA EN LA ACTIVACIÓN (D-053): el piloto ya trajo el dron hasta el borde sur de la zona (donde se
@@ -598,6 +598,7 @@ R_RACHA_V17 = 10.0
 # aprendía a quedarse. El punto ciego y el ángulo los cuidan reglas (reflejo de punto ciego, barrera de -45°).
 R_SOBREVUELO_V17, R_ANGULO_GMB_V17 = 0.0, 0.0
 K_SUAVE_V17 = 0.1              # V17.2: peso de la multa de suavidad (delta y sacudida) en la cancha
+K_SUAVE_Z_V17 = 0.5            # V17.3: peso en el eje vertical (la V17.2, con 0.1, cambiaba de sentido 16.8 veces/min)
 K_RACHA_V17 = 3.0
 # D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
 TF03_PITCH_V17 = -3.0
@@ -3388,8 +3389,12 @@ class EntornoDronPersona(object):
         pen_jerk = np.where(v16r & mando & self.mando_prev, K_JERK_V16 * np.abs(u_ia - 2 * self.u_prev + self.u_prev2).sum(1), 0.0)
         # V17.2: en la cancha la suavidad pesa K_SUAVE_V17 (con botones al azar costaba -170 por partida contra +35 de la
         # vista: al empezar a entrenar aplastaba todo y la red se quedaba en QUEDARSE, el único botón siempre permitido)
-        pen_delta = np.where(v17, K_SUAVE_V17, 1.0) * pen_delta
-        pen_jerk = np.where(v17, K_SUAVE_V17, 1.0) * pen_jerk
+        # V17.3: el eje vertical (la altura que pide la red) pesa K_SUAVE_Z_V17: la V17.2 subía y bajaba en vaivén
+        w17 = np.array([K_SUAVE_V17, K_SUAVE_V17, K_SUAVE_Z_V17])
+        d17_ = np.abs(u_ia - self.u_prev)
+        j17_ = np.abs(u_ia - 2 * self.u_prev + self.u_prev2)
+        pen_delta = np.where(v17, np.where(mando & self.mando_prev, K_DELTA * (w17 * d17_).sum(1), 0.0), pen_delta)
+        pen_jerk = np.where(v17, np.where(mando & self.mando_prev, K_JERK_V16 * (w17 * j17_).sum(1), 0.0), pen_jerk)
         rc["control"] -= pen_delta + pen_esfuerzo + pen_jerk
         self.u_prev2 = np.where((mando & self.mando_prev)[:, None], self.u_prev, u_ia)
         # jitter FÍSICO por eje (todo lo que se movió, lo comande quien lo comande), solo para el registro

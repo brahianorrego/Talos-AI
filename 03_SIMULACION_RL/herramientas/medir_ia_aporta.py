@@ -188,6 +188,10 @@ def v17(pol, n, semilla, max_pasos):
     t_bajo8_ent = t_bajo8_est = 0
     t_fij, run_vis, tramos = 0, np.zeros(n, int), []
     ret, comp = np.zeros(n), np.zeros((n, len(E.R_COMP)))     # retorno de cada partida y por componente
+    # suavidad (pedido del Arquitecto): metros de altura recorridos, cambios de sentido de la altura pedida por la red y
+    # jitter físico por eje (cabeceo, guiñada, gimbal: |u(t) - u(t-1)| de lo que se manda, lo mande quien lo mande)
+    z_rec, z_cambios, dir_z, z17_ant = 0.0, 0, np.zeros(n), env.z_v17.copy()
+    u_ant, jit = env.u_prev_fis.copy(), np.zeros(3)
     datos = lambda i, src: dict(racha=float(src["racha"][i]), vista=float(src["t_vista_ac"][i]), gmin=float(src["gmb_min"][i]),
                                 nr=int(src["n_readq"][i]), tr=float(src["t_readq_sum"][i]), np_=int(src["n_perd"][i]),
                                 n10=int(src["n_readq10"][i]), rul=int(src["ruleta"][i]), esc=int(src["escudo"][i]))
@@ -198,6 +202,13 @@ def v17(pol, n, semilla, max_pasos):
             ent0 = env.entrada.copy()
             r_, _, done, info = env.step(np.asarray(a).astype(int), ap, auto_reset=False)
             ret += np.where(vivo, r_, 0.0)
+            z_rec += float((np.abs(env.dvz) * E.DT)[vivo].sum())
+            dz17 = np.sign(env.z_v17 - z17_ant)
+            z_cambios += int(((dz17 != 0) & (dir_z != 0) & (dz17 != dir_z) & vivo).sum())
+            dir_z = np.where(dz17 != 0, dz17, dir_z)
+            z17_ant = env.z_v17.copy()
+            jit += np.abs(env.u_prev_fis - u_ant)[vivo].sum(0)
+            u_ant = env.u_prev_fis.copy()
             comp += np.where(vivo[:, None], info["r_comp"], 0.0)
             for i in np.where(ent0 & ~env.entrada & vivo & ~ent_hecho)[0]:
                 ent_hecho[i] = True
@@ -251,6 +262,9 @@ def v17(pol, n, semilla, max_pasos):
                # 60 s de vista acumulada)
                custodia30=float(np.mean(racha >= 30.0)),
                m1=float(np.mean(racha >= E.RACHA_M1_V17)),            # V17.1 · D-059: M1 = racha >= 30 s
+               altura_m_por_min=float(z_rec / max(t_tot * E.DT / 60.0, 1e-9)),
+               cambios_sentido_altura_por_min=float(z_cambios / max(t_tot * E.DT / 60.0, 1e-9)),
+               jitter_por_s={k: round(float(v / max(t_tot * E.DT, 1e-9)), 4) for k, v in zip(E.EJES_U, jit)},
                retorno=float(ret.mean()), retorno_comp={k: round(float(v), 2) for k, v in zip(E.R_COMP, comp.mean(0))},
                custodia_v16=float(np.mean((res == "cumplida") | (np.array([f["vista"] for f in F]) >= 60.0))),
                readq10=float(r10 / max(perd, 1)), t_readq=float(tr / max(nr, 1)), perdidas=float(perd / n),
@@ -331,7 +345,8 @@ if __name__ == "__main__":
     for kv in a.set:
         k, v = kv.split("=", 1)
         viejo = getattr(E, k)
-        setattr(E, k, v if isinstance(viejo, str) else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
+        setattr(E, k, v if isinstance(viejo, str) else tuple(float(x) for x in v.split(",")) if isinstance(viejo, tuple)
+                else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
     todo = {}
     if a.modo == "probs":
         todo = probs(a.n, a.semilla)

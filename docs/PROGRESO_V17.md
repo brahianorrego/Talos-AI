@@ -166,6 +166,38 @@ B2 53.1 %, **B3 56.2 %**. El tiempo real bajo 3.30 m con alguien a < 8 m queda e
 `.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol modelos_v17_2\ultimo.zip,modelos_v17_2\ultimo.zip-est --n 512 --salida informes\v17\v172_50M.json`
 Los checkpoints de cada millón quedan en `modelos_v17_2\checkpoints\` para ver la curva.
 
+### V17.2 a los 50 M (terminó 02:49 del 18-oct)
+
+512 partidas en su misma cancha (paneles de 1.0 × 1.9-2.2 m, `--set ANCHO_PANEL_V17=1.0 --set ALTO_PANEL_V17=1.9,2.2`),
+B0 y B3 re-medidos con las métricas de suavidad (`informes/v17/v172_50M_*.json`):
+
+| | M1 | Vista (s) | M2 | Rendición | Altura recorrida (m/min) | Cambios de sentido de la altura (/min) | Jitter cabeceo / guiñada / gimbal (/s) | Botones donde decide |
+|---|---:|---:|---:|---:|---:|---:|---|---|
+| V17.2 determinista | **54.3 %** | 99.4 | 74.0 % | 22.5 % | 17.0 | 16.8 | 1.25 / 0.86 / 1.21 | QUEDARSE 71 %, SUBIR 17 %, BAJAR 13 % |
+| V17.2 estocástica | 53.7 % | 100.5 | 73.3 % | 18.0 % | 17.0 | 42.7 | 1.26 / 0.86 / 1.22 | QUEDARSE 48 %, SUBIR 27 %, BAJAR 23 % |
+| B0 QUEDARSE | 48.4 % | 102.6 | 70.3 % | 14.5 % | 9.7 | 0 | 1.19 / 0.76 / 1.18 | — |
+| B3 SUBIR | 56.2 % | 96.0 | 78.8 % | 22.3 % | 13.5 | 8.2 | 1.34 / 0.99 / 1.20 | — |
+
+- **Supera a B0 por 5.9 puntos** (cumple la regla de parada de D-052), **pero no supera a B3** (−1.9, dentro del ruido de
+  ±4.3). La IA aprendió algo (de 50 % a los 10 M a 54 % a los 50 M), pero no más que una regla fija.
+- **La altura es un vaivén:** 16.8 cambios de sentido por minuto, el doble que B3 (los de B3 son las vueltas a 3.30 m al
+  perderlo). El jitter de cabeceo, guiñada y gimbal queda entre el de B0 y el de B3: la suavidad ×0.1 no lo empeoró.
+- **Decisión (D-062):** se para la V17.2 y va la **V17.3**.
+
+## V17.3 · paneles reales (D-066) y suavidad vertical (18-oct)
+
+- **Paneles reales (D-066):** `ANCHO_PANEL_V17 = 1.5`, `ALTO_PANEL_V17 = (2.2, 2.3)`. **Qué corrida usó qué paneles:**
+  V17.0, V17.1 y V17.2 con 1.0 m × 1.9-2.2 m; desde la V17.3, 1.5 m × 2.2-2.3 m. Prueba nueva:
+  `test_v17.TestCancha.test_paneles_reales_d066`.
+- **Suavidad vertical:** `K_SUAVE_Z_V17 = 0.5` (cabeceo y lado siguen en 0.1), por el vaivén de la V17.2.
+- `--set` acepta pares (`--set ALTO_PANEL_V17=1.9,2.2`) para medir en la cancha vieja.
+- Dos pruebas de botones dependían de la semilla (los paneles más grandes cambian cuántos números al azar se gastan al ubicar
+  al ladrón); ahora usan más partidas y sacan las V de la zona. La comprobación de fondo (con 3 cuadros de amenaza real la
+  esquiva arranca siempre, sea cual sea el botón) no cambió.
+- **En marcha desde 2026-10-18 03:26** (pestaña del Terminal), desde cero:
+  `.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_3 --dir-master modelos_v17_3 --dir-modelos modelos_v17_3 *> modelos_v17_3.log`
+- Línea base con los paneles nuevos: `informes/v17/v173_base_b*.json` (midiéndose).
+
 ### D-063 · Altura segura con el error del barómetro
 
 B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y
