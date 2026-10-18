@@ -194,7 +194,7 @@ B0 y B3 re-medidos con las métricas de suavidad (`informes/v17/v172_50M_*.json`
 - Dos pruebas de botones dependían de la semilla (los paneles más grandes cambian cuántos números al azar se gastan al ubicar
   al ladrón); ahora usan más partidas y sacan las V de la zona. La comprobación de fondo (con 3 cuadros de amenaza real la
   esquiva arranca siempre, sea cual sea el botón) no cambió.
-- **En marcha desde 2026-10-18 03:26** (pestaña del Terminal), desde cero:
+- **En marcha desde 2026-10-18 10:32** (pestaña del Terminal; la sesión estuvo pausada entre las 03:30 y las 10:30), desde cero:
   `.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_3 --dir-master modelos_v17_3 --dir-modelos modelos_v17_3 *> modelos_v17_3.log`
 - Línea base con los paneles nuevos: `informes/v17/v173_base_b*.json` (midiéndose).
 
