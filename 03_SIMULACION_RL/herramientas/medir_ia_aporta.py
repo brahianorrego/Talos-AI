@@ -133,6 +133,16 @@ class B2(object):
         return env.regla_b2(), None
 
 
+class B4(object):
+    """D-067 · B4: altura por cobertura (B4* = oráculo con la posición verdadera, solo para medir el techo)."""
+
+    def __init__(self, oraculo=False):
+        self.oraculo = oraculo
+
+    def predict(self, obs, env=None, deterministic=True):
+        return env.regla_b4(self.oraculo), None
+
+
 class Red17(object):
     """Política de 7 botones (MaskablePPO o PPO): decide con la máscara de la V17; guarda sus probabilidades donde decide."""
 
@@ -166,6 +176,8 @@ def cargar17(nombre):
         return {"b0": B0, "b1": B1, "b2": B2}[nombre]()
     if nombre == "b3":                                      # V17.1 · D-059: B3 = siempre SUBIR
         return Fija(E.SUBIR)
+    if nombre in ("b4", "b4o"):                             # D-067: B4 y B4* (oráculo)
+        return B4(nombre == "b4o")
     if nombre.upper() in E.CLASES_V17:                      # un botón fijo (si no está permitido, el entorno usa QUEDARSE)
         return Fija(E.CLASES_V17.index(nombre.upper()))
     return Red17(nombre.replace("-est", ""), nombre.endswith("-est"))
@@ -192,6 +204,11 @@ def v17(pol, n, semilla, max_pasos):
     # jitter físico por eje (cabeceo, guiñada, gimbal: |u(t) - u(t-1)| de lo que se manda, lo mande quien lo mande)
     z_rec, z_cambios, dir_z, z17_ant = 0.0, 0, np.zeros(n), env.z_v17.copy()
     u_ant, jit = env.u_prev_fis.copy(), np.zeros(3)
+    # D-067: vaivén DE LA RED (solo SUBIR/BAJAR que ella aprieta, sin la vuelta a 3.30 m de la búsqueda) y altura pedida
+    # cerca de una V (ladrón a < 3 m de un panel) contra en campo abierto, en los pasos donde decide
+    dir_red, vaiven_red = np.zeros(n), 0
+    zc_sum = np.zeros(2)
+    zc_n = np.zeros(2)
     datos = lambda i, src: dict(racha=float(src["racha"][i]), vista=float(src["t_vista_ac"][i]), gmin=float(src["gmb_min"][i]),
                                 nr=int(src["n_readq"][i]), tr=float(src["t_readq_sum"][i]), np_=int(src["n_perd"][i]),
                                 n10=int(src["n_readq10"][i]), rul=int(src["ruleta"][i]), esc=int(src["escudo"][i]))
@@ -208,6 +225,20 @@ def v17(pol, n, semilla, max_pasos):
             dir_z = np.where(dz17 != 0, dz17, dir_z)
             z17_ant = env.z_v17.copy()
             jit += np.abs(env.u_prev_fis - u_ant)[vivo].sum(0)
+            bt = info["boton"]
+            dec_ = info["decide17"] & vivo
+            sb = dec_ & ((bt == E.SUBIR) | (bt == E.BAJAR))
+            s_ = np.where(bt == E.SUBIR, 1.0, -1.0)
+            vaiven_red += int((sb & (dir_red != 0) & (s_ != dir_red)).sum())
+            dir_red = np.where(sb, s_, dir_red)
+            if dec_.any():
+                Pl = np.stack([env.px[:, 0], env.py[:, 0]], -1)
+                dv = np.min(np.stack([E.dist_punto_segmento(Pl, env.pa[:, j], env.pb[:, j])[0]
+                                      for j in range(env.pa.shape[1])], -1), 1)
+                cerca_v = dv < 3.0
+                for k_, mk_ in enumerate((cerca_v, ~cerca_v)):
+                    zc_sum[k_] += env.z_v17[dec_ & mk_].sum()
+                    zc_n[k_] += (dec_ & mk_).sum()
             u_ant = env.u_prev_fis.copy()
             comp += np.where(vivo[:, None], info["r_comp"], 0.0)
             for i in np.where(ent0 & ~env.entrada & vivo & ~ent_hecho)[0]:
@@ -264,6 +295,9 @@ def v17(pol, n, semilla, max_pasos):
                m1=float(np.mean(racha >= E.RACHA_M1_V17)),            # V17.1 · D-059: M1 = racha >= 30 s
                altura_m_por_min=float(z_rec / max(t_tot * E.DT / 60.0, 1e-9)),
                cambios_sentido_altura_por_min=float(z_cambios / max(t_tot * E.DT / 60.0, 1e-9)),
+               vaiven_red_por_min=float(vaiven_red / max(t_tot * E.DT / 60.0, 1e-9)),
+               z_pedida_cerca_v=float(zc_sum[0] / zc_n[0]) if zc_n[0] else float("nan"),
+               z_pedida_abierto=float(zc_sum[1] / zc_n[1]) if zc_n[1] else float("nan"),
                jitter_por_s={k: round(float(v / max(t_tot * E.DT, 1e-9)), 4) for k, v in zip(E.EJES_U, jit)},
                retorno=float(ret.mean()), retorno_comp={k: round(float(v), 2) for k, v in zip(E.R_COMP, comp.mean(0))},
                custodia_v16=float(np.mean((res == "cumplida") | (np.array([f["vista"] for f in F]) >= 60.0))),

@@ -597,6 +597,7 @@ R_RACHA_V17 = 10.0
 # multas de sobrevuelo y de ángulo, "siempre SUBIR" (M1 61.7 %) cobraba MENOS que "siempre QUEDARSE" (55.1 %): la red
 # aprendía a quedarse. El punto ciego y el ángulo los cuidan reglas (reflejo de punto ciego, barrera de -45°).
 R_SOBREVUELO_V17, R_ANGULO_GMB_V17 = 0.0, 0.0
+B4_SUBE, B4_BAJA = 0.05, 0.02  # D-067 · B4: umbrales de cobertura para subir a 5.5 m o volver a 3.30 m
 K_SUAVE_V17 = 0.1              # V17.2: peso de la multa de suavidad (delta y sacudida) en la cancha
 K_SUAVE_Z_V17 = 0.5            # V17.3: peso en el eje vertical (la V17.2, con 0.1, cambiaba de sentido 16.8 veces/min)
 K_RACHA_V17 = 3.0
@@ -897,7 +898,8 @@ class EntornoDronPersona(object):
         self.t_clic = np.full(n, 99.0)                   # V16: s desde el último clic del operador (tracker amarrado)
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
         self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()
-        self.phi_racha = z()                             # V17.1: potencial de la racha en curso   # V17 · visor: consignas, quién manda y motivo del árbitro
+        self.phi_racha = z()                             # V17.1: potencial de la racha en curso
+        self.b4_meta = np.full(n, Z_SEGURA)              # D-067 · B4: altura meta de la regla   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
         self.blur = z(N_PERS)                            # desenfoque de cada persona en la cámara principal (px)
         self.alt_obj = np.full(n, Z_V16_ENTRADA)         # V16 · A1: altura objetivo en rampa (lo que se le pide a la Pixhawk)
@@ -1275,6 +1277,7 @@ class EntornoDronPersona(object):
         self.t_clic[m] = 99.0
         self.n_ruleta[m] = self.n_escudo[m] = 0.0
         self.phi_racha[m] = 0.0
+        self.b4_meta[m] = Z_SEGURA
         self.z_v17[m] = Z_SEGURA
         # V16 · A3: tipo de gimbal, alcance del TF-Luna y ruido de navegación de la partida (solo en la V16)
         iv = np.where(m)[0][lv >= NIVEL_V16]
@@ -1375,6 +1378,22 @@ class EntornoDronPersona(object):
             gana = mk[:, k] & (c > mejor + 1e-9)
             mejor, b = np.where(gana, c, mejor), np.where(gana, k, b)
         return b
+
+    def regla_b4(self, oraculo=False):
+        """V17 · D-067 · B4, REGLA DE ALTURA POR COBERTURA: con la posición donde el dron cree que está el ladrón (B4*,
+        `oraculo`: la verdadera, solo para medir el techo) y desde donde está, compara la cobertura a 3.30 m y a 5.5 m. Altura
+        meta: arriba si desde arriba ve B4_SUBE más, abajo si ve B4_BAJA o menos; entre los dos conserva la meta anterior
+        (histéresis contra el vaivén). Botón: SUBIR o BAJAR si z_v17 está a más de 0.25 m de la meta, QUEDARSE si no."""
+        mk = self.action_masks()
+        d = self.mascara_decision() & (self.lvl_ep == NIVEL_V17)
+        P = (np.stack([self.px[:, 0], self.py[:, 0]], -1) if oraculo else np.stack([self.ult_x, self.ult_y], -1))
+        c_bajo = self._cobertura(P, self.dx, self.dy, np.full(self.n, Z_SEGURA))
+        c_alto = self._cobertura(P, self.dx, self.dy, np.full(self.n, Z_MAX_V17))
+        dif = c_alto - c_bajo
+        meta = np.where(dif >= B4_SUBE, Z_MAX_V17, np.where(dif <= B4_BAJA, Z_SEGURA, self.b4_meta))
+        self.b4_meta = np.where(d, meta, self.b4_meta)
+        b = np.where(self.z_v17 < self.b4_meta - 0.25, SUBIR, np.where(self.z_v17 > self.b4_meta + 0.25, BAJAR, QUEDARSE))
+        return np.where(mk[np.arange(self.n), b], b, QUEDARSE)
 
     def _preparar_civil_v16(self, i, j):
         """V16 · civil realista: atraviesa la zona caminando tranquilo, de un borde al opuesto; nace en algún punto de ese

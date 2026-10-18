@@ -173,6 +173,16 @@ class TestBotones(unittest.TestCase):
         env.step(np.full(8, E.BAJAR), AP(8), auto_reset=False)
         self.assertTrue((env.z_v17 >= E.Z_SEGURA - EPS).all())
 
+    def test_regla_b4_nunca_prohibido(self):
+        # D-067: B4 y B4* nunca aprietan un botón prohibido, en partidas reales de la cancha
+        env = E.EntornoDronPersona(16, semilla=3, nivel=E.NIVEL_V17)
+        for k in range(300):
+            mk = env.action_masks()
+            b = env.regla_b4(oraculo=bool(k % 2))
+            self.assertTrue(mk[np.arange(16), b].all())
+            self.assertTrue(np.isin(b, (E.QUEDARSE, E.SUBIR, E.BAJAR)).all())
+            env.step(b, AP(16), auto_reset=True)
+
     def test_regla_b2(self):
         env = fijado_quieto(8)
         b = env.regla_b2()
