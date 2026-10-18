@@ -12,6 +12,7 @@ una sale como un solo sólido.** Los `.stl` están en `stl/`.
 | `soporte_camara_abajo.stl` | 49 × 44 × 6.5 | Cámara IMX219 al piso, bajo el chasis |
 | `soporte_lidar_luna_pantilt.stl` | 40 × 42 × 16 | TF-Luna en la cuna del pan-tilt |
 | `soporte_luna_pod.stl` | 47 × 38 × 9.4 | **Variante C:** TF-Luna en el pod de la BaseCam (≈ 4–6 g, un solo sólido) |
+| `soporte_tf03_colgante.stl` | ver abajo | **TF03 real al chasis, colgante** (medidas de relleno) |
 | `soporte_lidar_tf03_chasis.stl` | 102 × 64 × 32 | TF03 al chasis a −3° (medidas del TF03 provisionales) |
 
 ## Lo que sí se comprobó (en la computadora)
@@ -45,3 +46,51 @@ gimbal hasta −45°, que es la hipótesis de toda la variante C.
 
 Peso estimado de los soportes (STL a 35 % de relleno): pan-tilt 48 g (base 12.7, plataforma 24.6, cuna 10.4); soporte del TF03 al
 chasis ≈ 32 g (grande para un sensor de 77 g: se aligera cuando se mida el TF03).
+
+## Lo que se ve en las fotos reales del dron (08_EVIDENCIA_Y_DIAGRAMAS/fotos/14 a 18, 2026-10-18)
+
+Lo que digo es lo que **se ve**; ninguna medida sale de las fotos salvo donde dice "de foto, aproximada".
+
+- **TF03:** caja negra con etiqueta blanca (código de barras) en un lado y una ventana grande de esquinas redondeadas al frente.
+  Cuelga **debajo** de una placa negra del pod del gimbal. *Tamaño: pendiente.*
+- **Placa del pod:** placa negra con una **ranura larga (riel)** y un tornillo de cabeza cilíndrica en cada extremo de la ranura.
+  *No puedo asegurar desde las fotos si la ranura va a lo largo de la mirada o de lado (en unas fotos parece una cosa y en otras
+  la otra). Pendiente.*
+- **Cámara USB:** placa **verde redonda** con un lente negro de tuerca hexagonal; va **encima** de la placa del pod, sujeta por el
+  riel. Sus cables salen por detrás. *Diámetro: de foto, aproximada, ≈ 20–25 mm; pendiente medirlo.*
+- El gimbal tiene el motor del pitch (negro, redondo) a un lado del pod; el cable amarillo/naranja/rojo de la BaseCam y un cable
+  plano naranja pasan cerca. Hay una cinta de velcro azul que sujeta la batería abajo.
+
+## Lo que FALTA medir (lista corta para Brahian, con calibrador)
+
+1. **TF03:** largo (en la dirección en la que mira), ancho y alto. *Pendiente.*
+2. **Distancia entre los dos tornillos del riel** (de centro a centro). *Pendiente.* → `riel_sep`.
+3. **Ancho de la ranura** y **tamaño de los tornillos** (¿M3? ¿cabeza de cuántos mm?). *Pendiente.* → `tornillo_d`.
+4. **¿La ranura va a lo largo de la mirada o de lado?** (basta con una foto desde arriba con una regla al lado). *Pendiente.* → `riel_eje`.
+5. **Diámetro de la placa verde de la cámara** y distancia entre su centro y el centro del lente. *Pendiente.*
+6. **Altura libre entre el riel y la placa donde cuelga el TF03** (para que el TF-Luna y su soporte quepan).
+7. Pesar el TF03, la cámara USB y el pod con todo (pedido de pesaje ya hecho a la parte física).
+
+## Piezas nuevas de esta ronda
+
+| Pieza | Para qué | Estado |
+|---|---|---|
+| `soporte_luna_pod.scad` (v2) | TF-Luna en el pod, atornillado por el **riel** con dos agujeros alargados (`riel_sep`, `riel_eje`, `tornillo_d`: **de relleno**) y bolsillo para las tuercas bajo el Luna | Compila, un solo sólido |
+| `soporte_tf03_colgante.scad` | El **TF03 real** cuelga de esta placa (como hoy del pod) y la placa va al chasis con 4 ranuras M3, con `cabeceo_deg = −3`. Mucho más liviana que la versión con paredes (el signo del cabeceo sigue sin probar) | Compila, un solo sólido; tamaños **de relleno** |
+
+La versión anterior del TF03 (`soporte_lidar.scad` con `modelo="tf03"`, con paredes y amarras) queda de respaldo; sus medidas eran inventadas y por eso la nueva es la que hay que mirar.
+
+**Qué no se puede saber sin la medida real:** si los agujeros alargados caen sobre la ranura, si la placa cabe bajo la cámara USB, si el Luna queda alineado con la cámara y si el cable fino deja bajar el gimbal.
+
+## Vistas
+
+Imágenes de cada pieza desde tres ángulos en `piezas_3d/vistas/` (hechas con OpenSCAD) y la página `../VISTA_3D.html`, que se abre con doble clic (necesita internet solo para cargar three.js 0.128 de cdnjs) y deja girar cada pieza con el mouse.
+
+## Cómo imprimirlas (para Brahian)
+
+- **Las hicimos nosotros: no se descargan de ningún sitio.** Los `.stl` ya están en `piezas_3d/stl/`.
+- Material: **PETG** (o PLA+). Relleno: **30–40 %**. Altura de capa 0.2 mm, 3 paredes. Sin soportes en casi todo; si el programa
+  de corte los pide en los agujeros del servo o de las tuercas, mira la vista previa antes.
+- Imprime **una sola pieza primero** y pruébala (por ejemplo `soporte_luna_pod.stl`, que es pequeña) antes de seguir.
+- Antes de imprimir las que dependen del riel (`soporte_luna_pod`, `soporte_tf03_colgante`), mide los puntos 1–5 de arriba y
+  avísame: se cambian 3 números y se vuelve a exportar en un minuto.
