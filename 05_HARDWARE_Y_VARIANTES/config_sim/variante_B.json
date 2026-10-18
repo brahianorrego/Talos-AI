@@ -3,7 +3,7 @@
   "NOMBRE": "A + cámara CSI al piso (nada más cambia)",
   "ESTADO": "proyectada",
   "TOCA_EL_MINIMO": false,
-  "MASA_SUMA_G": 5,
+  "MASA_SUMA_G": 10,
   "MASA_QUITA_G": 0,
   "GIMBAL_TIPO": "basecam",
   "GIMBAL_TIPO_EQUIVALENTE_V16": "basecam",

@@ -3,7 +3,7 @@
   "NOMBRE": "Pan-tilt de 2 servos SIN BaseCam: USB + TF-Luna encima, TF03 al chasis, CSI al piso",
   "ESTADO": "proyectada",
   "TOCA_EL_MINIMO": true,
-  "MASA_SUMA_G": 85,
+  "MASA_SUMA_G": 146,
   "MASA_QUITA_G": null,
   "GIMBAL_TIPO": "servo",
   "GIMBAL_TIPO_EQUIVALENTE_V16": "servo",

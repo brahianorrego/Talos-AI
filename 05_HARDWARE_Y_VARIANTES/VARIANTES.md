@@ -76,14 +76,47 @@ reequilibrar; la potencia en vuelo estacionario sube como m^1.5.
 | | A | B | C | D | E | F |
 |---|---|---|---|---|---|---|
 | **Viabilidad** | existe | alta | alta si el cable era el culpable | media (impresión, servos, Pixhawk, código Jetson) | media-baja (carga sobre un gimbal chico) | baja-media |
-| **Peso añadido (g, estim.)** | 0 | +5 | +13 | +85 y **−BaseCam (pesarla)** | +85 | +98 y −BaseCam |
-| **Δ potencia en vuelo** | — | <0.1 % | ~0.8 % | ~5 % menos lo de la BaseCam | ~5 % | ~6 % menos la BaseCam |
-| **Δ centro de gravedad** | — | 0.06 mm | ~1.4 mm (TF03 de 120→150 mm + TF-Luna) | ~3.5 mm menos lo que se quite | ~3.5 mm | ~4 mm |
+| **Peso añadido (g, estim., con los soportes impresos)** | 0 | +10 | +54 | +146 y **−BaseCam (pesarla)** | +146 | +166 y −BaseCam |
+| **Δ potencia en vuelo** | — | 0.6 % | 3.4 % | 9.4 % menos lo de la BaseCam | 9.4 % | 10.7 % menos la BaseCam |
+| **Δ centro de gravedad (mm hacia adelante)** | — | ~0.1 | 3.5 (TF03 a 150 mm de la nariz) a 5.7 (a 200 mm) | 0.2 a 9 según lo que pese la BaseCam (§4.1) | ≈ 7–9 | ≈ 8–10 menos la BaseCam |
 | **Cableado nuevo** | — | flex CSI→CAM0 | + TF-Luna (UART) | + 2 señales a AUX1/AUX2, + BEC | igual que D | + CSI→CAM1, + TF-Luna piso |
 | **Alimentación** | actual | CSI: 3.3 V de la Jetson | TF-Luna 5 V (~70 mA según hoja de datos) | **BEC 5–6 V ≥ 3 A solo para servos**, tierra común | igual | igual |
 | **Carga de la Jetson** | 1 cámara: ~30 FPS (medido) | 2 cámaras: **USB 24.2 / CSI 21.4 FPS (medido)** | igual a B | igual a B | igual a B | 3 cámaras: **no medido**; si el tope es total (45.6 FPS) → ~15 FPS cada una |
 | **Toca el mínimo congelado** | no | no (solo peso) | **sí** (TF03 deja de estar alineado con la cámara a −5°: re-simular `minimo_tesis/`) | sí | sí | sí |
 | **Riesgo principal** | no baja a −45° | masa y flex cerca de ESC | que el cable no fuera la causa | sin estabilización inercial, sin compensar alabeo, vibración en la imagen | sobrecargar los motores de la BaseCam | CPU/USB saturados |
+
+### 4.1 Peso y centro de gravedad de C y D (revisión del 18-oct)
+
+**Todo peso marcado "est." es de hoja de datos o calculado del volumen del STL (PETG 1.27 g/cm³, ≈60 % del macizo con 35 % de
+relleno); la parte física todavía no ha pesado nada** (pedido 2 de `docs/PEDIDOS_A_LA_PARTE_FISICA.md`). Cuando pese, se
+cambian los números y se repite la cuenta: ΔCG (mm) = Σ m·d / (2 371 + Σ m), con d = distancia al CG actual, **supuesta**: pod 120 mm,
+cámara al piso 30 mm, BEC 0 mm, cables 60 mm, TF03 en la nariz a 150–230 mm (medir).
+
+| Pieza | Peso (g) | Variante | Fuente |
+|---|---|---|---|
+| TF03 (pasa del pod a la nariz; no suma peso) | 77 | C, D | hoja de datos, de memoria |
+| Soporte del TF03 al chasis | 32 est. | C, D | STL (puede aligerarse a la mitad cuando se mida el TF03: la placa es grande) |
+| TF-Luna + cable | 8 est. | C, D | hoja de datos (5 g + cable) |
+| Soporte del TF-Luna (pod en C / pan-tilt en D) | 4 est. / 6 est. | C / D | STL |
+| Cámara CSI + soporte al piso | 5 + 5 est. | C, D | hoja de datos + STL |
+| Pan-tilt impreso (3 piezas) | 48 est. | D | STL |
+| 2 servos MG90D | 27 | D | hoja de datos (13.4 g c/u) |
+| BEC 5–6 V ≥ 3 A + cables de servo | 15 est. | D | estimado |
+| **BaseCam (se quita en D)** | **sin dato** | D | **pesarla** |
+
+| | Masa añadida | Δ potencia en vuelo (m^1.5) | ΔCG hacia adelante |
+|---|---|---|---|
+| **C**, TF03 a 150 mm | +54 g | 3.4 % | **3.5 mm** |
+| **C**, TF03 a 200 mm | +54 g | 3.4 % | **5.7 mm** |
+| **C**, TF03 a 230 mm | +54 g | 3.4 % | 7.0 mm |
+| **D**, BaseCam de 100 g, TF03 a 150 mm | +46 g | — | 2.6 mm |
+| **D**, BaseCam de 150 g, TF03 a 150 mm | −4 g | — | 0.2 mm |
+| **D**, BaseCam de 200 g, TF03 a 200 mm | −54 g | — | −0.1 mm |
+| **D** si la BaseCam no se quita (E) | +146 g | 9.4 % | 7–9 mm |
+
+Los pesos de BaseCam de la tabla son **ejemplos, no datos**. Lectura: con el TF03 **en la nariz**, C mueve el centro de gravedad
+3.5–7 mm hacia adelante: por encima de ~5 mm (mi regla práctica) conviene correr la batería hacia atrás un par de milímetros o
+aligerar el soporte del TF03; con el TF03 a 150 mm no hace falta. D casi se compensa si la BaseCam pesa 150–200 g.
 
 ### Notas por variante
 
@@ -151,6 +184,23 @@ Los dos puertos CSI son los únicos de la Jetson (CAM0 y CAM1).
   más lejos, o con un panel oscuro/a pleno sol (≈2.5 m de hoja de datos), no. El color de los paneles reales no consta
   en mis archivos: **verificarlo** (la foto de referencia es privada). La simulación debería usar el alcance del Luna
   por partida de 3 a 8 m como ya hace la V16 y **no** más.
+  **Alcance del TF-Luna según el color del panel (para fijar `LUNA_MAX`).** La hoja de datos (de memoria) da solo dos puntos:
+  ≈ 8 m con objetivo de 90 % de reflectividad y ≈ 2.5 m con 10 %. Entre medias interpolo con R = 8·√(ρ/0.9) (un objetivo difuso:
+  el alcance sube con la raíz de la reflectividad; con esa ley el punto de 10 % da 2.7 m, casi lo mismo). **Es mi estimación**,
+  la reflectividad en infrarrojo no es la del color que se ve, y el sol fuerte la baja.
+
+  | Panel (reflectividad en infrarrojo estimada) | ρ | Alcance estimado | ¿Ve todo el panel a −30° (2.6–6.6 m)? | ¿Y a −45° (1.8–4.7 m)? |
+  |---|---|---|---|---|
+  | Blanco mate | 0.85–0.9 | 7.8–8 m | sí | sí |
+  | Gris claro, crema, madera clara | 0.5 | 6.0 m | casi (la base a 6.6 m no) | sí |
+  | Colores medios (rojo, verde, amarillo) | 0.3 | 4.6 m | solo hasta 4.6 m: el tercio de abajo no | sí (justo, 4.7 m) |
+  | Azul o gris oscuro | 0.1 | 2.7 m | solo la parte alta (≤ 2.7 m) | solo la parte alta |
+  | Negro | 0.05 | 1.9 m | casi nada | solo el borde de arriba |
+
+  Reflectividad mínima para ver todo el panel (ρ = 0.9·(R/8)²): **0.61 a −30°** (6.6 m), **0.31 a −45°** (4.7 m). Por tanto,
+  **`LUNA_MAX` = 8 m solo si los paneles son blancos; 6 m con paneles claros; 4.5 m con colores medios y 2.5 m con oscuros.** El
+  rango (3, 8) de la simulación por partida cubre todos estos casos a la vez. Falta el color real de los paneles (Brahian).
+
   - **C (BaseCam):** el pitch es lento (30°/s) y es el de la cámara, que lo decide quien sigue al ladrón; el Luna mapea
     paneles solo cuando la cámara apunta abajo y a su ritmo. A cambio, el ángulo está estabilizado por la BaseCam y el
     descarte del suelo es confiable.
@@ -195,8 +245,8 @@ un servo rápido sin tope de cable; F pide una cámara más y el pan.
 | `soporte_camara.scad` | Placa con 4 separadores para IMX219 o una USB; modo `frente` (cuadrícula M2 de 10 mm de la cuna) y modo `abajo` (cámara al piso bajo el chasis) | Las medidas de la IMX219 son de un plano recordado |
 | `soporte_lidar.scad` | Cuna abierta con ranuras para amarras: TF-Luna (35×18×21) o TF03; `cuadricula` o `chasis` con cuña de `cabeceo_deg` | Las medidas del TF03 son **provisionales** |
 
-Impresión sugerida: PETG, 0.2 mm de capa, 3 perímetros, 30–40 % de relleno. Peso estimado del pan-tilt impreso: ~35 g
-(el *slicer* da el número real). Montar sobre silicona o arandelas blandas contra la vibración.
+Impresión sugerida: PETG, 0.2 mm de capa, 3 perímetros, 30–40 % de relleno. Peso estimado del pan-tilt impreso: ~48 g
+(calculado del volumen de los STL al 35 % de relleno; el *slicer* da el número real). Montar sobre silicona o arandelas blandas contra la vibración.
 
 ### Qué no se puede verificar sin la pieza (ni sin OpenSCAD)
 

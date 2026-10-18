@@ -1,8 +1,10 @@
-"""Comprueba los config_sim/variante_*.json contra las reglas duras del proyecto.
+"""Comprueba los config_sim/variante_*.json contra las reglas duras del proyecto y, para C y D, contra las
+constantes de 03_SIMULACION_RL/entorno.py y control.py (solo las LEE con ast; no importa ni escribe nada de 03_).
 
 Uso (desde cualquier carpeta):  python validar_variantes.py
 Sale con código 1 si algo falla. No importa nada del proyecto: solo lee los JSON.
 """
+import ast
 import glob
 import json
 import os
@@ -45,6 +47,91 @@ def revisar(v):
     return e
 
 
+SIM = os.path.join(AQUI, "..", "03_SIMULACION_RL")
+BC, MX = "control.GimbalBaseCam.", "control.GimbalMixto."
+
+
+def constantes(archivo, prefijo):
+    """Asignaciones literales de módulo (NOMBRE) y de clase (Clase.NOMBRE) de un .py, sin ejecutarlo."""
+    out = {}
+
+    def tomar(nodos, pre):
+        for n in nodos:
+            if isinstance(n, ast.Assign) and len(n.targets) == 1:
+                t = n.targets[0]
+                nombres = [t] if isinstance(t, ast.Name) else (t.elts if isinstance(t, ast.Tuple) else [])
+                try:
+                    v = ast.literal_eval(n.value)
+                except ValueError:
+                    continue
+                vals = [v] if isinstance(t, ast.Name) else (list(v) if isinstance(v, tuple) else [])
+                for nom, val in zip(nombres, vals):
+                    if isinstance(nom, ast.Name):
+                        out[pre + nom.id] = val  # la última asignación gana, como en Python
+            elif isinstance(n, ast.ClassDef):
+                tomar(n.body, f"{prefijo}{n.name}.")
+
+    with open(archivo, encoding="utf-8") as f:
+        tomar(ast.parse(f.read()).body, "" if prefijo == "entorno." else prefijo)
+    return out
+
+
+def contra_simulacion(v, c):
+    """Lista de (clave JSON, valor JSON, constante, valor de la simulación, estado) para una variante."""
+    servo = v["GIMBAL_TIPO_EQUIVALENTE_V16"] == "servo"
+    g = (MX + "SERVO_VEL", MX + "RETARDO", MX + "SERVO_BANDA") if servo else (BC + "VEL_MAX", BC + "TAU_ESTAB", None)
+    filas = [
+        ("GIMBAL_MIN", v["GIMBAL_MIN"], "GIMBAL_MIN", None),
+        ("GIMBAL_MAX", v["GIMBAL_MAX"], "GIMBAL_MAX", None),
+        ("GIMBAL_VEL_DPS", v["GIMBAL_VEL_DPS"], g[0], None),
+        ("GIMBAL_RETARDO_S", tuple(v["GIMBAL_RETARDO_S"]), g[1], "tupla"),
+        ("GIMBAL_ZONA_MUERTA_DEG", v["GIMBAL_ZONA_MUERTA_DEG"], g[2], None),
+        ("CAM_PRINCIPAL_HFOV", v["CAM_PRINCIPAL_HFOV"], "HFOV", None),
+        ("CAM_PRINCIPAL_VFOV", v["CAM_PRINCIPAL_VFOV"], "VFOV", None),
+        ("CAM_PISO_HFOV", v["CAM_PISO_HFOV"], "CAM_PISO_HFOV", None),
+        ("CAM_PISO_VFOV", v["CAM_PISO_VFOV"], "CAM_PISO_VFOV", None),
+        ("CAM_PISO_PITCH", v["CAM_PISO_PITCH"], "CAM_PISO_PITCH", None),
+        ("LIDAR_TF03_PITCH_DEG", v["LIDAR_TF03_PITCH_DEG"], "TF03_PITCH_V17", None),
+        ("LIDAR_TF03_ALCANCE_M", v["LIDAR_TF03_ALCANCE_M"], "LIDAR_MAX", None),
+        ("LIDAR_LUNA_ALCANCE_M", tuple(v["LIDAR_LUNA_ALCANCE_M"]), "LUNA_MAX", "tupla"),
+        ("LIDAR_LUNA_PISO_ALTIMETRO", "luna" if v["LIDAR_LUNA_PISO_ALTIMETRO"] else "baro", "ALTIMETRO", None),
+    ]
+    res = []
+    for clave, val, nom, _ in filas:
+        if nom is None or nom not in c:
+            res.append((clave, val, nom or "—", None, "sin constante"))
+            continue
+        sim = c[nom]
+        sim = tuple(sim) if isinstance(sim, (list, tuple)) else sim
+        if isinstance(val, tuple) and isinstance(sim, (int, float)):
+            ok = all(abs(x - sim) < 1e-9 for x in val)  # BaseCam: un solo retardo (TAU_ESTAB) para los dos extremos
+        else:
+            ok = (val == sim) if isinstance(val, (tuple, str)) or isinstance(sim, (tuple, str)) else abs(val - sim) < 1e-9
+        res.append((clave, val, nom, sim, "OK" if ok else "DIFIERE"))
+    # el tipo de gimbal: la V17 entrena "mixto", que incluye BaseCam y servo
+    tipo = c.get("GIMBAL_TIPO")
+    res.append(("GIMBAL_TIPO_EQUIVALENTE_V16", v["GIMBAL_TIPO_EQUIVALENTE_V16"], "GIMBAL_TIPO", tipo,
+                "OK" if tipo in ("mixto", v["GIMBAL_TIPO_EQUIVALENTE_V16"]) else "DIFIERE"))
+    return res
+
+
+def informe_simulacion(datos):
+    ent, ctl = os.path.join(SIM, "entorno.py"), os.path.join(SIM, "control.py")
+    if not (os.path.exists(ent) and os.path.exists(ctl)):
+        print("\n(no se encontró 03_SIMULACION_RL: se omite la comparación con la simulación)")
+        return 0
+    c = {**constantes(ent, "entorno."), **constantes(ctl, "control.")}
+    dif = 0
+    for nombre in ("variante_C.json", "variante_D.json"):
+        print(f"\n== {nombre} contra 03_SIMULACION_RL ==")
+        for clave, val, nom, sim, est in contra_simulacion(datos[nombre], c):
+            dif += est == "DIFIERE"
+            print(f"  {est:13} {clave} = {val}  |  {nom} = {sim}")
+        print("  sin constante en la simulación (según PROGRESO_V17): PAN_*, CAM_FRONTAL_ANCHA_*, CAM_PISO_ACTIVA, YOLO_FPS_*, MASA_*,")
+        print("  LIDAR_TF03_MONTAJE y LIDAR_LUNA_MONTAJE: no se comprueban aquí.")
+    return dif
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")  # la consola de Windows usa cp1252 y no tiene el signo −
     archivos = sorted(glob.glob(os.path.join(AQUI, "config_sim", "variante_*.json")))
@@ -63,6 +150,7 @@ def main():
         print(f"{nombre}: {'OK' if not errores else 'FALLA'}")
         for e in errores:
             print("   -", e)
+    informe_simulacion(datos)
     return 1 if malo else 0
 
 

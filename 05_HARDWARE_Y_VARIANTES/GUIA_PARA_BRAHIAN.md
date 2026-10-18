@@ -53,6 +53,44 @@ Las hace **la parte física**, después de terminar los pasos 4 a 7 del mínimo.
 
 Todo lo anterior queda como pedido en `docs/PEDIDOS_A_LA_PARTE_FISICA.md`.
 
+## 3.1 Calibrar el servo de la variante D en el banco, paso a paso
+
+Hace falta: el servo conectado a su fuente aparte (BEC), la Pixhawk **sin hélices y sin batería de vuelo conectada a los
+motores**, un transportador (o un teléfono con nivel), cinta y papel para anotar. Regla de oro: **la fórmula
+`pwm = 1500 + θ·500/45` no se toca nunca** (ni en la Jetson ni en la simulación). Si el servo no coincide, se corrige el
+servo en la Pixhawk con los parámetros del canal (`SERVO9_MIN`, `SERVO9_TRIM`, `SERVO9_MAX`, `SERVO9_REVERSED`).
+
+| Orden | Debe quedar el soporte en |
+|---|---|
+| 1000 µs | −45° |
+| 1500 µs | 0° (horizontal) |
+| 1667 µs | +15° |
+
+1. **Primero el servo solo, sin la cuna.** Monta el cuerno con un brazo de cartón o palito (el "brazo de medir") para ver el
+   ángulo con claridad. Si usas la cuna con su pin, el pin frenaría en −44°/+14° y no podrías medir −45° (el tope está 1°
+   dentro a propósito).
+2. **Cero.** Ordena 1500 µs (en Mission Planner, prueba de salidas de servo, canal 9; o con la orden de servo de la Jetson).
+   Aprieta el cuerno con el brazo **horizontal** (mídelo con el nivel). Si queda inclinado menos de 7°, déjalo y corrígelo
+   con `SERVO9_TRIM`; el cuerno solo encaja en pasos de 14.4°.
+3. **Los dos extremos.** Ordena 1000 µs y mide el ángulo del brazo (debe ser −45°). Ordena 1667 µs (debe ser +15°). Anota
+   los dos valores. Repite **3 veces** cada uno, yendo y viniendo desde el centro: la diferencia entre repeticiones es la
+   zona muerta del servo (se espera ≈ 1°).
+4. **Si no coinciden** (por ejemplo, a 1000 µs mide −38°): se ajustan `SERVO9_MIN` y `SERVO9_MAX` hasta que 1000 µs dé −45°
+   y 1667 µs dé +15°, y `SERVO9_TRIM` hasta que 1500 µs dé 0°. Si el servo se mueve al revés, `SERVO9_REVERSED = 1`. Si ni
+   con el extremo del servo llega a −45°, el servo no sirve para esto (anotarlo y cambiarlo). *Cómo escala exactamente la
+   Pixhawk ese rango en el modo de montura de ArduPilot 4.7 lo confirma la parte física en la documentación antes de
+   tocar nada; yo no lo he probado.*
+5. **Con la cuna puesta** (ahora con el pin): ordena 1000 µs y 1667 µs. La cuna debe frenar sola en −44° y +14° (el pin toca
+   el final de la ranura). Ordena más allá (900 y 1750 µs): **no debe pasar de −45° ni de +15°**. Un zumbido corto en el tope es
+   normal; si zumba más de unos segundos, el servo está empujando contra el tope: avisar para limitar la orden de la
+   Jetson a −43°…+13°.
+6. **Carga.** Con la cámara y el TF-Luna puestos, repite 1000, 1500 y 1667 µs: el ángulo no debe cambiar más de 1° ni
+   quedarse temblando.
+7. **Anota** en una tabla: orden (µs), ángulo medido, repetición 1/2/3, ¿zumbido?, ¿pasa del tope? Esa tabla es la evidencia
+   para el documento del proyecto de grado.
+
+Esta prueba la hace la parte física; sin ella no se vuela con el pan-tilt.
+
 ## 4. Imprimir el pan-tilt de la variante D
 
 **Estado: las piezas ya compilan y están en `piezas_3d/stl/`** (ver `piezas_3d/ESTADO_IMPRESION.md`). En la computadora
