@@ -1,10 +1,10 @@
-# Une los cuadros JPEG que deja video_cancha_v17.py en un MP4 (H.264) con el editor de video de Blender.
+# Une los cuadros JPEG o PNG (de Blender o de Unreal) en un MP4 (H.264) con el editor de video de Blender.
 # Uso: blender --background --factory-startup --python unir_video.py -- <carpeta_de_cuadros> <salida.mp4> [fps]
 import bpy, sys, os
 args = sys.argv[sys.argv.index("--") + 1:]
 CARPETA, SALIDA = args[0], args[1]
 FPS = int(args[2]) if len(args) > 2 else 24
-cuadros = sorted(f for f in os.listdir(CARPETA) if f.lower().endswith(".jpg") and os.path.getsize(os.path.join(CARPETA, f)) > 0)
+cuadros = sorted(f for f in os.listdir(CARPETA) if f.lower().endswith((".jpg", ".png")) and os.path.getsize(os.path.join(CARPETA, f)) > 0)
 esc = bpy.context.scene
 esc.render.fps = FPS
 ed = esc.sequence_editor_create()

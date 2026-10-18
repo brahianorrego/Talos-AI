@@ -1,0 +1,17 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "DRON-IA · cancha V17 realista (proyecto de grado, Brahian Andrés Orrego Osorio). Solo dibuja lo que manda foto() de la simulación.",
+	"Modules": [],
+	"Plugins": [
+		{ "Name": "ModelingToolsEditorMode", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "SequencerScripting", "Enabled": true },
+		{ "Name": "MovieRenderPipeline", "Enabled": true },
+		{ "Name": "MetaHumanCharacter", "Enabled": true },
+		{ "Name": "RemoteControl", "Enabled": true },
+		{ "Name": "RemoteControlWebInterface", "Enabled": true }
+	]
+}

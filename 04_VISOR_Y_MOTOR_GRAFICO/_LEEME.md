@@ -227,3 +227,11 @@ pueden desordenar. Cada modo pone los paneles que necesita y guarda los demás; 
 - **Confirmación del operador:** cuando una repetición espera el clic (Operador · MANUAL), sale un aviso grande con el
   botón **"Confirmar sospechoso"**, que funciona en cualquier modo. Antes la pantalla parecía congelada.
 - Capturas: `mediciones/capturas/estacion_modo_*.jpg`. Probado en vivo en Chrome con la RTX, sin errores.
+
+## Unreal Engine 5.8 · fase 1 hecha (2026-10-18)
+
+Unreal 5.8.3 instalado por Brahian. Claude creó el proyecto `DronIA_Cancha` (Blueprint, con Python, Sequencer, Movie Render
+Queue, MetaHuman y Remote Control activados) sin abrir el editor, y escribió los scripts de `unreal/` (ver `unreal/_LEEME.md`):
+la cancha con las V de 1.5 × 2.25 m, la conversión de cualquier repetición V17 en secuencia y el render a 1080p. Probado de
+punta a punta: repetición → secuencia (721 cuadros) → 24 cuadros PNG → MP4. Captura: `mediciones/capturas/unreal_prueba_cuadro240.jpg`
+(personas = cilindros, provisional). **A Brahian le quedan 4 pasos: `GUIA_BRAHIAN_UNREAL.md`.**
