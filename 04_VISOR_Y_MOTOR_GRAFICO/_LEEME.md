@@ -188,7 +188,7 @@ servidor de la estación (8768) y Chrome en http://127.0.0.1:8768/.
   entrenamiento y del mínimo, como en el clásico (el servidor las lee de `03_SIMULACION_RL` sin tocarla).
 - **Sin internet:** three.js 0.128, sus controles y las tipografías 3D están en `estacion/lib/` (MIT, ver `lib/LICENSE`).
   Se quitaron Google Fonts y Tailwind (usa las letras del sistema).
-- Probado en Chrome con la RTX en vivo, sin errores. Capturas: `mediciones/capturas/estacion_{todo,dron,3d}.jpg`.
+- Probado en Chrome con la RTX en vivo, sin errores. Capturas: ahora `mediciones/capturas/estacion_modo_*.jpg` (esta versión con ventanas fue reemplazada por los modos fijos).
 - Textos: "estación de tierra · proyecto de grado" (el clásico decía "Tesis").
 
 ### Pedidos de Brahian para la estación (17-oct, noche)
@@ -208,8 +208,7 @@ servidor de la estación (8768) y Chrome en http://127.0.0.1:8768/.
    El botón **⇱** de la cámara, del mapa o de la vista 3D la pone en la pantalla principal, y la que estaba ahí pasa a su
    recuadro. "Solo 3D" y "Solo lo que ve el dron" dejan la principal a pantalla completa.
 
-Probado en Chrome con la RTX en vivo: 111-144 cps, sin errores. Capturas: `mediciones/capturas/estacion_*.jpg`
-(`todo`, `mapa` = mapa en la principal, `3dprin` = 3D en la principal, `dron`, `3d`).
+Probado en Chrome con la RTX en vivo: 111-144 cps, sin errores. Capturas: reemplazadas por `estacion_modo_*.jpg` (modos fijos, abajo)
 
 ### Estación con modos fijos (pedido de Brahian, 17-oct, noche)
 
