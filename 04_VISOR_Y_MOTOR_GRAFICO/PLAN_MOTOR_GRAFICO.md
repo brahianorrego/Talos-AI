@@ -1,5 +1,9 @@
 # Plan del motor gráfico y de la estación de tierra (Fase D1-D2)
 
+> **Actualización 2026-10-17 (D-065):** Brahian rechazó el aspecto de Quaternius y pidió "algo similar a GTA 5". El mundo
+> realista pasa a **Unreal Engine 5** (`PLAN_UNREAL.md`); la estación de tierra sigue siendo web (`estacion/`). Lo de
+> abajo queda como registro de la primera comparación.
+
 Sesión "Visor y motor gráfico", 2026-10-17. **Solo plan y medición: no se construyó nada nuevo.** Lo que se aprueba
 de aquí lo decide Brahian con el Arquitecto.
 
