@@ -140,6 +140,32 @@ bono de entropía `--ent 0.01` y `MARGEN_BARO_V17 = 0.5` (D-063). Retornos con b
 A 1.3 M pasos (64 partidas) todavía elige QUEDARSE en modo determinista, pero **sin colapsar**: probabilidad de la
 preferida 0.68 y entropía 0.98 (la V17.1 tenía 0.98 y 0.12 en el mismo punto).
 
+**Línea base V17.2** (512 partidas, con el margen de 0.5 m; `informes/v17/v172_base_b*.json`): M1 B0 48.4 %, B1 45.9 %,
+B2 53.1 %, **B3 56.2 %**. El tiempo real bajo 3.30 m con alguien a < 8 m queda en 0.4-0.5 % en todas.
+
+**Resultado a los 10 M** (512 partidas, `informes/v17/v172_10M_det.json` y `_est.json`; terminó 21:17):
+
+| | M1 | Vista (s) | M2 ≤ 10 s | Rendición | Alcanzado | Botones donde decide |
+|---|---:|---:|---:|---:|---:|---|
+| V17.2 determinista | 50.0 % | 100.9 | 71.5 % | 15.0 % | 0.4 % | SUBIR 52 %, BAJAR 48 % |
+| V17.2 estocástica (como entrena) | 55.3 % | 100.2 | 73.4 % | 15.4 % | 0.2 % | SUBIR 42 %, BAJAR 37 %, QUEDARSE 19 % |
+| B0 / B3 | 48.4 / 56.2 % | 102.6 / 96.0 | 70.3 / 78.8 % | 14.5 / 22.3 % | 0.2 / 0.2 % | — |
+
+- **Ya no colapsa:** maneja la altura (SUBIR y BAJAR) en vez de quedarse quieta; probabilidad de la preferida 0.55, entropía
+  0.95 de 1.95. A 1.3 M y 3.3 M elegía QUEDARSE (M1 37.5 % en 64 partidas).
+- **Todavía no aporta:** empata con B0-B3 dentro del ruido (±4.3) y no le gana a "siempre SUBIR". Sube y baja a partes casi
+  iguales, como si no supiera todavía cuándo conviene estar arriba.
+- **Decisión (D-062, delegada al Supervisor/sesión):** se **continúa la V17.2 hasta 50 M** (es la única corrida que muestra
+  aprendizaje) con la regla de parada de D-052: si a los 50 M no supera a B0 por ≥ 3 puntos **y** a B3, se para y se prueba
+  la **V17.3** (`--gamma 0.995`, ya programado en `entrenar_master.py`: horizonte de ~20 s, porque la ventaja de estar
+  arriba aparece en rachas de 30 s).
+
+**V17.2 hasta 50 M, en marcha desde 2026-10-17 22:29** (misma pestaña del Terminal; termina hacia las 02:00):
+`.venv\Scripts\python.exe -u entrenar_master.py --continuar --pasos 4e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_2 --dir-master modelos_v17_2 --dir-modelos modelos_v17_2 *> modelos_v17_2_50M.log`
+(con `--continuar`, `--pasos` son los pasos que se AGREGAN: 10 M + 40 M = 50 M). Medirla al terminar:
+`.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol modelos_v17_2\ultimo.zip,modelos_v17_2\ultimo.zip-est --n 512 --salida informes\v17\v172_50M.json`
+Los checkpoints de cada millón quedan en `modelos_v17_2\checkpoints\` para ver la curva.
+
 ### D-063 · Altura segura con el error del barómetro
 
 B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y

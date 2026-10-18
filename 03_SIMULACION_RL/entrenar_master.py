@@ -218,9 +218,9 @@ class VecDron(VecEnv):
 
 
 # ======================================================================= modelo SB3 y transferencia
-def nuevo_ppo(venv, lr, ent=0.01, semilla=None):
+def nuevo_ppo(venv, lr, ent=0.01, semilla=None, gamma=0.99):
     """V17: MaskablePPO (sb3-contrib) con los hiperparámetros de siempre; ent = bono de entropía (R3)."""
-    return MaskablePPO("MlpPolicy", venv, learning_rate=lr, n_steps=128, batch_size=8192, n_epochs=4, gamma=0.99,
+    return MaskablePPO("MlpPolicy", venv, learning_rate=lr, n_steps=128, batch_size=8192, n_epochs=4, gamma=gamma,
                        gae_lambda=0.95, clip_range=0.2, ent_coef=ent, vf_coef=0.5, max_grad_norm=0.5, device="cpu",
                        verbose=0, seed=semilla,
                        policy_kwargs=dict(net_arch=dict(pi=[128, 128], vf=[128, 128]), activation_fn=nn.Tanh,
@@ -571,11 +571,11 @@ def _copiar_pesos(dst, src, n_viejas=None):
             dst.weight[:, :src.weight.shape[1]].copy_(src.weight)
 
 
-def desde_zip_v17(ruta, venv, lr, ent, semilla=None):
+def desde_zip_v17(ruta, venv, lr, ent, semilla=None, gamma=0.99):
     """V17: modelo nuevo de 7 botones con las capas OCULTAS (actor y crítico) y la salida del crítico de otro modelo SB3
     (por ejemplo la V15: sus 192 entradas, las nuevas en cero). La salida de los botones arranca nueva: cambió su número."""
     viejo = PPO.load(ruta, device="cpu", custom_objects={"learning_rate": lr})
-    modelo = nuevo_ppo(venv, lr, ent, semilla)
+    modelo = nuevo_ppo(venv, lr, ent, semilla, gamma)
     pv, pn = viejo.policy, modelo.policy
     for a, b in ((pn.mlp_extractor.policy_net[0], pv.mlp_extractor.policy_net[0]),
                  (pn.mlp_extractor.policy_net[2], pv.mlp_extractor.policy_net[2]),
@@ -794,6 +794,7 @@ def main():
     ap.add_argument("--desde", default=None, help="V17: modelo SB3 (.zip) del que se copian las capas ocultas del actor y "
                                                      "del crítico (sin esto, la red arranca de cero)")
     ap.add_argument("--ent", type=float, default=0.003, help="bono de entropía (R3: 0.003; la V15 usaba 0.01)")
+    ap.add_argument("--gamma", type=float, default=0.99, help="V17.3: factor de descuento (0.995 = horizonte ~20 s)")
     ap.add_argument("--congelar", choices=["viejas", "capa", "nada"], default="nada",
                     help="viejas: congela en la 1.a capa del actor las conexiones de las 192 entradas de la V15 (las 3 "
                          "nuevas aprenden); capa: la 1.a capa entera (como la V12); nada: todo aprende")
@@ -852,10 +853,10 @@ def main():
         torch.save(red_p.state_dict(), ruta_persona)
         venv = VecDron(a.envs, semilla, red_p)
         if a.desde:
-            modelo = desde_zip_v17(a.desde, venv, a.lr, a.ent, semilla)
+            modelo = desde_zip_v17(a.desde, venv, a.lr, a.ent, semilla, a.gamma)
             desde = a.desde + " (capas ocultas; salida de 7 botones nueva)"
         else:
-            modelo = nuevo_ppo(venv, a.lr, a.ent, semilla)
+            modelo = nuevo_ppo(venv, a.lr, a.ent, semilla, a.gamma)
             desde = "cero"
         modelo.num_timesteps = 0
         modelo.save(os.path.join(MASTER, "base_%s.zip" % VERSION.lower()))
