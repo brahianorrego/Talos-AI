@@ -35,7 +35,7 @@ Fuente: `v16/simulacion/recursos/LICENCIAS.md`. El script que hizo las texturas 
 
 En `v16/`, escenario **"Vista previa · cancha V17, dos V de 90° (no entrenado)"** (`visor/previa.js`, `crearCancha`):
 cancha de fútbol con líneas y arcos (90 × 60 m, **medidas por medir**), zona de IA de 30 × 30 m en el centro de la mitad
-este (geocerca roja en la vista externa y en el mapa pequeño), dos V de 90° de paneles de exposición de 1.0 × 2.0 m con
+este (geocerca roja en la vista externa y en el mapa pequeño), dos V de 90° de paneles de exposición de 1.5 × 2.25 m (D-066; antes 1.0 × 2.0) con
 bolsas de arena, vértices a 10 m (V1 abre al sur, V2 al norte) y árboles fuera de la cancha (≥ 10 m de la geocerca).
 Escena de ejemplo: el ladrón agachado detrás de V1 se cambia a V2 y el civil cruza a 8 m. Fuente: `docs/PLAN_V17_REFUERZO.md`
 §3.3 y D-051. Medido con la RTX: 144 cps y sin errores (`mediciones/medir_fps.mjs cancha`). Capturas:

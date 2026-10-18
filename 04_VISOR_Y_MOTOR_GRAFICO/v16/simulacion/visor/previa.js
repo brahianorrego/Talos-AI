@@ -39,7 +39,7 @@ export class Previa {
   }
 
   // ------------------------------------------------------------------------------------------------ cancha V17 (D-051)
-  // Zona de IA de 30 × 30 m centrada en el origen, en el centro de media cancha; dos V de 90° (alas de ~1.0 m, 2.0 m de
+  // Zona de IA de 30 × 30 m centrada en el origen, en el centro de media cancha; dos V de 90° (alas de 1.5 m, 2.25 m de
   // alto) con los vértices a 10 m: V1 abre al sur y V2 al norte; árboles fuera de la cancha, a ≥ 10 m de la geocerca.
   // Fuente: docs/PLAN_V17_REFUERZO.md §3.3 y docs/v17_zona_ia.png. Medidas de la cancha (90 × 60 m): por medir.
   crearCancha() {
@@ -72,7 +72,7 @@ export class Previa {
     const tablero = new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.85 });
     const marco = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, roughness: 0.35, metalness: 0.8 });
     const arena = new THREE.MeshStandardMaterial({ color: 0x8a6f4a, roughness: 1 });
-    const ALA = 1.0, ALTO = 2.0, segs = [];
+    const ALA = 1.5, ALTO = 2.25, segs = [];       // D-066 (hasta medirlos con cinta)
     const panel = (xa, ya, xb, yb) => {
       const L = Math.hypot(xb - xa, yb - ya), rot = Math.atan2(yb - ya, xb - xa), c = mundo((xa + xb) / 2, (ya + yb) / 2);
       const t = new THREE.Mesh(new THREE.BoxGeometry(L - 0.06, ALTO - 0.12, 0.03), tablero); t.position.copy(c).setY(ALTO / 2 + 0.03); t.rotation.y = rot; add(t);

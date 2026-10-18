@@ -119,11 +119,12 @@ for xa in (x0, x1):
     bpy.ops.mesh.primitive_cylinder_add(radius=0.06, depth=7.44, location=(xa, 0, 2.44), rotation=(math.pi / 2, 0, 0))
     bpy.context.object.data.materials.append(tubo)
 
-# paneles de exposición en V de 90° (alas de 1.0 m, 2.0 m de alto) con bolsas de arena
+# paneles de exposición en V de 90° (alas de 1.5 m, 2.25 m de alto, D-066) con bolsas de arena
 tablero = material("tablero", (0.86, 0.85, 0.82), 0.7)
 marco = material("marco", (0.7, 0.72, 0.75), 0.3, 0.9)
 arena = material("arena", (0.42, 0.33, 0.2), 1.0)
-ALA, ALTO, d = 1.0, 2.0, 1.0 / math.sqrt(2)
+ALA, ALTO = 1.5, 2.25
+d = ALA / math.sqrt(2)
 for xv, s in ((-5, -1), (5, 1)):          # V1 abre al sur, V2 al norte
     for lado in (-1, 1):
         xa, ya, xb, yb = xv, 0, xv + lado * d, s * d
