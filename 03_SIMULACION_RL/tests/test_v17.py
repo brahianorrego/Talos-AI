@@ -149,16 +149,18 @@ class TestBotones(unittest.TestCase):
         self.assertEqual(mk.shape, (16, len(E.CLASES_V17)))
         self.assertTrue(mk[:, E.QUEDARSE].all())
         self.assertFalse(mk[~env.mascara_decision(), 1:].any())   # sin decisión: un solo botón
-        env = fijado_quieto(3, z17=E.Z_SEGURA)
+        env = fijado_quieto(8, z17=E.Z_SEGURA)
         mk = env.action_masks()
-        self.assertTrue(mk[:, E.RODEAR_IZQ].all() and mk[:, E.SUBIR].all())
+        d = env.mascara_decision()
+        self.assertTrue(d.any())
+        self.assertTrue(mk[d, E.RODEAR_IZQ].all() and mk[d, E.SUBIR].all())
         self.assertFalse(mk[:, E.BAJAR].any())                    # ya a la altura segura: nunca más abajo
         env.z_v17[:] = E.Z_MAX_V17
         self.assertFalse(env.action_masks()[:, E.SUBIR].any())
         # un botón prohibido se toma como QUEDARSE
         z = env.z_v17.copy()
         env.z_v17[:] = E.Z_SEGURA
-        env.step(np.full(3, E.BAJAR), AP(3), auto_reset=False)
+        env.step(np.full(8, E.BAJAR), AP(8), auto_reset=False)
         self.assertTrue((env.z_v17 >= E.Z_SEGURA - EPS).all())
 
     def test_regla_b2(self):

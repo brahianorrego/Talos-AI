@@ -597,6 +597,7 @@ R_RACHA_V17 = 10.0
 # multas de sobrevuelo y de ángulo, "siempre SUBIR" (M1 61.7 %) cobraba MENOS que "siempre QUEDARSE" (55.1 %): la red
 # aprendía a quedarse. El punto ciego y el ángulo los cuidan reglas (reflejo de punto ciego, barrera de -45°).
 R_SOBREVUELO_V17, R_ANGULO_GMB_V17 = 0.0, 0.0
+K_SUAVE_V17 = 0.1              # V17.2: peso de la multa de suavidad (delta y sacudida) en la cancha
 K_RACHA_V17 = 3.0
 # D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
 TF03_PITCH_V17 = -3.0
@@ -3385,6 +3386,10 @@ class EntornoDronPersona(object):
         # V16 · A4 · SACUDIDA (jerk): segunda diferencia de lo que comanda la red, con ella al mando 3 pasos seguidos
         v16r = self.lvl_ep >= NIVEL_V16
         pen_jerk = np.where(v16r & mando & self.mando_prev, K_JERK_V16 * np.abs(u_ia - 2 * self.u_prev + self.u_prev2).sum(1), 0.0)
+        # V17.2: en la cancha la suavidad pesa K_SUAVE_V17 (con botones al azar costaba -170 por partida contra +35 de la
+        # vista: al empezar a entrenar aplastaba todo y la red se quedaba en QUEDARSE, el único botón siempre permitido)
+        pen_delta = np.where(v17, K_SUAVE_V17, 1.0) * pen_delta
+        pen_jerk = np.where(v17, K_SUAVE_V17, 1.0) * pen_jerk
         rc["control"] -= pen_delta + pen_esfuerzo + pen_jerk
         self.u_prev2 = np.where((mando & self.mando_prev)[:, None], self.u_prev, u_ia)
         # jitter FÍSICO por eje (todo lo que se movió, lo comande quien lo comande), solo para el registro

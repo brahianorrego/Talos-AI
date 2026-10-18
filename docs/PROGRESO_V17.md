@@ -121,6 +121,25 @@ red aprende a no moverse.
 - Medirla: `.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol modelos_v17_1\ultimo.zip --n 512 --salida informes\v17\v171_10M.json`
 - D-062: si supera a B0 y a B3 en M1 (B3 = 60.0 %), o va claramente en subida, sigue la de 50 M.
 
+**Resultado de la V17.1:** a los 1.3 M pasos ya elegía QUEDARSE en el 100 % (probabilidad 0.98, entropía 0.12; revisión
+con 64 partidas). **Se detuvo a los ~2.4 M** (D-062: si colapsa, se ajusta la recompensa o la entropía).
+
+## V17.2 · suavidad más liviana y más entropía (D-062; 17-oct)
+
+**Por qué colapsaba:** con botones al azar (que es como empieza la red) la multa de suavidad costaba **−170 por partida**
+(B1, `informes/v17/v171_base_b1.json`, componente `control`), contra ~+35 de la vista. Al principio del entrenamiento eso
+aplasta todo y empuja a un solo botón; QUEDARSE es el único siempre permitido.
+
+**Cambios:** `K_SUAVE_V17 = 0.1` (la multa por cambiar de botón y por la sacudida pesa la décima parte en la cancha),
+bono de entropía `--ent 0.01` y `MARGEN_BARO_V17 = 0.5` (D-063). Retornos con botones fijos (128 partidas,
+`informes/v17/v172_rec_*.json`): **QUEDARSE 19.1, azar −1.6 (suavidad −16), SUBIR 31.1**.
+
+**En marcha desde 2026-10-17 19:39**, misma pestaña del Terminal:
+`.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_2 --dir-master modelos_v17_2 --dir-modelos modelos_v17_2 *> modelos_v17_2.log`
+
+A 1.3 M pasos (64 partidas) todavía elige QUEDARSE en modo determinista, pero **sin colapsar**: probabilidad de la
+preferida 0.68 y entropía 0.98 (la V17.1 tenía 0.98 y 0.12 en el mismo punto).
+
 ### D-063 · Altura segura con el error del barómetro
 
 B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y
