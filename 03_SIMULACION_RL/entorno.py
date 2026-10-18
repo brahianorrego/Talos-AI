@@ -602,7 +602,7 @@ K_RACHA_V17 = 3.0
 TF03_PITCH_V17 = -3.0
 # D-063 · altura segura con el error del barómetro: en la V17, lo que se le PIDE a la Pixhawk con alguien cerca es
 # Z_SEGURA + MARGEN_BARO_V17 (la otra opción medida es el altímetro por LiDAR al piso: ALTIMETRO = "luna")
-MARGEN_BARO_V17 = 0.0
+MARGEN_BARO_V17 = 0.5                  # D-063 medido (informes/v17/d063_*.json): real bajo 3.30 m con alguien a < 8 m 13.6 % -> 0.5 %
 # E7 · búsqueda tras el panel: con V cortas, el "muro de canto" (D-044) se mira desde A_CANTO_V17 m de la punta; con
 # CANTO_V17 = False se salta ese paso
 CANTO_V17 = True

@@ -1,0 +1,62 @@
+{
+ "b0": {
+  "cumplida": 0.12890625,
+  "alcanzado": 0.0,
+  "perdido": 0.0078125,
+  "no_encontrado": 0.01171875,
+  "panel": 0.0,
+  "choque_peaton": 0.0,
+  "geocerca": 0.0,
+  "tiempo": 0.8515625,
+  "n": 256,
+  "dur": 280.20546875,
+  "custodia60": 0.00390625,
+  "custodia90": 0.0,
+  "racha_s": 30.36953125000017,
+  "vista_s": 116.51132812499758,
+  "custodia30": 0.4765625,
+  "m1": 0.4765625,
+  "retorno": 21.343638282807973,
+  "retorno_comp": {
+   "vista": 38.44,
+   "guia": -13.15,
+   "descubre": 36.54,
+   "pierde": -37.25,
+   "maniobra": 0.0,
+   "exito": 14.23,
+   "fallas": -4.36,
+   "control": 0.0,
+   "cobertura": -12.16,
+   "abordaje": -0.94
+  },
+  "custodia_v16": 0.984375,
+  "readq10": 0.8434472208057113,
+  "t_readq": 5.844296577946764,
+  "perdidas": 22.98046875,
+  "gimbal_fuera": 0,
+  "bajo_330_con_persona_8m": 0.004190557421840412,
+  "bajo_330_8m_en_entrada": 0.33247089262613194,
+  "bajo_330_pedida_con_persona_8m": 0.0020925681304403607,
+  "mapeo_entrada": 0.48828125,
+  "frac_decide": 0.2226560866328559,
+  "frac_decide_en_fijado": 0.4610208923860271,
+  "tramo_visto_medio_s": 1.0841816786640845,
+  "tramo_visto_mediana_s": 0.5,
+  "reconf_partida": 5.8515625,
+  "cambio_nodet": 0,
+  "ruleta_partidas": 0.98828125,
+  "escudo_partidas": 0.78125,
+  "acciones": {
+   "QUEDARSE": 1.0,
+   "RODEAR_IZQ": 0.0,
+   "RODEAR_DER": 0.0,
+   "ACERCARSE": 0.0,
+   "ALEJARSE": 0.0,
+   "SUBIR": 0.0,
+   "BAJAR": 0.0
+  },
+  "set": [
+   "ALTIMETRO=luna"
+  ]
+ }
+}

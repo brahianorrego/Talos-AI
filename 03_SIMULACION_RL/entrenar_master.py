@@ -878,6 +878,9 @@ def main():
           "congelar: %s · semilla %d · autor: %s" % (NOMBRE, a.envs, a.pasos / 1e6, a.checkpoint / 1e6, a.congelar, semilla,
                                                      AUTOR), flush=True)
     modelo.learn(total_timesteps=int(a.pasos), callback=cbs, reset_num_timesteps=not continuar)
+    modelo.save(os.path.join(MASTER, "ultimo.zip"))         # V17: el último modelo también al terminar (no solo cada 20 it)
+    print("%s · terminado: %.1f M pasos · %s" % (VERSION, modelo.num_timesteps / 1e6, os.path.join(MASTER, "ultimo.zip")),
+          flush=True)
 
 
 if __name__ == "__main__":

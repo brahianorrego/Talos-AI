@@ -104,6 +104,39 @@ constantes no cambian lo que hace una política fija, solo lo que cobra):
 
 La IA tiene que superar a las cuatro, o sea a B3: **60.0 % + 5 puntos**.
 
+### V17.0 (control, recompensa original) · resultado a los 10 M
+
+Terminó a las 10:55 del 17-oct. Medida en el entorno V17.1 (mismas 512 partidas que B0-B3; `informes/v17/v170_10M.json`,
+checkpoint `dron_master_9999360_steps.zip`): **M1 47.5 %, igual que B0; QUEDARSE en el 100 % de las decisiones**
+(probabilidad de la preferida 1.000, entropía 0.002). El colapso del humo se confirmó a 10 M: con la recompensa original la
+red aprende a no moverse.
+
+### V17.1 en marcha
+
+- **Inicio 2026-10-17 19:02** (la sesión estuvo detenida entre las 11:00 y las 19:00 por el límite de uso), pestaña
+  "V17 todo 10M" del panel Terminal, desde `03_SIMULACION_RL`:
+  `.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --repeticiones 5 --salida salida_v17_1 --dir-master modelos_v17_1 --dir-modelos modelos_v17_1 *> modelos_v17_1.log`
+- Carpetas `modelos_v17_1\` y `salida_v17_1\`. Detener: Ctrl+C en la pestaña. Al terminar, `entrenar_master.py` ahora
+  guarda también `ultimo.zip` (antes solo cada 20 iteraciones).
+- Medirla: `.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol modelos_v17_1\ultimo.zip --n 512 --salida informes\v17\v171_10M.json`
+- D-062: si supera a B0 y a B3 en M1 (B3 = 60.0 %), o va claramente en subida, sigue la de 50 M.
+
+### D-063 · Altura segura con el error del barómetro
+
+B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y
+el dron, en su altura REAL, por debajo de 3.25 m.
+
+| Opción | Real bajo 3.30 m | M1 | M2 ≤ 10 s | Alcanzado |
+|---|---:|---:|---:|---:|
+| Sin margen (barómetro) | 13.6 % | 55.1 % | 76.5 % | 0.8 % |
+| Margen 0.3 m | 2.9 % | 47.7 % | 72.3 % | 0.4 % |
+| **Margen 0.5 m (queda)** | **0.5 %** | 53.5 % | 71.5 % | 0.4 % |
+| Altímetro por LiDAR al piso (`ALTIMETRO="luna"`) | 0.4 % | 47.7 % | 84.3 % | 0 % |
+
+Criterio de D-063: ≤ 2 % sin empeorar M1. Cumple el margen de 0.5 m (M1 dentro del ruido de ±6 puntos). El altímetro por
+LiDAR también queda bajo el 2 %, pero baja M1 en 7 puntos. Queda **`MARGEN_BARO_V17 = 0.5`** para la V17.2 en adelante.
+La V17.1 ya había arrancado sin margen, así que se mide igual que B0-B3, que tampoco lo tenían.
+
 ## Contrato `foto()` · campos nuevos de la V17 (para el visor)
 
 Además de los de la V16 (`docs/PROGRESO_V16.md` de la rama `v16-simulacion`):
