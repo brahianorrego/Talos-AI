@@ -1,5 +1,5 @@
 /* Paneles como ventanas (D-065): mover, cambiar de tamaño, minimizar, maximizar, cerrar y vistas. Ver ventanas.js. */
-.ventana { position: fixed !important; display: flex; flex-direction: column; min-width: 180px; min-height: 34px; margin: 0 !important;
+.ventana { position: fixed !important; z-index: 5; display: flex; flex-direction: column; min-width: 180px; min-height: 34px; margin: 0 !important;
            transform: none !important; animation: none !important; }
 .ventana > .cuerpo { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; }
 .ventana.con-alto > .cuerpo { overflow: auto; }
@@ -29,7 +29,9 @@
 .ventana > #log { height: auto; }
 
 /* el FPV: la imagen de la cámara llena la ventana sin deformarse */
-#fpv.ventana { background: var(--panel); border: 1px solid var(--borde); border-radius: 6px; }
+/* las ventanas con imagen dibujada detrás (cámara del dron y vista 3D) son transparentes: solo la cabecera lleva fondo */
+#fpv.ventana, #p-3d.ventana { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid var(--borde); border-radius: 6px; }
+#fpv.ventana > .cab, #p-3d.ventana > .cab { background: var(--panel); border-radius: 6px 6px 0 0; backdrop-filter: blur(10px); }
 #fpv.ventana > .cuerpo { display: flex; align-items: center; justify-content: center; border: 0; box-shadow: none; overflow: hidden; }
 #fpv.ventana #fpv-vista { width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 4 / 3; }
 
@@ -50,10 +52,19 @@
 #lista-paneles hr { border: 0; border-top: 1px solid var(--linea); margin: 6px 0; }
 #lista-paneles .btn { width: 100%; }
 
-/* vistas */
+/* vista principal (la elige ventanas.js): ocupa el centro, detrás de las demás ventanas */
+.ventana.principal { z-index: 1 !important; border-color: #2c3b4e; box-shadow: none; }
+.ventana.principal .agarre, .ventana.principal .ctl-v .maxi, .ventana.principal .ctl-v .min, .ventana.principal .ctl-v .poner { display: none; }
+.ventana.principal > .cab, .ventana.principal > .cab-v { cursor: default; }
+body[data-principal="3d"] [data-v="p-3d"] { display: none !important; }
+#p-3d.ventana > .cuerpo { display: flex; padding: 4px; }
+#p-3d #vista-3d { flex: 1; aspect-ratio: auto; min-height: 60px; }
+#p-slam.ventana.principal > .cuerpo, #p-slam.ventana.con-alto > .cuerpo { display: flex; flex-direction: column; }
+#p-slam.ventana.principal #slam-lienzo, #p-slam.ventana.con-alto #slam-lienzo { flex: 1; height: auto; min-height: 120px; }
+#p-slam.ventana.con-alto:not(.principal) .slam-ley, #p-slam.ventana.con-alto:not(.principal) .kv.lidar { display: none; }
+
+/* vistas: en "Solo ..." quedan la principal y el reproductor */
 body.vista-3d .ventana:not([data-v="reproductor"]) { display: none !important; }
-body.vista-dron .ventana:not(#fpv):not([data-v="reproductor"]) { display: none !important; }
-body.vista-dron #fpv.ventana { left: 50% !important; top: 52px !important; bottom: 108px !important; height: auto !important; right: auto !important;
-                              width: min(calc(100vw - 20px), calc((100vh - 160px - 34px) * 4 / 3 + 14px)) !important; transform: translateX(-50%) !important; z-index: 40 !important; }
+body.vista-dron .ventana:not(.principal):not([data-v="reproductor"]) { display: none !important; }
 body.vista-dron #mundo { background: #000; }
 #izq:empty, #der:empty, #dock:empty { display: none; }

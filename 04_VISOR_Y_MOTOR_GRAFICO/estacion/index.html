@@ -163,6 +163,8 @@
   @media (max-width: 1100px) { #duelo .pie .txt { display: none; } }
 
   /* ---------- V12 · mapa SLAM y máquina de búsqueda ---------- */
+  #vista-3d { width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; }
+  #duelo { display: none !important; }
   #slam-lienzo { width: 100%; height: 232px; display: block; border: 1px solid var(--linea); border-radius: 4px; background: #070b10; cursor: crosshair; }
   .slam-barra { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
   .slam-barra .seg button { padding: 3px 8px; font-size: 10.5px; }
@@ -217,8 +219,7 @@
       <span>Tasa de guiñada</span><b id="t-yaw">–</b>
       <span>LiDAR frontal</span><b id="t-lid">–</b>
       <span>Objetivo en vista</span><b id="t-vista">–</b>
-      <span>Currículo (entrenamiento)</span><b id="t-cur">–</b>
-      <span>Nivel de esta partida</span><b id="t-niv">–</b>
+      <span>Fase de la misión</span><b id="t-niv">–</b>
     </div>
   </section>
   <section class="panel" id="p-fsm">
@@ -332,6 +333,19 @@
   <div class="tira"><i class="d" id="du-bd"></i><i class="l" id="du-bl"></i><span class="medio"></span><span class="div" id="du-div"></span></div>
   <div class="pie"><div class="niveles" id="du-niv"><span>N0</span><span>N1</span><span>N2</span><span>N3</span><span>N4</span></div><span class="txt" id="du-pie">–</span></div>
 </section>
+<section id="p-cus" class="ui panel" title="Cuánto tiempo de esta partida el dron tiene al ladrón a la vista (lo que importa en la misión)">
+  <div class="cab"><h3>Custodia del ladrón</h3><span class="tag" id="cus-tag" style="color:var(--suave)">–</span></div>
+  <div class="cuerpo kv">
+    <span>Viéndolo (esta partida)</span><b id="cus-pct">–</b>
+    <span>Tiempo viéndolo</span><b id="cus-t">–</b>
+    <span>Racha actual</span><b id="cus-racha">–</b>
+    <span>Mejor racha</span><b id="cus-mejor">–</b>
+  </div>
+</section>
+<section id="p-3d" class="ui panel">
+  <div class="cab"><h3>Vista 3D · simulación</h3></div>
+  <div class="cuerpo"><div id="vista-3d"></div></div>
+</section>
 <div id="aviso" class="ui panel"></div>
 <section id="resumen" class="ui panel">
   <div class="cab"><h3>Resumen de la misión</h3><span class="tag" id="res-tag">–</span></div>
@@ -378,6 +392,17 @@ const lerp = (a, b, f) => a + (b - a) * f;
 const limitar = (v, a, b) => Math.max(a, Math.min(b, v));
 const pad2 = n => String(n).padStart(2, "0");
 const reloj = t => pad2(Math.floor(t / 60)) + ":" + (t % 60).toFixed(1).padStart(4, "0");
+// custodia del ladrón en la partida: fracción del tiempo con el objetivo a la vista, racha actual y mejor racha (s)
+function actualizarCustodia(C, k, dt) {
+  let vistos = 0, racha = 0, mejor = 0;
+  for (let i = 0; i <= k; i++) { if (C[i].vis) { vistos++; racha++; mejor = Math.max(mejor, racha); } else racha = 0; }
+  const seg = n => (n * dt).toFixed(1) + " s";
+  $("cus-pct").textContent = k ? Math.round(100 * vistos / (k + 1)) + " %" : "–";
+  $("cus-t").textContent = seg(vistos) + " de " + seg(k + 1);
+  $("cus-racha").textContent = seg(racha);
+  $("cus-mejor").textContent = seg(mejor);
+  const t = $("cus-tag"); t.textContent = C[k].vis ? "A LA VISTA" : "SIN VERLO"; t.style.color = C[k].vis ? "var(--ok)" : "var(--alerta)";
+}
 function lerpAng(a, b, f) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * f; }
 const difAngGrados = (a, b) => ((a - b) * 180 / Math.PI + 540) % 360 - 180;
 
@@ -1018,9 +1043,16 @@ const OSC = {
 };
 function ajustarOsciloscopios() { Object.values(OSC).forEach(o => o.dibujar(performance.now())); }
 const durTxt = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} h ${pad2(m)} min` : `${m} min`; };
+// V17 (pedido de Brahian): la estación lee solo las corridas V17 (salida_v17_*); la más reciente da métricas y estado
+let CORRIDA = null;
+async function corridaV17() {
+  try { const c = await cargarJSON("corridas.json"); CORRIDA = c.length ? c[0].carpeta : null; return c; } catch (e) { return []; }
+}
 async function actualizarMetricas() {
   let M = null;
-  try { M = (await cargarJSON("salida/metricas.json")).filter(m => m.adv); } catch (e) {}
+  if (!CORRIDA) await corridaV17();
+  if (!CORRIDA) return;
+  try { M = (await cargarJSON(CORRIDA + "/metricas.json")).filter(m => m.adv); } catch (e) {}
   if (M && M.length) {
     const x = m => m.pasos / 1e6;
     OSC.vista.poner(M.map(m => [x(m), m.adv.vista]));
@@ -1033,61 +1065,14 @@ async function actualizarMetricas() {
     $("mon-resumen").textContent = `VISTA ${pct(prom(m => m.adv.vista))} · ALC ${pct(prom(m => m.adv.alcanzado))}` + (jit !== null ? ` · JITTER ${jit.toFixed(3)}` : "");
   }
   try {
-    const e = await cargarJSON("salida/estado.json");
+    const e = await cargarJSON(CORRIDA + "/estado.json");
     const vivo = Date.now() / 1000 - e.t < 60;
     $("mon-izq").textContent = `IT ${e.it} · ${(e.pasos / 1e6).toFixed(1)} M PASOS · ${durTxt(e.seg)}`;
     $("mon-der").textContent = vivo ? `${(e.pasos_s / 1000).toFixed(1)}k PASOS/s · ETA ${durTxt((e.objetivo - e.pasos) / Math.max(e.pasos_s, 1))}` : "DETENIDO";
     $("i-ent").innerHTML = vivo ? `<span style="color:${COL.ok}">●</span> EN VIVO · IT ${e.it}` : `<span style="color:${COL.tenue}">●</span> DETENIDO`;
     $("mon-resumen").textContent = (M && M.length ? $("mon-resumen").textContent + " · " : "") + `${(e.pasos / 1e6).toFixed(1)} M`;
-    ponerDuelo(e, M);
-  } catch (err) { ponerDuelo(null, M); }
+  } catch (err) {}
 }
-// V14 · tira y afloja dron vs ladrón y nivel del currículo (lo escribe entrenar_master.py en salida/estado.json; con
-// entrenamientos anteriores a la V14 se estima con las métricas de las últimas iteraciones)
-const NIVELES_TXT_V14 = ["Duelo abierto", "Muro único", "Ruido visual", "Misión completa"];
-const NIVELES_TXT_V15 = ["Duelo abierto", "Duelo con civil", "Muro", "Muro y civil", "Misión completa"];
-let NIVELES_TXT = NIVELES_TXT_V15;
-function ponerDuelo(e, M) {
-  let dron = null, ladron = null, otros = null, n = 0, est = false, cur = e && e.curriculo;
-  if (cur && cur.niveles) NIVELES_TXT = cur.niveles;
-  const nNiv = (cur && cur.niveles) ? cur.niveles.length : 5;
-  [...$("du-niv").children].forEach((sp, i) => sp.style.display = i < nNiv ? "" : "none");
-  if (e && e.competencia && e.competencia.dron !== null && e.competencia.dron !== undefined) {
-    ({ dron, ladron, otros, n } = e.competencia);
-  } else if (M && M.length) {
-    const u = M.slice(-10), prom = f => u.reduce((s, m) => s + (f(m) || 0), 0) / u.length;
-    const d = prom(m => m.adv.cumplida), l = prom(m => m.adv.alcanzado + m.adv.perdido + m.adv.no_encontrado);
-    if (d + l > 0) { dron = d / (d + l); ladron = l / (d + l); otros = Math.max(0, 1 - d - l); est = true; }
-  }
-  if (dron !== null) {
-    const pd = Math.round(100 * dron);
-    $("du-d").textContent = pd + "%"; $("du-l").textContent = (100 - pd) + "%";
-    $("du-bd").style.width = (100 * dron) + "%"; $("du-bl").style.width = (100 * ladron) + "%";
-    $("du-div").style.left = (100 * dron) + "%";
-  }
-  const nv = cur ? cur.nivel : null;
-  $("du-tit").textContent = nv === null ? "Dominio táctico" : `Dominio táctico · N${nv} ${cur.nombre}`;
-  [...$("du-niv").children].forEach((sp, i) => {
-    sp.classList.toggle("actual", i === nv); sp.classList.toggle("hecho", nv !== null && i < nv);
-    sp.title = `Nivel ${i} · ${NIVELES_TXT[i]}`;
-  });
-  $("du-pie").textContent = dron === null ? "sin datos de entrenamiento"
-    : est ? "estimado con las últimas iteraciones"
-    : `${n} partidas` + (otros ? ` · ${Math.round(100 * otros)} % otras fallas` : "")
-      + (cur && cur.exito !== null && cur.nivel < nNiv - 1 ? ` · rendición ${Math.round(100 * cur.exito)} / ${Math.round(100 * ((cur.criterios || {}).rinde ?? cur.umbral))} %` : "")
-      + custodiaTxt(cur, nNiv);
-  $("t-cur").textContent = nv === null ? "–" : `N${nv} · ${cur.nombre}`;
-  $("t-cur").style.color = nv === null ? "" : COL.precaucion;
-}
-
-// C3 (diagnóstico del nivel 4): en la misión completa el número principal es la CUSTODIA, la vista acumulada en los 5 min
-function custodiaTxt(cur, nNiv) {
-  const r = cur && cur.por_nivel && cur.por_nivel[String(nNiv - 1)];
-  if (!r || r.custodia_60 === undefined) return "";
-  return ` · N${nNiv - 1} CUSTODIA ≥60 s ${Math.round(100 * r.custodia_60)} % · ≥90 s ${Math.round(100 * r.custodia_90)} %`
-    + ` (rendición ${Math.round(100 * r.rinde)} %)`;
-}
-
 // ======================================================================= repeticiones
 const sel = $("selector");
 let partida = null, eventos = [], tPartida = 0, pausa = false, vel = 1, modoCam = "cine", recargando = false, angCine = 0, kAnterior = -1;
@@ -1189,35 +1174,17 @@ function iniciarPartida(pt) {
   } catch (e) { console.warn(e); }
 }
 async function llenarSelector() {
-  // V15: una opción por nivel ("Nivel K · ... · en vivo (it N)"), la misión completa con despegue e hitos agrupados por
-  // nivel. Con los archivos de entrenamientos anteriores (sin replay_nivel_K.json) queda como antes.
-  const actual = sel.value;
-  let est = null, hitos = [];
-  try { est = await cargarJSON("salida/estado.json"); } catch (e) {}
-  try { hitos = await cargarJSON("salida/hitos/lista.json"); } catch (e) {}
-  const rn = est && est.replays_nivel, nombres = (est && est.niveles) || NIVELES_TXT;
-  const grupos = [];
-  if (rn) {
-    const vivo = nombres.map((nm, k) => rn[k] !== undefined
-      ? `<option value="salida/replay_nivel_${k}.json">Nivel ${k} · ${nm} · en vivo (it ${rn[k]})</option>`
-      : `<option disabled>Nivel ${k} · ${nm} · aún no entrenado</option>`);
-    vivo.push(`<option value="salida/replay_mision.json">Misión completa (despegue) · en vivo${rn.mision !== undefined ? ` (it ${rn.mision})` : ""}</option>`);
-    grupos.push(`<optgroup label="En vivo">${vivo.join("")}</optgroup>`);
-  } else {
-    grupos.push(`<option value="salida/replay_mision.json">Misión completa · en vivo</option><option value="salida/replay_adv.json">Partida en zona · en vivo</option>`);
+  // V17: en vivo (en_vivo.py) y, de cada corrida V17 del entrenamiento, su última partida y sus hitos (sin niveles viejos)
+  const actual = sel.value, corridas = await corridaV17(), grupos = [];
+  grupos.push(`<optgroup label="Simulación"><option value="vivo">En vivo · misión V17 (en_vivo.py, puerto 8767)</option></optgroup>`);
+  for (const c of corridas) {
+    let hitos = [];
+    try { hitos = await cargarJSON(c.carpeta + "/hitos/lista.json"); } catch (e) {}
+    grupos.push(`<optgroup label="Entrenamiento V17 · ${c.carpeta}${c.vivo ? " · entrenando" : ""}">`
+      + `<option value="${c.carpeta}/replay_v17.json">Última partida · it ${c.it} · ${(c.pasos / 1e6).toFixed(1)} M pasos</option>`
+      + hitos.slice().reverse().slice(0, 20).map(h => `<option value="${c.carpeta}/hitos/${h.archivo}">Hito · it ${h.it} · ${(h.pasos / 1e6).toFixed(1)} M</option>`).join("")
+      + `</optgroup>`);
   }
-  const porNivel = {};
-  hitos.slice().reverse().forEach(h => { const g = h.mision ? "Misión completa" : h.nivel !== undefined ? `Nivel ${h.nivel} · ${nombres[h.nivel] ?? ""}` : "Hitos"; (porNivel[g] = porNivel[g] || []).push(h); });
-  Object.keys(porNivel).sort().forEach(g => grupos.push(`<optgroup label="Hitos · ${g}">${porNivel[g].map(h =>
-    `<option value="salida/hitos/${h.archivo}">${h.nivel !== undefined && !h.mision ? `Nivel ${h.nivel} · ` : ""}it ${h.it} · ${(h.pasos / 1e6).toFixed(1)} M${h.mision ? " · misión" : ""}</option>`).join("")}</optgroup>`));
-  // mínimo indispensable del proyecto de grado (minimo_tesis/protocolo_comite.py): piloto al mando, el sistema solo frena y sube
-  // fase G: el mismo protocolo (y los escenarios de discriminación) con cada decisor
-  grupos.push(`<optgroup label="Proyecto de grado"><option value="minimo_tesis/replay/replay_protocolo.json">Mínimo indispensable · protocolo del comité</option>`
-    + `<option value="minimo_tesis/replay/replay_protocolo_reglas.json">Mínimo indispensable · decisor: reglas</option>`
-    + `<option value="minimo_tesis/replay/replay_protocolo_ia.json">Mínimo indispensable · decisor: IA sola</option>`
-    + `<option value="minimo_tesis/replay/replay_protocolo_ia_env.json">Mínimo indispensable · decisor: IA + envolvente</option>`
-    + `<option value="minimo_tesis/replay/replay_protocolo_ia_env_estricta.json">Mínimo indispensable · decisor: IA + envolvente estricta</option></optgroup>`);
-  grupos.unshift(`<optgroup label="Simulación"><option value="vivo">En vivo · en_vivo.py (puerto 8767)</option></optgroup>`);
   sel.innerHTML = grupos.join("");
   const valores = [...sel.querySelectorAll("option:not([disabled])")].map(o => o.value);
   if (actual && valores.includes(actual)) sel.value = actual;
@@ -1319,7 +1286,7 @@ function actualizarPaneles(c, b, k, info) {
   $("t-lid").textContent = lidarTxt(c);
   $("t-vista").textContent = info.vista === null ? "–" : (info.vista * 100).toFixed(0) + " %";
   actualizarFSM(c, k);
-  $("t-niv").textContent = c.niv === undefined ? "–" : partida.mision ? "misión" : `N${c.niv} · ${NIVELES_TXT[c.niv] ?? ""}` + (c.lgu === 2 ? " (cenit)" : "");
+  $("t-niv").textContent = c.fase === 1 ? "Tránsito · piloto" : "Zona de IA";
   if (!$("p-slam").classList.contains("plegado")) dibujarSLAM(c, k);
   // objetivo y pistas del tracker
   const tag = $("obj-tag");
@@ -1791,6 +1758,7 @@ function animar(ahora) {
     }
     const k = Math.min(Math.floor(tPartida / dt), C.length - 2), f = (tPartida - k * dt) / dt;
     const a = C[k], b = C[k + 1];
+    actualizarCustodia(C, k, dt);
     if (kAnterior >= 0 && k > kAnterior) {     // avisos de los eventos que acaban de ocurrir
       eventos.filter(e => e.k > kAnterior && e.k <= k && e.marca).forEach(e => {
         aviso(e.txt, e.col);
@@ -1951,7 +1919,21 @@ function animar(ahora) {
   renderer.setScissorTest(false);
   renderer.setViewport(0, 0, innerWidth, innerHeight);
   renderer.shadowMap.needsUpdate = true;
-  if (document.body.classList.contains("vista-dron")) renderer.clear(); else renderer.render(escena, camara);
+  const principal = window.PRINCIPAL || "dron", v3 = $("vista-3d"), r3 = v3.getBoundingClientRect();
+  if (principal === "3d") {
+    if (Math.abs(camara.aspect - innerWidth / innerHeight) > 1e-3) { camara.aspect = innerWidth / innerHeight; camara.updateProjectionMatrix(); }
+    renderer.render(escena, camara);
+  } else {
+    renderer.clear();
+    if (r3.width > 8 && r3.height > 8 && v3.offsetParent) {           // la vista 3D en su recuadro
+      if (Math.abs(camara.aspect - r3.width / r3.height) > 1e-3) { camara.aspect = r3.width / r3.height; camara.updateProjectionMatrix(); }
+      renderer.setScissorTest(true);
+      renderer.setViewport(r3.left, innerHeight - r3.bottom, r3.width, r3.height);
+      renderer.setScissor(r3.left, innerHeight - r3.bottom, r3.width, r3.height);
+      renderer.render(escena, camara);
+      renderer.setScissorTest(false);
+    }
+  }
   if (partida) {     // la cámara del dron se dibuja dentro del recuadro FPV
     const rv = fpvVista.getBoundingClientRect(), x = rv.left, y = innerHeight - rv.bottom;
     const ocultos = [dron, cono, laser, puntoLaser, lineaVista, pulso, rastroDron, rastroLadron, sombraDron, marcaUlt, marcaWp, mapaLidar, flechaEscape, lineaRuta, nube3d,
@@ -1970,7 +1952,7 @@ function animar(ahora) {
   redimensionar();
   requestAnimationFrame(animar);
   await llenarSelector();
-  await cargarPartida(sel.value || "salida/replay_mision.json");
+  await cargarPartida(sel.value || "vivo");
   await actualizarMetricas();
   setInterval(actualizarMetricas, 5000);
   setInterval(llenarSelector, 30000);

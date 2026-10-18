@@ -190,3 +190,23 @@ servidor de la estación (8768) y Chrome en http://127.0.0.1:8768/.
   Se quitaron Google Fonts y Tailwind (usa las letras del sistema).
 - Probado en Chrome con la RTX en vivo, sin errores. Capturas: `mediciones/capturas/estacion_{todo,dron,3d}.jpg`.
 - Textos: "estación de tierra · proyecto de grado" (el clásico decía "Tesis").
+
+### Pedidos de Brahian para la estación (17-oct, noche)
+
+1. **Solo la misión V17.** La lista tiene "En vivo · misión V17" y, de cada corrida `salida_v17_*` del entrenamiento, su
+   última partida y sus hitos (el servidor las lista en `/corridas.json`, la más reciente primero). Se quitaron los
+   niveles 0-4, la "misión completa" vieja, el mínimo y `salida/` de la V15. El osciloscopio de entrenamiento lee la
+   corrida V17 más reciente. En la telemetría, "Currículo" y "Nivel" se cambiaron por "Fase de la misión".
+2. **Paneles que se retraen, se minimizan y se guardan:** botón – o doble clic en el título; la distribución se recuerda.
+3. **El mapa SLAM a la izquierda**, junto a la cámara y el control: arranca como recuadro sobre la vista del dron (abajo
+   a la izquierda); la columna izquierda tiene la vista 3D y la entrada de control.
+4. **Barra de arriba:** el nombre de Brahian una sola vez; **se quitó el "Dominio táctico" 32/68** (datos viejos de la
+   V15) y en su lugar está el panel **"Custodia del ladrón"**: % del tiempo viéndolo en la partida, tiempo, racha actual
+   y mejor racha.
+5. **Cámaras cine, seguir, libre y cenital:** se conservan (en el reproductor).
+6. **Vista principal intercambiable:** por defecto, **lo que ve el dron** en el centro, con el mapa SLAM superpuesto.
+   El botón **⇱** de la cámara, del mapa o de la vista 3D la pone en la pantalla principal, y la que estaba ahí pasa a su
+   recuadro. "Solo 3D" y "Solo lo que ve el dron" dejan la principal a pantalla completa.
+
+Probado en Chrome con la RTX en vivo: 111-144 cps, sin errores. Capturas: `mediciones/capturas/estacion_*.jpg`
+(`todo`, `mapa` = mapa en la principal, `3dprin` = 3D en la principal, `dron`, `3d`).

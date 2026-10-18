@@ -9,15 +9,43 @@ ni tocar nada de la simulación. Solo lectura y solo en este computador (127.0.0
 Uso:  03_SIMULACION_RL\\.venv\\Scripts\\python.exe 04_VISOR_Y_MOTOR_GRAFICO\\estacion\\servidor.py [--puerto 8768]
 """
 import argparse
+import json
 import http.server
 import os
+import time
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SIM = os.path.normpath(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL"))
 TIPOS = {".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".html": "text/html; charset=utf-8"}
 
 
+def corridas_v17():
+    """Las carpetas salida_v17_* de la simulación, la más reciente primero (la estación solo muestra la V17)."""
+    lista = []
+    for nombre in os.listdir(SIM):
+        ruta = os.path.join(SIM, nombre, "estado.json")
+        if nombre.startswith("salida_v17") and os.path.isfile(ruta):
+            try:
+                e = json.load(open(ruta, encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            lista.append({"carpeta": nombre, "it": e.get("it"), "pasos": e.get("pasos", 0), "t": e.get("t", 0),
+                          "vivo": time.time() - e.get("t", 0) < 120})
+    return sorted(lista, key=lambda c: -c["t"])
+
+
 class Manejador(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path.split("?")[0] == "/corridas.json":
+            datos = json.dumps(corridas_v17()).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(datos)))
+            self.end_headers()
+            self.wfile.write(datos)
+            return
+        super().do_GET()
+
     def translate_path(self, path):
         propio = super().translate_path(path)                  # dentro de esta carpeta (el servidor corre en AQUI)
         if os.path.exists(propio):
