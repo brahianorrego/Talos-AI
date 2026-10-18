@@ -5,7 +5,7 @@ del mínimo indispensable**, salvo lo marcado "se puede ya" (no toca el montaje)
 
 | # | Pedido | De quién | Para qué | Cuándo |
 |---|---|---|---|---|
-| 1 | Medir con cinta los paneles de exposición que se van a pedir prestados: alto, ancho de cada panel y cómo se unen | Arquitecto (D-051, D-066) | Cerrar `ALTO_PANEL_V17` (hoy 2.25 m según Brahian) y `ANCHO_PANEL_V17` (hoy 1.5 m) | Se puede ya, el día que se pidan |
+| 1 | Medir con cinta los paneles de exposición que se van a pedir prestados: alto, ancho de cada panel, cómo se unen y **de qué color son** (el alcance del TF-Luna va de ~8 m con blanco a ~2.5 m con oscuro, `05_HARDWARE_Y_VARIANTES/VARIANTES.md` §5) | Arquitecto (D-051, D-066) | Cerrar `ALTO_PANEL_V17` (hoy 2.25 m según Brahian) y `ANCHO_PANEL_V17` (hoy 1.5 m) | Se puede ya, el día que se pidan |
 | 2 | Pesar por separado la BaseCam, el TF03 con su cable y la cámara USB | Hardware y variantes (D-055) | Peso y centro de gravedad de las variantes C y D | Se puede ya (con el dron en el banco, sin desmontar si no hace falta) |
 | 3 | Comprobar si el pod de la BaseCam baja a −45° **sin** el cable del TF03 | Hardware y variantes (D-055) | Decide entre la variante C y la D | Después del mínimo |
 | 4 | Confirmar si la Jetson tiene el overlay para **dos** IMX219 (CAM0 y CAM1) y qué puerto serie de la Pixhawk está libre (¿TELEM1?) | Hardware y variantes | Cámara al piso y un posible TF-Luna como altímetro | Se puede ya (solo leer configuración) |
