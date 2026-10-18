@@ -62,6 +62,24 @@ delta = asin(pin_d/2 / R_tope);          // ángulo que el pin ocupa a cada lado
 a_min = tilt_min + margen_interior_deg;
 a_max = tilt_max - margen_interior_deg;
 
+// ---- ayudas de forma (diseño): placas de esquinas redondas con el canto de arriba biselado ----
+module rrect2d(x0, x1, y0, y1, r) { hull() for (x = [x0 + r, x1 - r]) for (y = [y0 + r, y1 - r]) translate([x, y]) circle(r); }
+module placa_r(x0, x1, y0, y1, z0, h, r, ch = 0.8) {
+    hull() {
+        translate([0, 0, z0]) linear_extrude(h - ch) rrect2d(x0, x1, y0, y1, r);
+        translate([0, 0, z0]) linear_extrude(h) rrect2d(x0 + ch, x1 - ch, y0 + ch, y1 - ch, max(r - ch, 0.5));
+    }
+}
+module ventana2d(x1, x2, z, r) { hull() for (x = [x1, x2]) translate([x, z]) circle(r); }   // ventana "estadio"
+// mejilla: perfil alado en el plano XZ, de espesor t que empieza en y0 y va hacia +Y
+module mejilla(y0, t) {
+    translate([0, y0 + t, 0]) rotate([90, 0, 0]) linear_extrude(t) difference() {
+        polygon([[-26, zp0], [20, zp0], [26, zp0 + 12], [26, z_eje + 16], [14, z_eje + 26], [-10, z_eje + 26], [-26, z_eje + 10]]);
+        ventana2d(-17, 3, zp0 + 13, 4);
+        ventana2d(-17, -9, zp0 + 24, 2.2);
+    }
+}
+
 // ---- servo ----
 module servo_fantasma() {
     color("gray", 0.5) {
@@ -87,13 +105,15 @@ module base_srv() {
     // placa con 4 ranuras M3 (largas en X: ajustan la separación al chasis) + bloque del servo de PAN
     difference() {
         union() {
-            translate([-base_x/2, -base_y/2, z_placa_sup - placa_t]) cube([base_x, base_y, placa_t]);
-            translate([-sv_eje - 6, -sv_W/2 - 3, z_placa_sup]) cube([sv_L + 12, sv_W + 6, -sv_oreja_z - z_placa_sup]);  // ancho para las orejas
+            placa_r(-base_x/2, base_x/2, -base_y/2, base_y/2, z_placa_sup - placa_t, placa_t, 6);
+            placa_r(-sv_eje - 6, sv_L - sv_eje + 6, -sv_W/2 - 3, sv_W/2 + 3, z_placa_sup, -sv_oreja_z - z_placa_sup, 3, 1.0);  // ancho para las orejas
         }
         servo_hueco(z_placa_sup + 1, -sv_oreja_z + 1, -sv_oreja_z - 9, -sv_oreja_z + 0.01);
         for (sx = [-1, 1]) for (sy = [-1, 1])
             hull() for (dx = [-4, 4])
                 translate([sx*(base_x/2 - 9) + dx, sy*(base_y/2 - 6), z_placa_sup - placa_t - 1]) cylinder(d = 3.4, h = placa_t + 2);
+        // ventanas "estadio" de aligeramiento a los lados del bloque (diseño)
+        for (sy = [-1, 1]) hull() for (dx = [-8, 8]) translate([5.5 + dx, sy * 22, z_placa_sup - placa_t - 1]) cylinder(d = 5, h = placa_t + 2);
         // paso del cable del servo
         translate([sv_L - sv_eje - 2, -3, z_placa_sup]) cube([8, 6, 5]);
     }
@@ -101,10 +121,10 @@ module base_srv() {
 module plataforma_srv() {
     difference() {
         union() {
-            translate([-26, yA - sv_oreja_z, zp0]) cube([52, (yB + mejilla_B) - (yA - sv_oreja_z), plataforma_t]);
-            // mejilla A (servo de tilt, espesor = sv_oreja_z) y mejilla B (ranura del tope)
-            translate([-26, yA - sv_oreja_z, zp0]) cube([52, sv_oreja_z, z_eje + 22 - zp0]);
-            translate([-26, yB, zp0]) cube([52, mejilla_B, z_eje + 22 - zp0]);
+            placa_r(-26, 26, yA - sv_oreja_z, yB + mejilla_B, zp0, plataforma_t, 6);
+            // mejilla A (servo de tilt, espesor = sv_oreja_z) y mejilla B (ranura del tope), con perfil alado y ventanas
+            mejilla(yA - sv_oreja_z, sv_oreja_z);
+            mejilla(yB, mejilla_B);
         }
         // 4 agujeros del cuerno del servo de PAN
         for (a = [0, 90, 180, 270]) translate([cuerno_r*cos(a), cuerno_r*sin(a), zp0 - 1]) cylinder(d = 2.2, h = plataforma_t + 2);
@@ -129,7 +149,7 @@ module cuna_tilt() {
             translate([0, -cuna_w/2, 0]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(pared_A) pared_2d();
             translate([0, cuna_w/2 - pared_cuna, 0]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(pared_cuna) pared_2d();
             // cubierta
-            translate([deck_x0, -cuna_w/2, -deck_t]) cube([deck_x1 - deck_x0, cuna_w, deck_t]);
+            placa_r(deck_x0, deck_x1, -cuna_w/2, cuna_w/2, -deck_t, deck_t, 4, 0.8);
             // pin del tope: sale de la pared B hacia la mejilla B
             translate([R_tope, cuna_w/2, 0]) rotate([-90, 0, 0]) cylinder(d = pin_d, h = gap_B + mejilla_B - 0.5);
         }
@@ -142,12 +162,20 @@ module cuna_tilt() {
             translate([x, y, -deck_t - 1]) cylinder(d = 2.2, h = deck_t + 2);
     }
 }
-module pared_2d() { hull() { circle(r = 14); translate([deck_x1 - 4, -deck_t]) square([4, 15]); } }
+module pared_2d() {
+    difference() {
+        offset(r = 2) offset(delta = -2) hull() { circle(r = 14); translate([deck_x1 - 4, -deck_t]) square([4, 15]); }
+        ventana2d(22, 36, 6.5, 2.4);   // ventana "estadio" de aligeramiento (diseño)
+    }
+}
 
 // ---- salida ----
 if (parte == "base") translate([0, 0, sv_H + 1 + placa_t]) base_srv();
 if (parte == "plataforma") translate([0, 0, -zp0]) plataforma_srv();
 if (parte == "cuna") translate([0, 0, cuna_w/2]) rotate([90, 0, 0]) cuna_tilt();   // apoyada sobre la pared A para imprimir
+if (parte == "asm_base") base_srv();
+if (parte == "asm_plataforma") plataforma_srv();
+if (parte == "asm_cuna") cuna_tilt();   // marco de la cuna: el eje del tilt en el origen
 if (parte == "vista") {
     base_srv();
     servo_fantasma();

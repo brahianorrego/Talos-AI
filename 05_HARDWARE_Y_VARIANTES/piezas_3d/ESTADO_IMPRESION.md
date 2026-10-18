@@ -110,3 +110,17 @@ Imágenes de cada pieza desde tres ángulos en `piezas_3d/vistas/` (hechas con O
 - Imprime **una sola pieza primero** y pruébala (por ejemplo `soporte_luna_pod.stl`, que es pequeña) antes de seguir.
 - Antes de imprimir las que dependen del riel (`soporte_luna_pod`, `soporte_tf03_colgante`), mide los puntos 1–5 de arriba y
   avísame: se cambian 3 números y se vuelve a exportar en un minuto.
+
+## Rediseño estético del pan-tilt (2026-10-18, pedido de Brahian)
+
+El pan-tilt (variante D) se rehízo con un diseño más trabajado, **sin tocar la mecánica**: placas de esquinas redondas con el canto de
+arriba biselado, mejillas con perfil "alado" (esquinas cortadas en diagonal) y ventanas tipo estadio de aligeramiento en las
+mejillas, en la base y en las paredes de la cuna. Los huecos de los servos, la ranura y el pin del tope, el pivote y la cuadrícula
+M2 son los mismos: **se repitió la prueba de intersección y los topes siguen parando la cuna en −44°/+14°** (choca a −46° y +15°).
+La versión anterior (cajas rectas) está en `piezas_3d/_v1/pan_tilt_servos_v1.scad`. El peso estimado del pan-tilt impreso pasa a
+≈ 45 g (base 12, plataforma 23, cuna 10; 35 % de relleno). Las ventanas aligeran, pero **no se ha comprobado la rigidez** de las
+mejillas con ventana: es lo primero que hay que mirar al imprimir.
+
+`VISTA_3D.html` (se regenera con `python generar_vista_3d.py`) muestra ahora el **montaje completo** con PLA gris, blanco o negro, los
+dos servos MG90D (con su etiqueta rosa y sus cables), el TF-Luna y la cámara USB como ilustración, sombras y un deslizador de
+cabeceo que se detiene en los topes. Los servos, el TF-Luna y la cámara son formas aproximadas, no modelos exactos.
