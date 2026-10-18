@@ -9,7 +9,7 @@
 #   --muestras N          muestras de Cycles (32)         --ancho N --alto N  resolución (1920 × 1080)
 #   --cuadros a,b,c       solo esos cuadros, como PNG (prueba); si no, el video completo en MP4
 #   --guardar archivo.blend   guarda la escena armada (para abrirla en Blender)
-import bpy, sys, math, random, argparse
+import bpy, sys, os, math, random, argparse
 from mathutils import Vector
 
 a = sys.argv[sys.argv.index("--") + 1:]
@@ -183,27 +183,10 @@ for _ in range(14000):                             # matas de pasto bajas alrede
     instancia(rnd.choice(pastos), x, y, rnd.random() * 6.28, 0.12 + rnd.random() * 0.1)   # césped de cancha: matas bajas
 
 
-# ------------------------------------------------------------------------------------------------ dron (cuadricóptero de ~0.5 m)
-def dron():
-    raiz = bpy.data.objects.new("dron", None); esc.collection.objects.link(raiz)
-    negro, rojo, gris = material("carbono", (0.03, 0.03, 0.035), 0.4), material("rojo", (0.6, 0.05, 0.04), 0.4), material("gris", (0.5, 0.5, 0.52), 0.35, 0.6)
-    helice = material("helice", (0.01, 0.01, 0.01), 1.0)
-    def parte(op, mat, **kw):
-        op(**kw); o = bpy.context.object; o.data.materials.append(mat); o.parent = raiz; return o
-    parte(bpy.ops.mesh.primitive_cube_add, negro, size=1, location=(0, 0, 0)).scale = (0.2, 0.14, 0.06)
-    for k in range(4):
-        ang = math.radians(45 + 90 * k); bx, by = 0.25 * math.cos(ang), 0.25 * math.sin(ang)
-        brazo = parte(bpy.ops.mesh.primitive_cube_add, rojo if k < 2 else negro, size=1, location=(bx / 2, by / 2, 0))
-        brazo.scale = (0.25, 0.025, 0.02); brazo.rotation_euler[2] = ang
-        parte(bpy.ops.mesh.primitive_cylinder_add, gris, radius=0.022, depth=0.04, location=(bx, by, 0.03))
-        parte(bpy.ops.mesh.primitive_cylinder_add, helice, radius=0.11, depth=0.003, location=(bx, by, 0.055))   # hélice girando (disco)
-    for sx in (-1, 1):                                                      # patas
-        parte(bpy.ops.mesh.primitive_cube_add, negro, size=1, location=(0, sx * 0.09, -0.09)).scale = (0.2, 0.012, 0.012)
-    parte(bpy.ops.mesh.primitive_cube_add, gris, size=1, location=(0.12, 0, -0.06)).scale = (0.05, 0.06, 0.05)   # cámara en el gimbal
-    return raiz
-
-
-DRONE = dron()
+# ------------------------------------------------------------------------------------------------ dron real (modelo_dron/dron_real.py)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "modelo_dron"))
+import dron_blender                                  # noqa: E402  (el mismo modelo que usan Unreal y el visor)
+DRONE = dron_blender.construir("dron")
 
 
 # ------------------------------------------------------------------------------------------------ personas

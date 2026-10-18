@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Mundo, CAPA_AYUDAS } from "./escena.js";
 import { Dron } from "./dron.js";
+import { aplicarModeloReal } from "./dron_real.js";
 import { Partida, listarRepeticiones, cargarJSON, conectarVivo } from "./datos.js";
 import { Personas } from "./personas.js";
 import { FiguraGLTF, cargarPersonas } from "./personas_gltf.js";
@@ -38,6 +39,8 @@ export const M = new Mundo(renderer);
 M.calidadSombras(CALIDAD[calidad].sombras);
 const dron = new Dron();
 M.escena.add(dron.raiz);
+// el dron real de las fotos (modelo_dron/); con ?dron=v16 se ve el de antes
+if (new URLSearchParams(location.search).get("dron") !== "v16") aplicarModeloReal(dron).catch(e => console.warn("Dron real no disponible; se queda el de la V16:", e));
 export const personas = new Personas(M.escena);
 const ui = new Interfaz();
 const previa = new Previa(M);
@@ -97,7 +100,16 @@ const sensorP = new SensorCamara(renderer, dron.camara, { ancho: CAM.ancho, alto
 const sensorPiso = new SensorCamara(renderer, dron.camaraPiso, { ancho: CAM_PISO.ancho, alto: CAM_PISO.alto, k1: 0.16, k2: 0.03, aberracion: 0.0035, vineteo: 0.55, ruido: 0.03, hfov: CAM_PISO.hfov });
 export const camarasDron = {
   principal: (r, e, dt) => { const c = encajar(r, 4 / 3); sensorP.dibujar(M.escena, c, dt, performance.now(), 30); return c; },
-  piso: (r, e, dt) => { const c = encajar(r, 4 / 3); sensorPiso.dibujar(M.escena, c, dt, performance.now(), calidad === "alta" ? 30 : 15); return c; },
+  // la cámara al piso mira hacia abajo desde el chasis: la batería real cuelga justo ahí y la taparía (en el dron real, esa cámara
+  // iría fuera de la batería, variante C); en su imagen se oculta la batería y el velcro, no en las demás vistas
+  piso: (r, e, dt) => {
+    const c = encajar(r, 4 / 3), tapan = [];
+    dron.chasis.traverse(o => { if (o.userData.tapaPiso) tapan.push(o); });
+    tapan.forEach(o => { o.visible = false; });
+    sensorPiso.dibujar(M.escena, c, dt, performance.now(), calidad === "alta" ? 30 : 15);
+    tapan.forEach(o => { o.visible = true; });
+    return c;
+  },
 };
 // rectángulo de three (y desde abajo) -> rectángulo de la página
 const aPagina = r => r ? { x: r.x, y: innerHeight - r.y - r.h, w: r.w, h: r.h } : null;

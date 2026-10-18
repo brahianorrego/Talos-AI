@@ -73,10 +73,41 @@ def material(nombre, color, rugosidad=0.8, metalico=0.0):
     return mi
 
 
+def material_translucido(nombre, color, opacidad=0.25):
+    """Material translúcido (acrílico, vidrio): instancia de M_Translucido con Color y Opacidad."""
+    ruta_base = CARPETA + "/Materiales/M_Translucido"
+    if biblioteca.does_asset_exist(ruta_base):
+        base = unreal.load_asset(ruta_base)
+    else:
+        base = herramientas.create_asset("M_Translucido", CARPETA + "/Materiales", unreal.Material, unreal.MaterialFactoryNew())
+        base.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
+        c = mel.create_material_expression(base, unreal.MaterialExpressionVectorParameter, -400, 0)
+        c.set_editor_property("parameter_name", "Color")
+        o = mel.create_material_expression(base, unreal.MaterialExpressionScalarParameter, -400, 200)
+        o.set_editor_property("parameter_name", "Opacidad")
+        o.set_editor_property("default_value", 0.25)
+        r = mel.create_material_expression(base, unreal.MaterialExpressionConstant, -400, 320)
+        r.set_editor_property("r", 0.05)
+        mel.connect_material_property(c, "", unreal.MaterialProperty.MP_BASE_COLOR)
+        mel.connect_material_property(o, "", unreal.MaterialProperty.MP_OPACITY)
+        mel.connect_material_property(r, "", unreal.MaterialProperty.MP_ROUGHNESS)
+        mel.recompile_material(base)
+        biblioteca.save_loaded_asset(base)
+    ruta = CARPETA + "/Materiales/MI_" + nombre
+    if biblioteca.does_asset_exist(ruta):
+        return unreal.load_asset(ruta)
+    mi = herramientas.create_asset("MI_" + nombre, CARPETA + "/Materiales", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+    mel.set_material_instance_parent(mi, base)
+    mel.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(color[0], color[1], color[2], 1))
+    mel.set_material_instance_scalar_parameter_value(mi, "Opacidad", opacidad)
+    biblioteca.save_loaded_asset(mi)
+    return mi
+
+
 # ------------------------------------------------------------------------------------------------ actores simples
-def forma(nombre_forma, etiqueta, centro, escala, mat, guinada_grados=0.0, carpeta="Cancha"):
+def forma(nombre_forma, etiqueta, centro, escala, mat, guinada_grados=0.0, carpeta="Cancha", rot=None):
     """Forma básica del motor (Cube, Cylinder, Plane, Sphere: miden 100 cm) con su escala en m y su material."""
-    a = actores.spawn_actor_from_class(unreal.StaticMeshActor, centro, unreal.Rotator(0, 0, guinada_grados))
+    a = actores.spawn_actor_from_class(unreal.StaticMeshActor, centro, unreal.Rotator(*(rot or (0, 0, guinada_grados))))   # rot = (roll, pitch, yaw) de Unreal
     a.static_mesh_component.set_static_mesh(unreal.load_asset(FORMAS + nombre_forma))
     a.set_actor_scale3d(unreal.Vector(*escala))
     a.static_mesh_component.set_material(0, mat)
@@ -114,26 +145,39 @@ def paneles_de_foto(paneles, mats):
         caja(f"panel_{i}_marco", (x1 + x2) / 2, (y1 + y2) / 2, h - 0.02, L, 0.05, 0.04, marco, psi, "Paneles")
 
 
-def dron(etiqueta="Dron"):
-    """Cuadricóptero de ~0.5 m hecho con formas (provisional, hasta tener el modelo del dron real)."""
-    carbono, rojo, gris = material("Carbono", (0.02, 0.02, 0.025), 0.4), material("Rojo", (0.55, 0.03, 0.03), 0.4), material("Gris", (0.5, 0.5, 0.52), 0.35, 0.6)
+def dron(etiqueta="Dron", z_centro=3.3):
+    """El dron real hecho con primitivas, desde modelo_dron/dron_real.json (lo genera dron_real.py; fotos en 08_EVIDENCIA).
+    Marco del modelo: x adelante, y izquierda, z arriba, centro = placa del medio del chasis."""
+    import json
+    import os
+    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "modelo_dron", "dron_real.json")
+    with open(ruta, encoding="utf-8") as f:
+        modelo = json.load(f)
     # La raíz es un punto SIN forma y con escala 1: Sequencer escribe escala 1 en lo que mueve, y si la raíz tuviera la del
     # cuerpo, todas las piezas hijas se agrandarían (el dron salía gigante).
-    raiz = actores.spawn_actor_from_class(unreal.StaticMeshActor, ue(0, 0, 3.3), unreal.Rotator(0, 0, 0))
+    raiz = actores.spawn_actor_from_class(unreal.StaticMeshActor, ue(0, 0, z_centro), unreal.Rotator(0, 0, 0))
     raiz.set_actor_label(etiqueta)
     raiz.set_folder_path("Dron")
-    piezas = [caja(f"{etiqueta}_cuerpo", 0, 0, 3.3, 0.22, 0.15, 0.06, carbono, 0.0, "Dron")]
-    for k in range(4):
-        ang = math.radians(45 + 90 * k)
-        bx, by = 0.25 * math.cos(ang), 0.25 * math.sin(ang)
-        piezas.append(caja(f"{etiqueta}_brazo", bx / 2, by / 2, 3.3, 0.26, 0.025, 0.02, rojo if k < 2 else carbono, ang, "Dron"))
-        piezas.append(forma("Cylinder", f"{etiqueta}_motor", ue(bx, by, 3.33), (0.045, 0.045, 0.04), gris, 0.0, "Dron"))
-        piezas.append(forma("Cylinder", f"{etiqueta}_helice", ue(bx, by, 3.355), (0.22, 0.22, 0.004), carbono, 0.0, "Dron"))
-    for sy in (-1, 1):
-        piezas.append(caja(f"{etiqueta}_pata", 0, sy * 0.09, 3.21, 0.2, 0.012, 0.012, carbono, 0.0, "Dron"))
-    piezas.append(caja(f"{etiqueta}_camara", 0.12, 0, 3.24, 0.05, 0.06, 0.05, gris, 0.0, "Dron"))
-    for p in piezas:
-        p.attach_to_actor(raiz, "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
+    mats = {}
+    piezas = []
+    for p in modelo["piezas"]:
+        col = tuple(modelo["colores"][p["color"]])
+        if p["color"] not in mats:
+            mats[p["color"]] = (material_translucido("Dron_" + p["color"], col, 0.22) if p.get("translucido")
+                                else material("Dron_" + p["color"], col, 0.25 if p["color"] in ("carbono", "rojo", "espuma") else 0.5,
+                                              0.0))
+        x, y, z = p["centro"]
+        yaw, incl = p.get("yaw", 0.0), p.get("inclinacion", 0.0)
+        if p["forma"] == "caja":
+            escala, forma_ue, rot = tuple(p["tam"]), "Cube", (0.0, 0.0, -yaw)
+        else:
+            d, h = p["tam"]
+            escala, forma_ue = (d, d, h), "Cylinder"
+            eje = p.get("eje", "z")
+            rot = (0.0, 90.0, -yaw) if eje == "x" else ((90.0, 0.0, -yaw) if eje == "y" else (incl, 0.0, -yaw))
+        piezas.append(forma(forma_ue, f"{etiqueta}_{p['nombre']}", ue(x, y, z_centro + z), escala, mats[p["color"]], 0.0, "Dron", rot=rot))
+    for pz in piezas:
+        pz.attach_to_actor(raiz, "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
     return raiz
 
 

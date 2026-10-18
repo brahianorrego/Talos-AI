@@ -235,3 +235,8 @@ Queue, MetaHuman y Remote Control activados) sin abrir el editor, y escribió lo
 la cancha con las V de 1.5 × 2.25 m, la conversión de cualquier repetición V17 en secuencia y el render a 1080p. Probado de
 punta a punta: repetición → secuencia (721 cuadros) → 24 cuadros PNG → MP4. Captura: `mediciones/capturas/unreal_prueba_cuadro240.jpg`
 (personas = cilindros, provisional). **A Brahian le quedan 4 pasos: `GUIA_BRAHIAN_UNREAL.md`.**
+
+## El dron real en el modelo 3D (2026-10-18)
+
+`modelo_dron/` tiene el dron de las fotos de Brahian (77 piezas, proporcionado, con sus medidas pendientes anotadas en
+`modelo_dron/_LEEME.md`). Ya lo usan Unreal, el video de Blender y el visor V16. Pendiente: la estación de tierra.
