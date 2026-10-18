@@ -169,3 +169,24 @@ confirma. Captura: `mediciones/capturas/regla4_esperando_operador.jpg`.
 Brahian rechazó el aspecto de Quaternius. **Por defecto** el visor usa otra vez las personas, los árboles y el cielo de la
 V16. Quaternius quedó como opción apagada, sin borrar nada: `?personas=quaternius` y `?naturaleza=quaternius`. El mundo
 realista pasa a Unreal Engine 5 (`PLAN_UNREAL.md`).
+
+## D-065 · Estación de tierra con paneles movibles (2026-10-17)
+
+Es la interfaz que irá en la Jetson. **Se abre con `ABRIR_EN_VIVO.bat`**: arranca la simulación en vivo (8767), el
+servidor de la estación (8768) y Chrome en http://127.0.0.1:8768/.
+
+- **Base:** una copia del visor clásico (`03_SIMULACION_RL/index.html`, que no se tocó) en `estacion/index.html`, con
+  todas sus pantallas: telemetría, estados de búsqueda, mapa SLAM, objetivo/tracker, decisión, árbitro, cámara FPV con
+  HUD y YOLO, entrada de control, osciloscopio de entrenamiento, dominio táctico, estado, bitácora y reproductor.
+- **Ventanas** (`estacion/ventanas.js` y `ventanas.css`): cada panel se mueve arrastrando su título, cambia de tamaño
+  con la esquina de abajo a la derecha, se minimiza (–), se maximiza (□) y se cierra (×). Los cerrados se vuelven a abrir
+  en **Paneles ▾**, que también tiene **Restablecer distribución**. La distribución se guarda en el navegador. La
+  primera vez, los paneles que no caben en la pantalla arrancan minimizados.
+- **Vistas** (botones arriba o teclas 1, 2 y 3): **Solo 3D** (el mundo y el reproductor), **Solo lo que ve el dron** (la
+  cámara del dron con YOLO y su HUD en grande, sobre negro, como se verá en vuelo) y **Todo**.
+- **En vivo:** la primera opción de la lista es "En vivo · en_vivo.py"; también se pueden ver las repeticiones del
+  entrenamiento y del mínimo, como en el clásico (el servidor las lee de `03_SIMULACION_RL` sin tocarla).
+- **Sin internet:** three.js 0.128, sus controles y las tipografías 3D están en `estacion/lib/` (MIT, ver `lib/LICENSE`).
+  Se quitaron Google Fonts y Tailwind (usa las letras del sistema).
+- Probado en Chrome con la RTX en vivo, sin errores. Capturas: `mediciones/capturas/estacion_{todo,dron,3d}.jpg`.
+- Textos: "estación de tierra · proyecto de grado" (el clásico decía "Tesis").
