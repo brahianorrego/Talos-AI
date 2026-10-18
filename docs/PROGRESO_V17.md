@@ -210,6 +210,41 @@ B0 y B3 re-medidos con las métricas de suavidad (`informes/v17/v172_50M_*.json`
   y hay más espacio para que la IA aporte. B0 queda bajo el 20 % que el plan pedía para las reglas del ladrón (5.1), pero
   esta cancha es la real (D-066), así que no se ablanda.
 
+- **La V17.3 colapsó** a QUEDARSE a los ~2-3 M pasos (64 partidas: probabilidad de la preferida 0.97, entropía 0.16;
+  la V17.2 tenía 0.80 en el mismo punto): con la multa vertical en 0.5 vuelve a aplastar el aprendizaje. Se deja terminar
+  los 10 M como control (D-067).
+
+## D-067 · Compuerta B4 / B4* (18-oct)
+
+`entorno.regla_b4()` y `--pol b4,b4o` en `medir_ia_aporta.py`. **B4** sube a 5.5 m si, desde arriba, ve al menos `B4_SUBE`
+más de la zona de escape del ladrón (cobertura) y vuelve a 3.30 m si ve `B4_BAJA` o menos, con histéresis entre los dos.
+**B4\*** hace lo mismo con la posición verdadera del ladrón: solo sirve para medir el techo. Prueba nueva: B4 nunca aprieta
+un botón prohibido (`test_regla_b4_nunca_prohibido`). Medidas nuevas: vaivén de la red (solo lo que ella aprieta) y altura
+pedida con el ladrón a < 3 m de una V contra en campo abierto.
+
+**Ajuste de los umbrales con otra semilla** (7, 256 partidas, cancha real, `informes/v17/b4_ajuste_*.json`), M1: B3 20.7 %;
+B4 con `B4_SUBE` = 0.02 / **0.05** / 0.10 → 20.3 / **21.9** / 18.0 %; B4\* → 17.2 / 20.7 / 17.2 %. Quedan 0.05 y 0.02.
+
+**Medición oficial** (semilla 123, 512 partidas; `informes/v17/b4_real_*.json`, `b4_vieja_*.json`; B3 de
+`v173_base_b3.json` y `v172_50M_b3.json`):
+
+| | M1 cancha real | M1 cancha vieja | Altura pedida cerca de una V / en campo abierto (real) |
+|---|---:|---:|---|
+| B3 siempre SUBIR | **24.6 %** | **56.2 %** | 5.4 / 5.4 m |
+| B4 altura por cobertura | 19.5 % | 54.1 % | 4.3 / 4.1 m |
+| B4\* con la posición verdadera | 22.5 % | 51.4 % | 4.3 / 4.1 m |
+| V17.2 a los 50 M (red) | — | 54.3 % | — |
+
+**Resultado de la compuerta: cerrada.** Ni decidiendo la altura con la posición verdadera del ladrón se le gana a "siempre
+subir" (B4\* queda 2.1 puntos debajo en la cancha real y 4.8 en la vieja). En esta cancha, con la búsqueda determinista
+volviendo a 3.30 m en cada pérdida, **subir siempre ya es casi lo mejor que da la altura**. Por D-067 no se entrena más la
+altura (la V17.4 con los cambios del diagnóstico no se lanza). Lo honesto para el documento:
+**"la IA aprendió sola lo que hace la mejor regla simple"** (V17.2: 54.3 % contra 56.2 % de B3, empate dentro del ruido; le
+gana a "solo reglas" por 5.9 puntos).
+
+La palanca grande que queda (D-059 C: que la red decida los primeros 2-3 s tras perderlo) toca la regla dura 3: **la decide
+Brahian**.
+
 ### D-063 · Altura segura con el error del barómetro
 
 B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y
