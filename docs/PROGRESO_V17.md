@@ -196,7 +196,19 @@ B0 y B3 re-medidos con las métricas de suavidad (`informes/v17/v172_50M_*.json`
   esquiva arranca siempre, sea cual sea el botón) no cambió.
 - **En marcha desde 2026-10-18 10:32** (pestaña del Terminal; la sesión estuvo pausada entre las 03:30 y las 10:30), desde cero:
   `.venv\Scripts\python.exe -u entrenar_master.py --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_3 --dir-master modelos_v17_3 --dir-modelos modelos_v17_3 *> modelos_v17_3.log`
-- Línea base con los paneles nuevos: `informes/v17/v173_base_b*.json` (midiéndose).
+- **Línea base con los paneles reales** (512 partidas, `informes/v17/v173_base_b*.json`). **La cancha se vuelve mucho más
+  difícil**: alas de 1.5 m y 2.2-2.3 m de alto tapan bastante más que 1.0 × 2.0 m.
+
+  | | M1 | Vista total (s) | M2 ≤ 10 s | Rendición | Alcanzado | Mapeo de las V en la entrada |
+  |---|---:|---:|---:|---:|---:|---:|
+  | B0 QUEDARSE | 11.7 % | 84.6 | 60.0 % | 1.6 % | 0 % | 61 % |
+  | B1 azar | 13.5 % | 82.6 | 61.6 % | 2.3 % | 0 % | 61 % |
+  | B2 posicionamiento | 17.2 % | 86.2 | 60.0 % | 2.3 % | 0 % | 61 % |
+  | **B3 SUBIR** | **24.6 %** | 87.3 | 68.3 % | 4.1 % | 0 % | 61 % |
+
+  Ahora **subir dobla la custodia** de quedarse (+12.9 puntos; con los paneles viejos eran +7.8): la altura pesa mucho más
+  y hay más espacio para que la IA aporte. B0 queda bajo el 20 % que el plan pedía para las reglas del ladrón (5.1), pero
+  esta cancha es la real (D-066), así que no se ablanda.
 
 ### D-063 · Altura segura con el error del barómetro
 
