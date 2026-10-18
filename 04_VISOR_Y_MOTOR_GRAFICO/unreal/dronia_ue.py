@@ -83,7 +83,7 @@ def material_cesped():
     crear = lambda clase, x, y: mel.create_material_expression(mat, clase, x, y)
     pos = crear(unreal.MaterialExpressionWorldPosition, -1400, 0)
     eje = crear(unreal.MaterialExpressionComponentMask, -1200, 0)
-    eje.set_editor_property("r", True); eje.set_editor_property("g", False); eje.set_editor_property("b", False); eje.set_editor_property("a", False)
+    eje.set_editor_property("r", False); eje.set_editor_property("g", True); eje.set_editor_property("b", False); eje.set_editor_property("a", False)   # franjas a lo largo de Y (norte-sur)
     seno = crear(unreal.MaterialExpressionSine, -1000, 0)
     seno.set_editor_property("period", 1000.0)                      # 10 m = dos franjas de 5 m (la posición está en cm)
     duro = crear(unreal.MaterialExpressionMultiply, -800, 0)
@@ -245,7 +245,7 @@ def cielo_y_luz():
     sol = actores.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1000), unreal.Rotator(0, -38, 215))
     sol.set_actor_label("Sol")
     luz = sol.get_component_by_class(unreal.DirectionalLightComponent)
-    luz.set_editor_property("intensity", 9.0)
+    luz.set_editor_property("intensity", 7.0)
     luz.set_editor_property("atmosphere_sun_light", True)
     luz.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
     actores.spawn_actor_from_class(unreal.SkyAtmosphere, unreal.Vector(0, 0, 0)).set_actor_label("Atmosfera")
@@ -255,7 +255,11 @@ def cielo_y_luz():
     c.set_editor_property("real_time_capture", True)
     c.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
     actores.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0)).set_actor_label("Niebla")
-    actores.spawn_actor_from_class(unreal.VolumetricCloud, unreal.Vector(0, 0, 0)).set_actor_label("Nubes")
+    nubes = actores.spawn_actor_from_class(unreal.VolumetricCloud, unreal.Vector(0, 0, 0))
+    nubes.set_actor_label("Nubes")
+    mat_nubes = unreal.load_asset("/Engine/EngineSky/VolumetricClouds/m_SimpleVolumetricCloud_Inst")
+    if mat_nubes:
+        nubes.get_component_by_class(unreal.VolumetricCloudComponent).set_editor_property("material", mat_nubes)
     for a in (sol,):
         a.set_folder_path("Luz")
 

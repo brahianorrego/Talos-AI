@@ -37,3 +37,17 @@ del proyecto compila shaders (varios minutos).
 Listo: cancha, V, dron provisional, personas **provisionales (cilindros)**, secuencia desde cualquier repetición V17, render y
 MP4 (probado con 24 cuadros). Falta: MetaHumans con sus animaciones (guía, pasos 3-4), árboles y pasto de Fab, modelo del dron
 real, la fase 2 en vivo (`puente_unreal.py`) y la fase 3 (Pixel Streaming).
+
+## El campus de la universidad en Unreal (2026-10-18)
+
+`crear_cancha.py` ahora construye el campus completo con `entorno_u_ue.py`, que lee `entorno/entorno_u.json` (la misma especificación de la
+estación web): césped con franjas de corte, líneas y arcos de la cancha de fútbol (67 × 102 m, medida), tenis y múltiple con cerco, aros y
+red, coliseo, laboratorio, parqueadero con autos, 6 bloques de ladrillo, 5 torres, vías, 333 árboles (mallas de bajo detalle del
+complemento PCG Biome Sample de Epic), 8 cerros, el motor de avión de la exhibición, cielo y nubes. Las fachadas son texturas que genera
+`entorno/fachadas.py` (una por pared, con ventanas; el nivel las importa solo). Antes: `entorno/entorno_u.py` y `entorno/fachadas.py`.
+
+- `vuelo_canchas.py`: la secuencia `Vuelo_entre_canchas` (18 s): la cámara parte de la cancha de fútbol, sube, cruza y baja a las canchas
+  cerradas, y vuelve (la misma curva que la tecla T de la estación web).
+- Medido: la secuencia del vuelo (432 cuadros, 1080p) se renderiza en 2 min 24 s; armar el nivel, 71 s.
+- Video: `04_VISOR_Y_MOTOR_GRAFICO/videos/vuelo_entre_canchas_unreal.mp4` (fuera de Git).
+- `vegetacion.py` se borró: los árboles ahora los pone `entorno_u_ue.py` (las plántulas de Epic se veían como cartulina y se descartaron).
