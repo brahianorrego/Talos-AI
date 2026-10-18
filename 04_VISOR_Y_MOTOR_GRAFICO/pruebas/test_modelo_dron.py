@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Pruebas del modelo 3D del dron (04_VISOR_Y_MOTOR_GRAFICO/modelo_dron). Correr desde la raíz del proyecto:
+r"""Pruebas del modelo 3D del dron (04_VISOR_Y_MOTOR_GRAFICO/modelo_dron). Correr desde la raíz del proyecto:
    03_SIMULACION_RL\.venv\Scripts\python.exe -m unittest discover -s 04_VISOR_Y_MOTOR_GRAFICO/pruebas"""
 import json
 import os

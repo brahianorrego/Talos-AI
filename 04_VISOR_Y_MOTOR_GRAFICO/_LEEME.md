@@ -240,3 +240,22 @@ punta a punta: repetición → secuencia (721 cuadros) → 24 cuadros PNG → MP
 
 `modelo_dron/` tiene el dron de las fotos de Brahian (77 piezas, proporcionado, con sus medidas pendientes anotadas en
 `modelo_dron/_LEEME.md`). Ya lo usan Unreal, el video de Blender y el visor V16. Pendiente: la estación de tierra.
+
+## El campus de la universidad en un solo entorno (2026-10-18)
+
+Pedido de Brahian con las fotos y mediciones de Google Earth (`08_EVIDENCIA_Y_DIAGRAMAS/privado/sitio_universidad/`, carpeta
+privada): todo en un entorno, con la cancha de fútbol, la cancha cerrada y los alrededores, y una tecla para volar entre las dos.
+
+- **Especificación única:** `entorno/entorno_u.py` → `entorno_u.json` (medidas, no fotos): cancha de fútbol de 67 × 102 m (6 822 m²,
+  medida), cancha de tenis de 19.5 × 36 m (695 m², medida) y la múltiple, coliseo, laboratorio, parqueadero con 40 autos, 4 bloques
+  de apartamentos al norte, 2 al este, 5 torres, vías, cercos de malla, un muro oscuro al este de la cancha, el motor de avión de
+  la exhibición, 333 árboles y 8 cerros. El origen es el centro de la zona de IA (30 × 30 m, en la mitad norte de la cancha).
+  **Las posiciones salen de las imágenes de satélite: son aproximaciones, por medir.**
+- **Estación web** (`estacion/universidad.js`): lo construye con texturas dibujadas por código (césped con franjas de corte y
+  líneas, ladrillo con ventanas, malla de cerco). **Tecla T** (o el botón "✈ Canchas (T)"): la cámara sube, cruza y baja entre la
+  cancha de fútbol y las canchas cerradas en 7 s, y queda en cámara libre. Con `?entorno=arena` se ve la arena blanca de antes.
+- **Pruebas** (`pruebas/test_entorno_u.py`): las áreas coinciden con Google Earth, la zona de IA cabe dentro de las líneas, ningún árbol
+  a menos de 10 m de la zona (D-051) ni sobre canchas, edificios o la cancha, y las dos vistas del vuelo.
+- Capturas: `mediciones/capturas/universidad_*.jpg`.
+- **Qué falta:** mismo entorno en Unreal (`unreal/`, lee el mismo JSON), medir con cinta las canchas, y los detalles de los edificios
+  reales (ventanas, colores, la cubierta del coliseo).

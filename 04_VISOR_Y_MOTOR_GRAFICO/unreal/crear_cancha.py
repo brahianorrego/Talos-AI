@@ -27,3 +27,5 @@ if nivel:
     D.dron()
     nivel.save_current_level()
     unreal.log("DRONIA: nivel creado " + RUTA)
+    import vegetacion                                      # árboles y piedras (PCG Biome Sample de Epic)
+    vegetacion.main()

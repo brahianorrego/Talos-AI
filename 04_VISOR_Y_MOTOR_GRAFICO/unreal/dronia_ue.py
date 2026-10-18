@@ -73,6 +73,59 @@ def material(nombre, color, rugosidad=0.8, metalico=0.0):
     return mi
 
 
+def material_cesped():
+    """Césped de cancha de fútbol: franjas de corte de 5 m (claro y oscuro), variación fina con ruido y rugosidad alta.
+    Es procedural (sin texturas): se ve parejo de cerca; para pasto realista hace falta contenido de Fab (PLAN_UNREAL.md, paso 7)."""
+    ruta = CARPETA + "/Materiales/M_Cesped"
+    if biblioteca.does_asset_exist(ruta):
+        return unreal.load_asset(ruta)
+    mat = herramientas.create_asset("M_Cesped", CARPETA + "/Materiales", unreal.Material, unreal.MaterialFactoryNew())
+    crear = lambda clase, x, y: mel.create_material_expression(mat, clase, x, y)
+    pos = crear(unreal.MaterialExpressionWorldPosition, -1400, 0)
+    eje = crear(unreal.MaterialExpressionComponentMask, -1200, 0)
+    eje.set_editor_property("r", True); eje.set_editor_property("g", False); eje.set_editor_property("b", False); eje.set_editor_property("a", False)
+    seno = crear(unreal.MaterialExpressionSine, -1000, 0)
+    seno.set_editor_property("period", 1000.0)                      # 10 m = dos franjas de 5 m (la posición está en cm)
+    duro = crear(unreal.MaterialExpressionMultiply, -800, 0)
+    duro.set_editor_property("const_b", 12.0)                        # endurece el borde de la franja
+    medio = crear(unreal.MaterialExpressionAdd, -600, 0)
+    medio.set_editor_property("const_b", 1.0)
+    mitad = crear(unreal.MaterialExpressionMultiply, -450, 0)
+    mitad.set_editor_property("const_b", 0.5)
+    franja = crear(unreal.MaterialExpressionSaturate, -300, 0)
+    claro = crear(unreal.MaterialExpressionConstant3Vector, -450, 150)
+    claro.set_editor_property("constant", unreal.LinearColor(0.095, 0.24, 0.04, 1))
+    oscuro = crear(unreal.MaterialExpressionConstant3Vector, -450, 280)
+    oscuro.set_editor_property("constant", unreal.LinearColor(0.040, 0.105, 0.018, 1))
+    mezcla = crear(unreal.MaterialExpressionLinearInterpolate, -150, 100)
+    ruido = crear(unreal.MaterialExpressionNoise, -700, 450)
+    ruido.set_editor_property("noise_function", unreal.NoiseFunction.NOISEFUNCTION_GRADIENT_ALU)   # el de por defecto dibujaba grietas (voronoi)
+    ruido.set_editor_property("scale", 0.05)
+    ruido.set_editor_property("levels", 3)
+    ruido.set_editor_property("turbulence", True)
+    ruido.set_editor_property("output_min", 0.82)
+    ruido.set_editor_property("output_max", 1.12)
+    var = crear(unreal.MaterialExpressionMultiply, 100, 150)
+    rug = crear(unreal.MaterialExpressionConstant, 100, 350)
+    rug.set_editor_property("r", 0.95)
+    mel.connect_material_expressions(pos, "", eje, "")
+    mel.connect_material_expressions(eje, "", seno, "")
+    mel.connect_material_expressions(seno, "", duro, "A")
+    mel.connect_material_expressions(duro, "", medio, "A")
+    mel.connect_material_expressions(medio, "", mitad, "A")
+    mel.connect_material_expressions(mitad, "", franja, "")
+    mel.connect_material_expressions(oscuro, "", mezcla, "A")
+    mel.connect_material_expressions(claro, "", mezcla, "B")
+    mel.connect_material_expressions(franja, "", mezcla, "Alpha")
+    mel.connect_material_expressions(mezcla, "", var, "A")
+    mel.connect_material_expressions(ruido, "", var, "B")
+    mel.connect_material_property(var, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(rug, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(mat)
+    biblioteca.save_loaded_asset(mat)
+    return mat
+
+
 def material_translucido(nombre, color, opacidad=0.25):
     """Material translúcido (acrílico, vidrio): instancia de M_Translucido con Color y Opacidad."""
     ruta_base = CARPETA + "/Materiales/M_Translucido"
@@ -210,7 +263,7 @@ def cielo_y_luz():
 # ------------------------------------------------------------------------------------------------ cancha
 def cancha():
     """Césped, líneas y arcos de la cancha de 90 x 60 m (por medir), con la zona de IA en el centro de la mitad este."""
-    cesped = material("Cesped", (0.045, 0.11, 0.025), 0.95)
+    cesped = material_cesped()
     cal = material("Cal", (0.85, 0.85, 0.82), 0.9)
     forma("Plane", "Cesped", ue(0, 0, 0), (400, 400, 1), cesped)
     LX, LY, CX = 90.0, 60.0, -22.5
