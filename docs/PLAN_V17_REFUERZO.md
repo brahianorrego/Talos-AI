@@ -90,6 +90,13 @@ la Jetson (`02_JETSON_A_BORDO/`, no se toca aquí): queda anotado para la nube d
 
 ### 3.2 Los paneles: altura medida en la foto
 
+> **Actualización (17-oct, D-066):** Brahian, que conoce los paneles, dice que cada uno mide **~1.5 m de ancho** y el
+> conjunto **~2.2-2.3 m de alto** ("al menos 50 cm por encima de mi cabeza", él mide 1.74 m). Eso manda sobre la
+> estimación de la foto de abajo. Nuevos valores hasta medirlos con cinta: **`ANCHO_PANEL_V17 = 1.5` m y
+> `ALTO_PANEL_V17 = 2.25` m (aleatorio 2.1-2.4 m)**. La V de 90° queda con boca de 2.12 m y fondo de 1.06 m. Las dos V a
+> 10 m y la zona de 30 × 30 m no cambian. Desde 3.30 m y a 5 m del panel, una persona de pie queda oculta hasta ~2.6 m
+> detrás y agachada hasta ~5.5 m: ver por encima ahora pesa más (SUBIR).
+
 Foto `08_EVIDENCIA_Y_DIAGRAMAS/paneles_de_exposicion_universidad.png` (330 × 572 px). Referencia: la mujer de la
 derecha, de pie a una distancia parecida a la del panel del fondo, con los pies a la vista. Con el método del horizonte
 (alto = altura de la cámara × (y_pie − y_cabeza) / (y_pie − y_horizonte); horizonte a la altura de los ojos, y ≈ 165):
