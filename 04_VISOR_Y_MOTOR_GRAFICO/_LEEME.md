@@ -210,3 +210,21 @@ servidor de la estación (8768) y Chrome en http://127.0.0.1:8768/.
 
 Probado en Chrome con la RTX en vivo: 111-144 cps, sin errores. Capturas: `mediciones/capturas/estacion_*.jpg`
 (`todo`, `mapa` = mapa en la principal, `3dprin` = 3D en la principal, `dron`, `3d`).
+
+### Estación con modos fijos (pedido de Brahian, 17-oct, noche)
+
+Brahian no quería ventanas sueltas ("puede empezar a cerrar pestañas y ya se cierran todas y qué hago"). Se cambiaron
+`ventanas.js/css` por **`modos.js/css`**: cinco pantallas ya organizadas, con botones arriba (o teclas 1 a 5), que no se
+pueden desordenar. Cada modo pone los paneles que necesita y guarda los demás; el modo elegido se recuerda.
+
+| Modo | Qué se ve |
+|---|---|
+| **Cámara del dron** (por defecto) | La cámara con YOLO a pantalla completa; encima, en las esquinas de la imagen, la telemetría, la custodia del ladrón y el mapa SLAM |
+| **Simulación 3D** | El mundo 3D con la cámara, el control y el mapa a la izquierda y el análisis a la derecha; **"Ocultar paneles"** deja solo la simulación y el reproductor |
+| **Mapa** | El mapa SLAM grande e **interactivo**: rueda = acercar o alejar, arrastrar = mover, doble clic = centrar. La geocerca es la de la V17 (30 × 30 m) |
+| **Ingeniería** | Estados de búsqueda, lógica de decisión, tracker, árbitro, custodia, telemetría y entrenamiento alrededor del 3D |
+| **Vuelo real** | La pantalla del operador con el dron de verdad: cámara grande, **Conexión** (Jetson, Pixhawk, mando, batería; hoy dice "simulación"), telemetría, mando del piloto, árbitro y mapa |
+
+- **Confirmación del operador:** cuando una repetición espera el clic (Operador · MANUAL), sale un aviso grande con el
+  botón **"Confirmar sospechoso"**, que funciona en cualquier modo. Antes la pantalla parecía congelada.
+- Capturas: `mediciones/capturas/estacion_modo_*.jpg`. Probado en vivo en Chrome con la RTX, sin errores.

@@ -1,0 +1,68 @@
+/* Modos de la estación (ver modos.js): cajas fijas donde cada modo pone sus paneles. Nada se mueve ni se cierra a mano. */
+:root { --abajo: 90px; --wi: 364px; --wd: 310px; }
+body.der-ancha { --wd: 380px; }
+.caja { position: fixed; z-index: 5; }
+#guardados { display: none; }
+#col-izq, #col-der { top: 52px; bottom: var(--abajo); display: none; flex-direction: column; gap: 8px; overflow-y: auto; scrollbar-width: thin; }
+#col-izq { left: 10px; width: var(--wi); }
+#col-der { right: 10px; width: var(--wd); }
+body.con-izq #col-izq, body.con-der #col-der { display: flex; }
+#centro { top: 52px; bottom: var(--abajo); left: 10px; right: 10px; display: flex; z-index: 2; }
+body.con-izq #centro { left: calc(var(--wi) + 20px); }
+body.con-der #centro { right: calc(var(--wd) + 20px); }
+#abajo { bottom: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; }
+body.con-izq #abajo { left: calc(var(--wi) + 20px); }
+body.con-der #abajo { right: calc(var(--wd) + 20px); }
+/* los paneles dentro de las cajas van en fila, sin posición propia */
+.caja > .pnl { position: relative !important; inset: auto !important; transform: none !important; width: auto !important; margin: 0 !important;
+               animation: none !important; flex: none; }
+.caja .chev { display: none; }
+#abajo > #log { height: 64px; }
+#abajo > .pnl { pointer-events: auto; }
+
+/* el centro: la cámara del dron o el mapa ocupan todo el espacio */
+#centro > .pnl { flex: 1 !important; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+#centro > .pnl > .cuerpo { flex: 1; min-height: 0; }
+#fpv { background: transparent !important; border: 1px solid var(--borde) !important; border-radius: 6px; box-shadow: none !important; }
+#fpv > .cab { background: var(--panel); border: 0 !important; border-bottom: 1px solid var(--linea) !important; border-radius: 6px 6px 0 0; }
+#fpv > .cuerpo { border: 0 !important; box-shadow: none !important; padding: 6px !important; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#centro #fpv-vista { width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 4 / 3; }
+#centro > #p-slam > .cuerpo { display: flex; flex-direction: column; }
+#centro #slam-lienzo { flex: 1; height: auto; min-height: 200px; cursor: grab; }
+#slam-lienzo:active { cursor: grabbing; }
+
+/* modo "Cámara del dron": telemetría, custodia y mapa encima de la imagen, en sus esquinas */
+.sobre { z-index: 6; width: 250px; }
+body:not([data-modo="dron"]) .sobre { display: none; }
+#sobre-br { width: 290px; }
+.sobre > .pnl { background: rgba(8, 12, 18, .72) !important; backdrop-filter: blur(4px); }
+.sobre .cab { padding: 4px 8px; }
+.sobre .cuerpo { padding: 5px 8px 7px; }
+.sobre .kv { font-size: 11.5px; }
+#sobre-br .slam-barra, #sobre-br .slam-ley, #sobre-br .kv.lidar { display: none; }
+#sobre-br #slam-lienzo { height: 210px; }
+
+/* "Ocultar paneles" (modo 3D): queda la simulación y el reproductor */
+body.sin-paneles #col-izq, body.sin-paneles #col-der, body.sin-paneles #abajo > :not(#reproductor) { display: none !important; }
+body.sin-paneles #abajo { left: 10px; right: 10px; }
+
+/* "Ocultar paneles": flota arriba, en el centro de la simulación */
+#b-ocultar { position: fixed; top: 58px; left: 50%; transform: translateX(-50%); z-index: 7; box-shadow: 0 6px 18px rgba(0, 0, 0, .4); }
+
+/* botones de modo */
+.modos button { white-space: nowrap; font-weight: 600; }
+#barra .btn, #barra .ind span, #barra .ind b { white-space: nowrap; }
+#barra { gap: 10px; }
+#barra .ind { padding: 0 9px; }
+#barra .ind.opc { display: none; }
+#selector { max-width: 240px; }
+
+/* confirmación del operador: grande y en el centro de arriba, con botón (sirve en cualquier modo) */
+#confirmar { display: none; left: 50%; top: 58px; transform: translateX(-50%); z-index: 30; align-items: center; gap: 14px; padding: 10px 14px;
+             background: rgba(26, 20, 6, .95); border: 1px solid var(--precaucion); border-radius: 8px; color: #ffe9a8; font-size: 13px;
+             box-shadow: 0 8px 30px rgba(0, 0, 0, .5); max-width: min(760px, 92vw); }
+#confirmar.ver { display: flex; }
+#confirmar b { color: var(--precaucion); }
+#b-confirmar { border-color: var(--precaucion); color: #fff; background: rgba(245, 197, 66, .18); font-weight: 600; white-space: nowrap; }
+#aviso { z-index: 31; }
+.caja:not(#centro) .slam-barra .mono { display: none; }           /* la ayuda del mapa solo cuando está grande */

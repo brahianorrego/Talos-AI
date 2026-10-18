@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DRON-IA · Estación de tierra</title>
-<!-- Estación de tierra (D-065): copia del visor clásico de 03_SIMULACION_RL con paneles movibles (ventanas.js), vistas
-     "Solo 3D", "Solo lo que ve el dron" y "Todo", y simulación en vivo (en_vivo.py). Funciona sin internet (lib/). -->
+<!-- Estación de tierra (D-065): copia del visor clásico de 03_SIMULACION_RL con modos fijos (modos.js): cámara del dron,
+     simulación 3D, mapa, ingeniería y vuelo real, y simulación en vivo (en_vivo.py). Funciona sin internet (lib/). -->
 <script src="lib/three.min.js"></script>
 <script src="lib/OrbitControls.js"></script>
 
@@ -201,10 +201,10 @@
   <div class="ind opc"><span>Entrenamiento</span><b id="i-ent">–</b></div>
   <div class="der">
     <div class="autoria">Desarrollado por <b>Brahian Andrés Orrego Osorio</b></div>
-    <div class="seg" id="vistas" title="Qué se ve en la pantalla">
-      <button data-vista="3d" title="Solo el mundo 3D, sin paneles (tecla 1)">Solo 3D</button><button data-vista="dron" title="Solo la cámara del dron con YOLO, como se verá en vuelo (tecla 2)">Solo lo que ve el dron</button><button data-vista="todo" class="activo" title="Todos los paneles abiertos (tecla 3)">Todo</button>
+    <div class="seg modos" id="modos" title="Elija qué quiere ver">
+      <button data-modo="dron" title="La cámara del dron con YOLO, la telemetría y el mapa (tecla 1)">Cámara del dron</button><button data-modo="3d" title="El mundo 3D de la simulación (tecla 2)">Simulación 3D</button><button data-modo="mapa" title="El mapa que arma el LiDAR (tecla 3)">Mapa</button><button data-modo="ing" title="Todo el análisis: estados, árbitro, decisiones, entrenamiento (tecla 4)">Ingeniería</button><button data-modo="vuelo" title="La pantalla del operador en el vuelo real (tecla 5)">Vuelo real</button>
     </div>
-    <div class="menu-paneles"><button class="btn" id="b-paneles" title="Abrir o cerrar paneles, o volver a la distribución inicial">Paneles ▾</button><div id="lista-paneles"></div></div>
+
     <select id="selector" title="Repetición a mostrar"></select>
   </div>
 </div>
@@ -244,7 +244,7 @@
     <div class="cuerpo">
       <div class="slam-barra">
         <div class="seg" id="slam-vista"><button data-v="dron" class="activo">Dron 12 m</button><button data-v="arena">Arena</button></div>
-        <span class="mono" style="color:var(--tenue);font-size:10px">norte arriba</span>
+        <span class="mono" style="color:var(--tenue);font-size:10px" title="Rueda del ratón: acercar o alejar · arrastrar: mover · doble clic: volver al centro">norte arriba · rueda: acercar · arrastrar: mover · doble clic: centrar</span>
       </div>
       <canvas id="slam-lienzo"></canvas>
       <div class="slam-ley">
@@ -346,13 +346,29 @@
   <div class="cab"><h3>Vista 3D · simulación</h3></div>
   <div class="cuerpo"><div id="vista-3d"></div></div>
 </section>
+<button class="btn" id="b-ocultar" title="Ocultar o mostrar los paneles para ver solo la simulación">Ocultar paneles</button>
+<div id="confirmar" class="ui">
+  <div><b>¿Es el sospechoso?</b> El operador lo confirma con un clic sobre la persona en la cámara del dron, o con este botón.</div>
+  <button class="btn" id="b-confirmar">Confirmar sospechoso</button>
+</div>
+<section id="p-enlace" class="ui panel">
+  <div class="cab"><h3>Conexión</h3><span class="tag" id="en-tag" style="color:var(--alerta)">SIMULACIÓN</span></div>
+  <div class="cuerpo kv">
+    <span>Datos</span><b id="en-fuente">simulación (en_vivo.py)</b>
+    <span>Jetson a bordo</span><b>sin conectar</b>
+    <span>Pixhawk (MAVLink)</span><b>sin conectar</b>
+    <span>Mando del piloto</span><b>sin conectar</b>
+    <span>Batería</span><b id="en-bat">–</b>
+  </div>
+  <div class="nota" style="padding:0 10px 8px">En el vuelo real, estos datos los manda la Jetson; hoy los da la simulación.</div>
+</section>
 <div id="aviso" class="ui panel"></div>
 <section id="resumen" class="ui panel">
   <div class="cab"><h3>Resumen de la misión</h3><span class="tag" id="res-tag">–</span></div>
   <div class="cuerpo"><table id="res-tabla"></table><div class="barra-sig"><i></i></div><div class="nota">Siguiente repetición en unos segundos…</div></div>
 </section>
 
-<link rel="stylesheet" href="ventanas.css">
+<link rel="stylesheet" href="modos.css">
 <script>
 "use strict";
 const NOMBRES = ["MANTENER", "ESQUIVAR IZQ", "ESQUIVAR DER", "FRENAR+SUBIR", "GIRAR IZQ", "GIRAR DER", "AVANZAR", "BAJAR", "GIMBAL ARRIBA", "GIMBAL ABAJO"];
@@ -401,6 +417,7 @@ function actualizarCustodia(C, k, dt) {
   $("cus-t").textContent = seg(vistos) + " de " + seg(k + 1);
   $("cus-racha").textContent = seg(racha);
   $("cus-mejor").textContent = seg(mejor);
+  if (C[k].bat !== undefined) $("en-bat").textContent = C[k].bat.toFixed(0) + " %";
   const t = $("cus-tag"); t.textContent = C[k].vis ? "A LA VISTA" : "SIN VERLO"; t.style.color = C[k].vis ? "var(--ok)" : "var(--alerta)";
 }
 function lerpAng(a, b, f) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * f; }
@@ -1353,6 +1370,10 @@ function actualizarPaneles(c, b, k, info) {
 }
 // ---- confirmación del operador con un clic sobre la persona en foco ----
 let operadorManual = true, esperaClic = null, confirmados = new Set(), clicsK = [], clicVisual = null, cajasActuales = [];
+$("b-confirmar").addEventListener("click", () => {
+  const c = cajasActuales.find(q => q.tipo === "cand");
+  confirmarClic(c ? (c.x0 + c.x1) / 2 : fpvVista.clientWidth / 2, c ? (c.y0 + c.y1) / 2 : fpvVista.clientHeight / 2);
+});
 function confirmarClic(x, y) {
   if (esperaClic === null) return;
   confirmados.add(esperaClic);
@@ -1391,6 +1412,20 @@ document.querySelectorAll("#slam-vista button").forEach(b => b.addEventListener(
 }));
 function hastaK(arr, k) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m][2] <= k) lo = m + 1; else hi = m; } return lo; }
 const TIPO_LIDAR = ["sin retorno", "suelo", "obstáculo", "persona"];
+// interacción con el mapa (pedido de Brahian): rueda = acercar o alejar, arrastrar = mover, doble clic = volver al centro
+slam.zoom = 1; slam.px = 0; slam.py = 0; slam.esc = 10;
+(() => {
+  const cv = $("slam-lienzo");
+  cv.addEventListener("wheel", e => { e.preventDefault(); slam.zoom = limitar(slam.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 0.4, 8); }, { passive: false });
+  cv.addEventListener("pointerdown", e => {
+    const x0 = e.clientX, y0 = e.clientY, px0 = slam.px, py0 = slam.py;
+    cv.setPointerCapture(e.pointerId);
+    const mover = ev => { slam.px = px0 - (ev.clientX - x0) / slam.esc; slam.py = py0 + (ev.clientY - y0) / slam.esc; };
+    cv.addEventListener("pointermove", mover);
+    cv.addEventListener("pointerup", () => cv.removeEventListener("pointermove", mover), { once: true });
+  });
+  cv.addEventListener("dblclick", () => { slam.zoom = 1; slam.px = 0; slam.py = 0; });
+})();
 function dibujarSLAM(c, k) {
   const cv = $("slam-lienzo"), r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio, 2);
   if (r.width < 10) return;
@@ -1399,14 +1434,15 @@ function dibujarSLAM(c, k) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.fillStyle = "#070b10"; g.fillRect(0, 0, W, H);
   const f2 = c.fase === 2, cerca = slam.vista === "dron";
-  const R = cerca ? 12 : 26, ox = cerca ? c.d[0] : 0, oy = cerca ? c.d[1] : 0, esc = Math.min(W, H) / (2 * R);
+  const R = (cerca ? 12 : 17) / slam.zoom, ox = (cerca ? c.d[0] : 0) + slam.px, oy = (cerca ? c.d[1] : 0) + slam.py, esc = Math.min(W, H) / (2 * R);
+  slam.esc = esc;
   const X = x => W / 2 + (x - ox) * esc, Y = y => H / 2 - (y - oy) * esc;
   // cuadrícula de 5 m y borde de la geocerca
   g.lineWidth = 1; g.strokeStyle = "rgba(86, 102, 122, .16)"; g.beginPath();
   for (let v = Math.ceil((ox - W / 2 / esc) / 5) * 5; v <= ox + W / 2 / esc; v += 5) { g.moveTo(X(v), 0); g.lineTo(X(v), H); }
   for (let v = Math.ceil((oy - H / 2 / esc) / 5) * 5; v <= oy + H / 2 / esc; v += 5) { g.moveTo(0, Y(v)); g.lineTo(W, Y(v)); }
   g.stroke();
-  g.strokeStyle = "rgba(255, 77, 79, .35)"; g.setLineDash([4, 4]); g.strokeRect(X(-25), Y(25), 50 * esc, 50 * esc); g.setLineDash([]);
+  g.strokeStyle = "rgba(255, 77, 79, .35)"; g.setLineDash([4, 4]); g.strokeRect(X(-15), Y(15), 30 * esc, 30 * esc);     // zona de IA de la V17 (30 x 30 m) g.setLineDash([]);
   // barrido del LiDAR: los impactos de los últimos 4 s (raycasting en vivo), más tenues cuanto más viejos
   const kb = hastaK(slam.barrido, k), k0 = k - Math.round(4 / (partida.dt || 0.1));
   for (let i = kb - 1; i >= 0 && slam.barrido[i][2] >= k0; i--) {
@@ -1740,6 +1776,7 @@ function animar(ahora) {
         fpvVista.style.cursor = "crosshair";
       } else tPartida = tNuevo;
     }
+    $("confirmar").classList.toggle("ver", esperaClic !== null);
     if (esperaClic !== null) {
       const a = $("aviso");
       a.textContent = "CONFIRMACIÓN DEL OPERADOR · clic sobre la persona (cámara FPV o lista del tracker)";
@@ -1958,6 +1995,6 @@ function animar(ahora) {
   setInterval(llenarSelector, 30000);
 })();
 </script>
-<script src="ventanas.js"></script>
+<script src="modos.js"></script>
 </body>
 </html>
