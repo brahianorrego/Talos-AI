@@ -31,3 +31,15 @@ Dato medido: 2 371 g con todo (báscula, fotos 12 y 13). El TF03 (74 × 47 × 36
   su imagen. En el visor, la cámara al piso ignora la batería, pero en el dron real habría que ponerla fuera de la batería.
 - El TF03 va en el gimbal con la cámara USB (como en las fotos), no fijo en la nariz como suponía la V16; ver VARIANTES.md.
 - La estación de tierra (`estacion/`) usa todavía el dron decorativo del visor clásico; falta pasarle este modelo.
+
+## Estado por programa (2026-10-18)
+
+| Dónde | Archivo | Estado |
+|---|---|---|
+| Unreal | `unreal/dronia_ue.py` | usa el modelo |
+| Blender y el video | `dron_blender.py`, `blender/video_cancha_v17.py` | usa el modelo |
+| Visor V16 | `v16/simulacion/visor/dron_real.js` | usa el modelo (`?dron=v16` = el de antes) |
+| **Estación de tierra** | `estacion/dron_real.js` | **usa el modelo** (`?dron=viejo` = el decorativo); hélices y gimbal siguen respondiendo |
+
+Pruebas: `03_SIMULACION_RL\.venv\Scripts\python.exe -m unittest discover -s 04_VISOR_Y_MOTOR_GRAFICO/pruebas` (4 pruebas: las 3 copias del
+JSON al día, piezas válidas, tamaño cercano al real, y el gimbal y la batería en su lugar).

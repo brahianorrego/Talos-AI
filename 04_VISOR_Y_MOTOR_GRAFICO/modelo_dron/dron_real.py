@@ -129,7 +129,8 @@ if __name__ == "__main__":
     datos = {"unidades": "m", "marco": "x adelante, y izquierda, z arriba; origen = centro de la placa del medio",
              "colores": COLORES, "piezas": piezas(), "faltan": FALTAN}
     for destino in (os.path.join(aqui, "dron_real.json"),                                        # Unreal y Blender
-                    os.path.join(aqui, "..", "v16", "simulacion", "recursos", "dron_real.json")):  # visor web
+                    os.path.join(aqui, "..", "v16", "simulacion", "recursos", "dron_real.json"),  # visor V16
+                    os.path.join(aqui, "..", "estacion", "dron_real.json")):                      # estación de tierra
         with open(destino, "w", encoding="utf-8") as f:
             json.dump(datos, f, ensure_ascii=False, indent=1)
     x0, x1, y0, y1, z0, z1 = tamano_total()
