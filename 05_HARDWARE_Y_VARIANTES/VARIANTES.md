@@ -76,9 +76,9 @@ reequilibrar; la potencia en vuelo estacionario sube como m^1.5.
 | | A | B | C | D | E | F |
 |---|---|---|---|---|---|---|
 | **Viabilidad** | existe | alta | alta si el cable era el culpable | media (impresión, servos, Pixhawk, código Jetson) | media-baja (carga sobre un gimbal chico) | baja-media |
-| **Peso añadido (g, estim., con los soportes impresos)** | 0 | +10 | +54 | +146 y **−BaseCam (pesarla)** | +146 | +166 y −BaseCam |
-| **Δ potencia en vuelo** | — | 0.6 % | 3.4 % | 9.4 % menos lo de la BaseCam | 9.4 % | 10.7 % menos la BaseCam |
-| **Δ centro de gravedad (mm hacia adelante)** | — | ~0.1 | 3.5 (TF03 a 150 mm de la nariz) a 5.7 (a 200 mm) | 0.2 a 9 según lo que pese la BaseCam (§4.1) | ≈ 7–9 | ≈ 8–10 menos la BaseCam |
+| **Peso añadido (g, estim., con los soportes impresos)** | 0 | +10 | +38 | +126 y **−BaseCam (pesarla)** | +126 | +146 y −BaseCam |
+| **Δ potencia en vuelo** | — | 0.6 % | 2.4 % | 8.1 % menos lo de la BaseCam | 8.1 % | 9.4 % menos la BaseCam |
+| **Δ centro de gravedad (mm hacia adelante)** | — | ~0.1 | 2.5 (TF03 a 150 mm de la nariz) a 4.3 (a 200 mm) | −3.6 a 3.2 según lo que pese la BaseCam (§4.1) | ≈ 7.7 | ≈ 8–9 menos la BaseCam |
 | **Cableado nuevo** | — | flex CSI→CAM0 | + TF-Luna (UART) | + 2 señales a AUX1/AUX2, + BEC | igual que D | + CSI→CAM1, + TF-Luna piso |
 | **Alimentación** | actual | CSI: 3.3 V de la Jetson | TF-Luna 5 V (~70 mA según hoja de datos) | **BEC 5–6 V ≥ 3 A solo para servos**, tierra común | igual | igual |
 | **Carga de la Jetson** | 1 cámara: ~30 FPS (medido) | 2 cámaras: **USB 24.2 / CSI 21.4 FPS (medido)** | igual a B | igual a B | igual a B | 3 cámaras: **no medido**; si el tope es total (45.6 FPS) → ~15 FPS cada una |
@@ -95,9 +95,9 @@ cámara al piso 30 mm, BEC 0 mm, cables 60 mm, TF03 en la nariz a 150–230 mm (
 | Pieza | Peso (g) | Variante | Fuente |
 |---|---|---|---|
 | TF03 (pasa del pod a la nariz; no suma peso) | 77 | C, D | hoja de datos, de memoria |
-| Soporte del TF03 al chasis | 32 est. | C, D | STL (puede aligerarse a la mitad cuando se mida el TF03: la placa es grande) |
+| Soporte del TF03 al chasis (colgante, con sus roscas M3) | 12 est. | C, D | STL (medidas de la ficha oficial) |
 | TF-Luna + cable | 8 est. | C, D | hoja de datos (5 g + cable) |
-| Soporte del TF-Luna (pod en C / pan-tilt en D) | 4 est. / 6 est. | C / D | STL |
+| Soporte del TF-Luna (pod en C / pan-tilt en D) | 8 est. / 6 est. | C / D | STL |
 | Cámara CSI + soporte al piso | 5 + 5 est. | C, D | hoja de datos + STL |
 | Pan-tilt impreso (3 piezas) | 48 est. | D | STL |
 | 2 servos MG90D | 27 | D | hoja de datos (13.4 g c/u) |
@@ -106,17 +106,17 @@ cámara al piso 30 mm, BEC 0 mm, cables 60 mm, TF03 en la nariz a 150–230 mm (
 
 | | Masa añadida | Δ potencia en vuelo (m^1.5) | ΔCG hacia adelante |
 |---|---|---|---|
-| **C**, TF03 a 150 mm | +54 g | 3.4 % | **3.5 mm** |
-| **C**, TF03 a 200 mm | +54 g | 3.4 % | **5.7 mm** |
-| **C**, TF03 a 230 mm | +54 g | 3.4 % | 7.0 mm |
-| **D**, BaseCam de 100 g, TF03 a 150 mm | +46 g | — | 2.6 mm |
-| **D**, BaseCam de 150 g, TF03 a 150 mm | −4 g | — | 0.2 mm |
-| **D**, BaseCam de 200 g, TF03 a 200 mm | −54 g | — | −0.1 mm |
-| **D** si la BaseCam no se quita (E) | +146 g | 9.4 % | 7–9 mm |
+| **C**, TF03 a 150 mm | +38 g | 2.4 % | **2.5 mm** |
+| **C**, TF03 a 200 mm | +38 g | 2.4 % | **4.3 mm** |
+| **C**, TF03 a 230 mm | +38 g | 2.4 % | 5.4 mm |
+| **D**, BaseCam de 100 g, TF03 a 150 mm | +26 g | — | 1.4 mm |
+| **D**, BaseCam de 150 g, TF03 a 150 mm | −24 g | — | −1.1 mm |
+| **D**, BaseCam de 200 g, TF03 a 200 mm | −74 g | — | −1.8 mm |
+| **D** si la BaseCam no se quita (E), TF03 a 200 mm | +126 g | 8.1 % | 7.7 mm |
 
-Los pesos de BaseCam de la tabla son **ejemplos, no datos**. Lectura: con el TF03 **en la nariz**, C mueve el centro de gravedad
-3.5–7 mm hacia adelante: por encima de ~5 mm (mi regla práctica) conviene correr la batería hacia atrás un par de milímetros o
-aligerar el soporte del TF03; con el TF03 a 150 mm no hace falta. D casi se compensa si la BaseCam pesa 150–200 g.
+Los pesos de BaseCam de la tabla son **ejemplos, no datos**. Lectura (actualizada con el soporte colgante del TF03, que pesa 12 g
+en vez de 32): con el TF03 en la nariz, C mueve el centro de gravedad 2.5–4.3 mm hacia adelante: por debajo de ~5 mm, no hace
+falta reequilibrar. D casi se compensa o queda detrás si la BaseCam pesa 150–200 g.
 
 ### Notas por variante
 

@@ -3,7 +3,7 @@
   "NOMBRE": "BaseCam liberada: TF03 al chasis, TF-Luna en el pod, CSI al piso",
   "ESTADO": "proyectada",
   "TOCA_EL_MINIMO": true,
-  "MASA_SUMA_G": 54,
+  "MASA_SUMA_G": 38,
   "MASA_QUITA_G": 0,
   "GIMBAL_TIPO": "basecam",
   "GIMBAL_TIPO_EQUIVALENTE_V16": "basecam",

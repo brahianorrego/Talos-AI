@@ -6,15 +6,15 @@
 // fijacion = "cuadricula": base con agujeros M2 de 10 mm para la cuna del pan-tilt (x = 15, 25, 35; y = -20..20).
 // fijacion = "chasis"    : base con 4 ranuras M3 para el chasis; `cabeceo_deg` inclina el sensor (cuña) para dejarlo a -3° (D-064: nariz del sensor hacia abajo; el signo no se ha probado).
 //
-// MEDIR: las medidas del sensor son de hoja de datos recordada (TF-Luna 35 x 18 x 21 mm) o PROVISIONALES (TF03).
-// Pesa tu unidad y mídela con calibrador antes de imprimir; solo cambian 3 números.
+// Medidas del sensor: fichas oficiales (ver abajo). Para el TF03 del chasis usa mejor soporte_tf03_colgante.scad (con sus roscas M3).
 
 modelo = "luna";                 // "luna" | "tf03"
 fijacion = "cuadricula";         // "cuadricula" | "chasis"
 cabeceo_deg = -3;                // solo "chasis": inclinación del sensor (-3 en las variantes C a F del TF03, D-064)
 $fn = 40;
 
-dims = (modelo == "luna") ? [35, 18, 21] : [77, 40, 40];   // largo (X), ancho (Y), alto (Z) — TF03 PROVISIONAL
+// medidas de las fichas oficiales: Luna 13.5 (fondo, a lo largo de la mirada) x 35 x 21.25; TF03 42.9 (largo, a lo largo de la mirada) x 44 x 31.8
+dims = (modelo == "luna") ? [13.5, 35, 21.25] : [42.9, 44, 31.8];   // largo (X), ancho (Y), alto (Z); el TF03 aquí se apoya sobre su cara de 44 x 42.9 (fondo 31.8 = alto)
 S_L = dims[0]; S_W = dims[1]; S_H = dims[2];
 tol = 0.4;
 pared = 2.5;
@@ -22,7 +22,7 @@ base_t = 3;
 alto_pared = 0.6 * S_H;
 amarra_w = 4.2; amarra_t = 1.6;  // ranura para amarra plástica de 3.6 mm de ancho
 
-BL = S_L + 2*pared + (fijacion == "chasis" ? 20 : 0);
+BL = max(S_L + 2*pared, fijacion == "cuadricula" ? 40 : 0) + (fijacion == "chasis" ? 20 : 0);
 BW = S_W + 2*pared + 2*(amarra_t + 4) + 8;
 
 module cuna() {
@@ -39,7 +39,7 @@ module cuna() {
         for (px = [pared + S_L*0.25, pared + S_L*0.75]) for (s = [-1, 1])
             translate([px - amarra_w/2, s*(S_W/2 + tol + pared + 3) - amarra_t/2, -1]) cube([amarra_w, amarra_t, base_t + 2]);
         if (fijacion == "cuadricula") {
-            for (x = [15, 25, 35]) for (y = [-10, 0, 10]) translate([x, y, -1]) cylinder(d = 2.2, h = base_t + 2);   // y = ±20 no cabe en la base del Luna
+            for (x = [25, 35]) for (y = [-20, -10, 0, 10, 20]) translate([x, y, -1]) cylinder(d = 2.2, h = base_t + 2);   // delante del sensor (x > 16)
         }
     }
 }

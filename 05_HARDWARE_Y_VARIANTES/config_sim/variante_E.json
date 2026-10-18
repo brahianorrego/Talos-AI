@@ -3,7 +3,7 @@
   "NOMBRE": "Pan-tilt de 2 servos SOBRE la BaseCam (horizonte por la BaseCam, ángulo exacto por el servo)",
   "ESTADO": "proyectada",
   "TOCA_EL_MINIMO": true,
-  "MASA_SUMA_G": 146,
+  "MASA_SUMA_G": 126,
   "MASA_QUITA_G": 0,
   "GIMBAL_TIPO": "servo_sobre_basecam",
   "GIMBAL_TIPO_EQUIVALENTE_V16": "servo",

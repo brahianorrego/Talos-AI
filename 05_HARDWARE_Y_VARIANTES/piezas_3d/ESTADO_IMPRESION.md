@@ -11,9 +11,8 @@ una sale como un solo sólido.** Los `.stl` están en `stl/`.
 | `soporte_camara_frente.stl` | 47.5 × 52 × 32 | Cámara IMX219 mirando al frente (cuadrícula M2 de la cuna) |
 | `soporte_camara_abajo.stl` | 49 × 44 × 6.5 | Cámara IMX219 al piso, bajo el chasis |
 | `soporte_lidar_luna_pantilt.stl` | 40 × 42 × 16 | TF-Luna en la cuna del pan-tilt |
-| `soporte_luna_pod.stl` | 47 × 38 × 9.4 | **Variante C:** TF-Luna en el pod de la BaseCam (≈ 4–6 g, un solo sólido) |
-| `soporte_tf03_colgante.stl` | ver abajo | **TF03 real al chasis, colgante** (medidas de relleno) |
-| `soporte_lidar_tf03_chasis.stl` | 102 × 64 × 32 | TF03 al chasis a −3° (medidas del TF03 provisionales) |
+| `soporte_luna_pod.stl` | 58.5 × 45 × 29.8 | **Variante C:** TF-Luna en el pod de la BaseCam (≈ 8 g) |
+| `soporte_tf03_colgante.stl` | 55.6 × 46.8 × 56.3 | **TF03 real al chasis, colgante, con sus roscas M3** (≈ 12 g) |
 
 ## Lo que sí se comprobó (en la computadora)
 
@@ -45,7 +44,7 @@ estorbe al Luna, la distancia real lente-Luna a lente-cámara, y si el cable fin
 gimbal hasta −45°, que es la hipótesis de toda la variante C.
 
 Peso estimado de los soportes (STL a 35 % de relleno): pan-tilt 48 g (base 12.7, plataforma 24.6, cuna 10.4); soporte del TF03 al
-chasis ≈ 32 g (grande para un sensor de 77 g: se aligera cuando se mida el TF03).
+chasis ≈ 12 g (versión colgante con roscas M3; la antigua con paredes pesaba ≈ 32 g).
 
 ## Lo que se ve en las fotos reales del dron (08_EVIDENCIA_Y_DIAGRAMAS/fotos/14 a 18, 2026-10-18)
 
@@ -61,26 +60,43 @@ Lo que digo es lo que **se ve**; ninguna medida sale de las fotos salvo donde di
 - El gimbal tiene el motor del pitch (negro, redondo) a un lado del pod; el cable amarillo/naranja/rojo de la BaseCam y un cable
   plano naranja pasan cerca. Hay una cinta de velcro azul que sujeta la batería abajo.
 
-## Lo que FALTA medir (lista corta para Brahian, con calibrador)
+## Medidas de las fichas técnicas oficiales (08_EVIDENCIA_Y_DIAGRAMAS/fichas_tecnicas/) — ya usadas
 
-1. **TF03:** largo (en la dirección en la que mira), ancho y alto. *Pendiente.*
-2. **Distancia entre los dos tornillos del riel** (de centro a centro). *Pendiente.* → `riel_sep`.
-3. **Ancho de la ranura** y **tamaño de los tornillos** (¿M3? ¿cabeza de cuántos mm?). *Pendiente.* → `tornillo_d`.
-4. **¿La ranura va a lo largo de la mirada o de lado?** (basta con una foto desde arriba con una regla al lado). *Pendiente.* → `riel_eje`.
-5. **Diámetro de la placa verde de la cámara** y distancia entre su centro y el centro del lente. *Pendiente.*
-6. **Altura libre entre el riel y la placa donde cuelga el TF03** (para que el TF-Luna y su soporte quepan).
-7. Pesar el TF03, la cámara USB y el pod con todo (pedido de pesaje ya hecho a la parte física).
+- **TF03:** cuerpo 44 mm de ancho, 42.9 de largo y 31.8 de fondo; 6 roscas M3 de 3.5 mm de hondo en una cara de 44 × 42.9, en dos
+  columnas a 38 mm de un borde (32 mm entre ellas) y tres filas a 10 mm. El eje óptico va a lo largo de los 42.9 (ventana en un
+  extremo, cable en el otro). Las leí en el dibujo; el 38 y el 10 coinciden con el resumen del Coordinador.
+- **TF-Luna:** 35 de ancho con orejas (26.5 sin ellas), 21.25 de alto, 13.5 de fondo con las lentes; 2 agujeros Φ2.2 en las orejas a
+  30.5 mm entre ellos y 9 mm bajo el borde de arriba; orejas de 2 mm en la cara de atrás (los agujeros son paralelos a la mirada);
+  lentes Φ10.5 a 10.5 mm entre centros; conector de 10.5 × 6.8 mm.
 
-## Piezas nuevas de esta ronda
+## Lo que ya no es relleno y lo que sigue siendo aproximado
 
-| Pieza | Para qué | Estado |
-|---|---|---|
-| `soporte_luna_pod.scad` (v2) | TF-Luna en el pod, atornillado por el **riel** con dos agujeros alargados (`riel_sep`, `riel_eje`, `tornillo_d`: **de relleno**) y bolsillo para las tuercas bajo el Luna | Compila, un solo sólido |
-| `soporte_tf03_colgante.scad` | El **TF03 real** cuelga de esta placa (como hoy del pod) y la placa va al chasis con 4 ranuras M3, con `cabeceo_deg = −3`. Mucho más liviana que la versión con paredes (el signo del cabeceo sigue sin probar) | Compila, un solo sólido; tamaños **de relleno** |
+| Dato | Estado |
+|---|---|
+| Medidas del TF03 y del TF-Luna | **De la ficha oficial** |
+| Roscas M3 del TF03 (columnas, filas, hondo) | **De la ficha oficial** |
+| Distancia de la primera fila de roscas al extremo de la ventana del TF03 (`fila0`) | **De dibujo, aproximada (≈ 7 mm, contada en píxeles)**; comprobar con el sensor |
+| Altura de las filas respecto al borde: columnas a 6 mm de cada borde de los 44 mm | Deducida del "38": 44 − 38 = 6; comprobar |
+| Dónde está el conector del TF-Luna respecto a la base (la ventana del suelo es de 14 × 10.5 mm) | **De dibujo, aproximada** |
+| **Ranura (riel) del pod: distancia entre sus dos tornillos (`riel_sep`), orientación (`riel_eje`) y tamaño del tornillo (`tornillo_d`)** | **PENDIENTE (de las fotos de Brahian)** |
+| **Placa verde de la cámara USB: diámetro y distancia del centro de la placa al centro del lente** | **PENDIENTE (de las fotos de Brahian)** |
+| Altura libre entre el riel y lo que cuelga debajo | **PENDIENTE** |
 
-La versión anterior del TF03 (`soporte_lidar.scad` con `modelo="tf03"`, con paredes y amarras) queda de respaldo; sus medidas eran inventadas y por eso la nueva es la que hay que mirar.
+**Lo único que Brahian tiene que medir ahora:** (1) distancia entre los centros de los dos tornillos del riel, (2) si la ranura va a lo
+largo de la mirada o de lado y el tamaño de esos tornillos, (3) diámetro de la placa verde de la cámara. (Y comprobar `fila0` en
+el TF03 cuando lo desmonte: de la ventana a la primera rosca.)
 
-**Qué no se puede saber sin la medida real:** si los agujeros alargados caen sobre la ranura, si la placa cabe bajo la cámara USB, si el Luna queda alineado con la cámara y si el cable fino deja bajar el gimbal.
+## Piezas de esta ronda (medidas de la ficha)
+
+| Pieza | Para qué | Peso est. (35 % relleno) | Estado |
+|---|---|---|---|
+| `soporte_luna_pod.scad` | TF-Luna en el pod (variante C): una L con placa vertical trasera donde se atornilla el Luna **por delante** (2 × M2, agujeros de sus orejas a 30.5 mm), suelo con ventana para el conector y aleta con dos agujeros alargados para el riel (M3 con tuerca hundida) | 8 g | Compila, un solo sólido; `riel_*` de relleno |
+| `soporte_tf03_colgante.scad` | **TF03 real** al chasis: el sensor se atornilla por sus 6 roscas M3 a una pared vertical que cuelga de una placa con 4 ranuras M3; `cabeceo_deg = −3` (signo por probar) | 12 g | Compila, un solo sólido; `fila0` aproximada |
+| `soporte_lidar.scad` | TF-Luna sobre la cuna del pan-tilt (variante D): cuna abierta con amarras; dimensiones de la ficha | 6 g | Compila |
+
+La versión anterior del TF03 con paredes y amarras (medidas inventadas) se retiró de la lista de piezas.
+
+**Sin ver el pod y el sensor no se puede saber:** si los agujeros alargados caen sobre la ranura, si la placa cabe junto a la cámara USB, si el Luna queda alineado con la cámara, si `fila0` es correcta y si el cable fino del Luna deja bajar el gimbal a −45°.
 
 ## Vistas
 
