@@ -1,0 +1,73 @@
+{
+ "b3": {
+  "cumplida": 0.0234375,
+  "alcanzado": 0.00390625,
+  "perdido": 0.01171875,
+  "no_encontrado": 0.01171875,
+  "panel": 0.0,
+  "choque_peaton": 0.0,
+  "geocerca": 0.0,
+  "tiempo": 0.94921875,
+  "n": 256,
+  "dur": 291.3484375,
+  "custodia60": 0.0,
+  "custodia90": 0.0,
+  "racha_s": 20.905859375000055,
+  "vista_s": 79.0601562499996,
+  "custodia30": 0.171875,
+  "m1": 0.171875,
+  "altura_m_por_min": 14.853509634794344,
+  "cambios_sentido_altura_por_min": 9.350112354729893,
+  "vaiven_red_por_min": 0.0,
+  "z_pedida_cerca_v": 5.403092201064691,
+  "z_pedida_abierto": 5.2866217378835625,
+  "jitter_por_s": {
+   "cabeceo": 1.4405,
+   "guinada": 0.8995,
+   "gimbal": 1.1325
+  },
+  "retorno": 4.626608962444259,
+  "retorno_comp": {
+   "vista": 25.63,
+   "guia": -5.12,
+   "descubre": 43.84,
+   "pierde": -44.89,
+   "maniobra": 0.0,
+   "exito": 3.39,
+   "fallas": -4.9,
+   "control": -0.28,
+   "cobertura": -12.09,
+   "abordaje": -0.96
+  },
+  "custodia_v16": 0.859375,
+  "readq10": 0.5952309985096871,
+  "t_readq": 6.939972611077288,
+  "perdidas": 26.2109375,
+  "gimbal_fuera": 0,
+  "bajo_330_con_persona_8m": 0.005433973192123118,
+  "bajo_330_8m_en_entrada": 0.402740768937952,
+  "bajo_330_pedida_con_persona_8m": 0.003551629985106735,
+  "mapeo_entrada": 0.65234375,
+  "frac_decide": 0.22459549615741461,
+  "frac_decide_en_fijado": 0.6808362765858,
+  "tramo_visto_medio_s": 0.9248876456021278,
+  "tramo_visto_mediana_s": 0.4,
+  "reconf_partida": 6.59765625,
+  "cambio_nodet": 0,
+  "ruleta_partidas": 0.9921875,
+  "escudo_partidas": 0.7890625,
+  "acciones": {
+   "QUEDARSE": 0.848,
+   "RODEAR_IZQ": 0.0,
+   "RODEAR_DER": 0.0,
+   "ACERCARSE": 0.0,
+   "ALEJARSE": 0.0,
+   "SUBIR": 0.152,
+   "BAJAR": 0.0
+  },
+  "set": [
+   "BUSQUEDA_RUTA_V17=1",
+   "D_RUTA_B5=4.5"
+  ]
+ }
+}

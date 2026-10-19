@@ -340,6 +340,16 @@ B0. En las dos baja la vista total: el recorrido largo pierde al ladrón que se 
 de partida, se prueba `D_RUTA_B5` = 3.0 / 4.5 / 6.0 m con otra semilla (7, 256 partidas,
 `informes/v17/ruta_ajuste_d*.json`) antes de cerrar.
 
+**Ajuste** (semilla 7, 256 partidas), M1 de B5 con `D_RUTA_B5` = 3.0 / 4.5 / 6.0 m: **18.4** / 17.2 / 9.0 %, contra 20.7 % de
+B3 con la misma semilla. Más cerca es mejor, pero ninguna distancia llega a B3. **Medición oficial con 3.0 m** (semilla 123,
+512 partidas, `informes/v17/ruta_b5_d3.json`): **M1 22.7 %**, vista 88.6 s, M2 65.6 %, rendición 4.5 %, seguridad 0. B3
+saca 24.6 %.
+
+**Cierre de D-071 (criterio de `docs/RUTA_BUSQUEDA_BRAHIAN.md`):** B5 no supera a B3 + 5 puntos, sino que queda 1.9 puntos
+debajo, dentro del ruido. Resultado honesto: **"la ruta de Brahian no mejora a subir siempre en esta cancha"**. Por eso no se
+entrena la imitación de B5 ni el bono de progreso. La ruta queda en el código, apagada (`BUSQUEDA_RUTA_V17 = False`), con
+`D_RUTA_B5 = 3.0` m (la mejor medida), por si se cambia la cancha.
+
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
 Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,

@@ -610,7 +610,7 @@ PERDIDA_RED_V17 = False
 # D_RUTA_B5 m y a la altura segura, después de frente a la boca con vaivén de ±AMP_BARRIDO_B5° durante T_BARRIDO_B5 s, y a la
 # otra V; se repite hasta encontrarlo. Valores de partida (no medidos)
 BUSQUEDA_RUTA_V17 = False
-D_RUTA_B5, MARGEN_RUTA_B5 = 4.5, 2.0
+D_RUTA_B5, MARGEN_RUTA_B5 = 3.0, 2.0          # D_RUTA_B5 ajustado (3.0 / 4.5 / 6.0 m, semilla 7): informes/v17/ruta_ajuste_d*.json
 T_BARRIDO_B5, AMP_BARRIDO_B5 = 3.0, 30.0
 PASO_RUTA_B5 = 4                 # valor de paso_muro mientras dura la ruta
 T_RUTA_B5_MAX = 30.0             # s máximos para recorrer la ruta de una V
