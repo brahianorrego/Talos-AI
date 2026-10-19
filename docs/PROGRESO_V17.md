@@ -260,6 +260,51 @@ sale nunca de QUEDARSE. No se lanza nada más hasta que el Arquitecto lo revise 
   alta cerca de las V**: sube y baja sin atar la altura a la situación. B4 sí lo hace un poco (4.3 contra 4.1 m en la cancha
   real), y aun así no le gana a B3.
 
+**Por qué colapsó la V17.3 con la suavidad vertical en 0.5:** la red empieza eligiendo casi al azar. Con 0.5, cada SUBIR
+o BAJAR cuesta cinco veces más que en la V17.2. En los primeros millones de pasos, lo único seguro que aprende es que tocar
+la altura cuesta y QUEDARSE no, y llega a QUEDARSE 100 % antes de descubrir que estar arriba paga (rachas de 30 s). Es el
+mismo mecanismo que hizo colapsar la V17.1 con toda la suavidad. Por eso `K_SUAVE_Z_V17` volvió a 0.1 (D-068).
+
+## La V17.2 en la cancha real (19-oct)
+
+512 partidas, paneles reales de 1.5 × 2.2-2.3 m (`informes/v17/v172_real_det.json` y `_est.json`; B0-B4 de
+`v173_base_b*.json` y `b4_real_*.json`):
+
+| | M1 | Vista (s) | M2 ≤ 10 s | Rendición | Vaivén de la red (/min) | Altura pedida cerca de una V / abierto | Alcanzado, choques, geocerca, gimbal |
+|---|---:|---:|---:|---:|---:|---|---|
+| V17.2 determinista | **19.3 %** | 86.5 | 63.0 % | 2.3 % | 10.2 | 4.10 / 4.29 m | 0 |
+| V17.2 estocástica | 19.1 % | 83.9 | 62.8 % | 3.7 % | 30.9 | 4.16 / 4.31 m | 0 |
+| B0 / B3 / B4 | 11.7 / **24.6** / 19.5 % | 84.6 / 87.3 / 85.9 | 60.0 / 68.3 / 63.3 % | 1.6 / 4.1 / 2.1 % | 0 / 0 / 4.9 | — | 0 |
+
+Le gana a "solo reglas" por 7.6 puntos, empata con B4 y queda 5.3 puntos debajo de "siempre subir": **no se adapta sola**
+a los paneles reales. Hay que afinarla en la cancha real (V17.4).
+
+## D-069 · La red decide durante la PÉRDIDA (D-059 C), experimento reversible (19-oct)
+
+- **Cómo:** interruptor `PERDIDA_RED_V17` (en `False` por defecto). Con `True`, en la cancha, la red sigue decidiendo con sus
+  7 botones durante la fase PÉRDIDA (PREDECIR: los ~1-4 s después de perder al ladrón, mientras el dron va tras la
+  predicción). QUEDARSE ahí significa "seguir la regla" (ir tras la predicción). ACERCARSE, ALEJARSE y RODEAR se miden
+  respecto al punto donde el dron cree que está el ladrón, y SUBIR y BAJAR siguen igual. Después de la PÉRDIDA sigue la
+  búsqueda determinista de siempre (flanqueo, 360°, siguiente panel). El árbitro, el reflejo de punto ciego y las guardas
+  mandan sobre la red, igual que con el objetivo a la vista.
+- **Por qué un interruptor aparte y no `PERDIDA_IA`:** `PERDIDA_IA = True` (V15) entrega a la red hasta 60 s de búsqueda con
+  los 10 botones viejos y **sin** búsqueda determinista: no es D-059 C y dejaría sin control. Así, `PERDIDA_IA` y su prueba de
+  regla dura no cambian.
+- **Pruebas:** `test_v17.TestPerdidaRed`. Apagado (por defecto), la red solo decide con el objetivo fijado y a la vista.
+  Encendido, decide solo en FIJADO y en la PÉRDIDA, nunca en el flanqueo ni en el 360°, y la búsqueda determinista sigue
+  apareciendo. Pasan todas las de reglas duras.
+- `--desde` ahora carga modelos MaskablePPO y copia también la salida cuando ya era de 7 botones: arranca decidiendo
+  exactamente igual que el modelo de origen (diferencia de logits 0).
+
+### V17.4 · afinado en la cancha real con D-069 (en marcha)
+
+Desde la V17.2 de 50 M (todos los pesos), paneles reales, suavidad vertical 0.1, entropía 0.01, `PERDIDA_RED_V17=1`,
+10 M pasos. **Inicio 2026-10-19 10:57**, pestaña "V17 entrenamiento" del Terminal:
+`.venv\Scripts\python.exe -u entrenar_master.py --desde modelos_v17_2\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --set PERDIDA_RED_V17=1 --repeticiones 5 --salida salida_v17_4 --dir-master modelos_v17_4 --dir-modelos modelos_v17_4 *> modelos_v17_4.log`
+
+Se medirá el **mismo modelo** con el interruptor encendido y apagado (512 partidas, semilla 123). D-069 se queda solo si M1
+sube ≥ 5 puntos con él y la seguridad sigue en 0.
+
 ## Repeticiones escogidas (D-065)
 
 `herramientas/grabar_repeticiones_v17.py`: corre partidas de una en una (1 hilo) con una política en la cancha V17 con

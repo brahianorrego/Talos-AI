@@ -86,6 +86,42 @@ class TestCancha(unittest.TestCase):
             self.assertFalse(((env.modo == E.VERIFICAR) & env.entrada).any())
 
 
+class TestPerdidaRed(unittest.TestCase):
+    """D-069 (D-059 C): interruptor PERDIDA_RED_V17. Apagado (por defecto) la red nunca decide sin el objetivo a la vista
+    (regla dura 3); encendido decide solo en la PÉRDIDA, y la búsqueda determinista sigue después."""
+
+    def correr(self, encendido):
+        viejo = E.PERDIDA_RED_V17
+        E.PERDIDA_RED_V17 = encendido
+        try:
+            rng = np.random.default_rng(1)
+            env = E.EntornoDronPersona(48, semilla=6, nivel=E.NIVEL_V17)
+            modos_dec, modos = set(), set()
+            for _ in range(900):
+                modo0 = env.modo.copy()
+                mk = env.action_masks()
+                a = np.argmax(rng.random(mk.shape) * mk + mk * 1e-9, 1)
+                _, _, done, info = env.step(a, AP(48), auto_reset=True)
+                modos_dec |= set(modo0[info["decide17"]].tolist())
+                modos |= set(env.modo.tolist())
+            return modos_dec, modos
+        finally:
+            E.PERDIDA_RED_V17 = viejo
+
+    def test_apagado_por_defecto(self):
+        self.assertFalse(E.PERDIDA_RED_V17)
+        self.assertFalse(E.PERDIDA_IA)
+        modos_dec, _ = self.correr(False)
+        self.assertTrue(modos_dec <= {E.FIJADO}, modos_dec)
+
+    def test_encendido_decide_en_la_perdida(self):
+        modos_dec, modos = self.correr(True)
+        self.assertIn(E.PREDECIR, modos_dec)
+        self.assertTrue(modos_dec <= {E.FIJADO, E.PREDECIR}, modos_dec)     # nunca en el flanqueo ni en el 360°
+        self.assertNotIn(E.BUSQUEDA_IA, modos)                               # la búsqueda sigue siendo la determinista
+        self.assertIn(E.INVESTIGAR, modos)
+
+
 class TestFotoVisor(unittest.TestCase):
 
     def test_cmd_y_arb_en_cada_cuadro(self):

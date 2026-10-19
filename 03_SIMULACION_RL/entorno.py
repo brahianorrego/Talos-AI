@@ -599,7 +599,12 @@ R_RACHA_V17 = 10.0
 R_SOBREVUELO_V17, R_ANGULO_GMB_V17 = 0.0, 0.0
 B4_SUBE, B4_BAJA = 0.05, 0.02  # D-067 · B4: umbrales de cobertura para subir a 5.5 m o volver a 3.30 m
 K_SUAVE_V17 = 0.1              # V17.2: peso de la multa de suavidad (delta y sacudida) en la cancha
-K_SUAVE_Z_V17 = 0.5            # V17.3: peso en el eje vertical (la V17.2, con 0.1, cambiaba de sentido 16.8 veces/min)
+K_SUAVE_Z_V17 = 0.1            # peso en el eje vertical. La V17.3 lo subió a 0.5 por el vaivén y colapsó a QUEDARSE (D-068)
+# D-069 (D-059 C, experimento REVERSIBLE): con True, en la cancha la red también decide durante la PÉRDIDA (PREDECIR, los
+# ~1-4 s tras perder al ladrón) con sus 7 botones; QUEDARSE ahí = seguir la regla (ir tras la predicción). Después sigue
+# la búsqueda determinista de siempre. Es un interruptor aparte de PERDIDA_IA (regla dura 3, que queda en False): aquel
+# entrega 60 s de búsqueda a la red con los botones viejos de la V15 y sin búsqueda determinista
+PERDIDA_RED_V17 = False
 K_RACHA_V17 = 3.0
 # D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
 TF03_PITCH_V17 = -3.0
@@ -2226,7 +2231,18 @@ class EntornoDronPersona(object):
         amenaza mandan las reglas: memoria del tracker, búsqueda y árbitro)."""
         base = ((self.modo == FIJADO) | (self.modo == BUSQUEDA_IA)) & (self.estado == VIGILANDO)
         v17 = self.lvl_ep == NIVEL_V17
-        return np.where(v17, base & (self.obs_retraso[:, 0] > 0.5) & ~self.amenaza, base)
+        return np.where(v17, (base & (self.obs_retraso[:, 0] > 0.5) & ~self.amenaza) | self._ventana_perdida(), base)
+
+    def _ventana_perdida(self):
+        """D-069: la red decide en la PÉRDIDA (PREDECIR) de la cancha, si PERDIDA_RED_V17, sin amenaza ni maniobra."""
+        return ((self.lvl_ep == NIVEL_V17) & PERDIDA_RED_V17 & (self.modo == PREDECIR) & (self.estado == VIGILANDO)
+                & ~self.amenaza)
+
+    def _punto_perdida(self):
+        """Dónde cree el dron que está el ladrón durante la PÉRDIDA: la media de la nube o su trayectoria extrapolada."""
+        tp = self.t_modo + T_PRED_INI
+        return (np.where(self.pf_on, self.pf_mx, self.pred_x0 + self.pred_vx * tp),
+                np.where(self.pf_on, self.pf_my, self.pred_y0 + self.pred_vy * tp))
 
     def _d_obj(self):
         """Distancia horizontal al objetivo según lo que mide el dron (la observación)."""
@@ -2239,7 +2255,8 @@ class EntornoDronPersona(object):
         mk = np.zeros((self.n, len(CLASES_V17)), bool)
         mk[:, QUEDARSE] = True
         d = self.mascara_decision() & (self.lvl_ep == NIVEL_V17)
-        d_obj = self._d_obj()
+        qx_, qy_ = self._punto_perdida()
+        d_obj = np.where(self._ventana_perdida(), np.hypot(qx_ - self.dx, qy_ - self.dy), self._d_obj())
         mk[:, RODEAR_IZQ] = mk[:, RODEAR_DER] = d
         mk[:, ACERCARSE] = d & (d_obj > D_ACERCA_V17 + 0.2)
         mk[:, ALEJARSE] = d & (d_obj < D_ALEJA_V17 - 0.2)
@@ -3085,6 +3102,7 @@ class EntornoDronPersona(object):
         # sigue centrándolo (rodear de lado = órbita); ACERCARSE / ALEJARSE van a 3.5 / 6 m (horizontal) y SUBIR / BAJAR
         # cambian la altura pedida (abajo). El LiDAR, la geocerca, las personas y el punto ciego siguen mandando (guardas).
         d17 = v17 & decide & ve & ~self.amenaza & ~eva & mando0      # (mando0: la máscara con que eligió la red)
+        vent17 = v17 & PERDIDA_RED_V17 & pred & ~self.amenaza & ~eva & mando0    # D-069: la red decide en la PÉRDIDA
         d_h17 = np.sqrt(np.maximum((o[:, 1] * 20.0) ** 2 - (self.dz - 0.9) ** 2, 0.0))
         vx17 = np.where(b17 == ACERCARSE, np.clip(K_RANGO * (d_h17 - D_ACERCA_V17), 0.0, VEL_RADIAL_V17),
                         np.where(b17 == ALEJARSE, -np.clip(K_RANGO * (D_ALEJA_V17 - d_h17), 0.0, VEL_RADIAL_V17), 0.0))
@@ -3092,9 +3110,11 @@ class EntornoDronPersona(object):
         vy17 = np.where(b17 == RODEAR_IZQ, -VEL_ORBITA, np.where(b17 == RODEAR_DER, VEL_ORBITA, 0.0))
         vx_b = np.where(d17, vx17, vx_b)
         vy_b = np.where(d17, vy17, vy_b)
-        self.z_v17 = np.clip(self.z_v17 + np.where(d17 & (b17 == SUBIR), PASO_Z_V17, np.where(d17 & (b17 == BAJAR), -PASO_Z_V17, 0.0)),
+        dz17 = d17 | vent17
+        self.z_v17 = np.clip(self.z_v17 + np.where(dz17 & (b17 == SUBIR), PASO_Z_V17, np.where(dz17 & (b17 == BAJAR), -PASO_Z_V17, 0.0)),
                              Z_SEGURA, Z_MAX_V17)
-        self.z_v17 = np.where(fij | (self.modo == RECONFIRMAR), self.z_v17, Z_SEGURA)    # al perderlo, la búsqueda manda
+        sigue17 = fij | (self.modo == RECONFIRMAR) | (pred & PERDIDA_RED_V17)
+        self.z_v17 = np.where(sigue17, self.z_v17, Z_SEGURA)    # al perderlo, la búsqueda manda (D-069: tras la PÉRDIDA)
         # búsqueda por IA: sus consignas; el LiDAR (rayo de la cámara) y el perímetro solo frenan el avance
         frena_ia = ~libre_v | cerca_peaton | self.perimetro
         vx_b = np.where(bia & ~eva, np.where(frena_ia, np.minimum(self.v_ia_f, 0.0), self.v_ia_f), vx_b)
@@ -3139,7 +3159,7 @@ class EntornoDronPersona(object):
         bajo_ok = v16 & ~np.isnan(z_bajo) & ~self.gente8 & ~self.anticenit & ~self.ciego & ALTURAS_V16
         z_v16 = np.where(bajo_ok, z_bajo, np.maximum(z_obj, Z_SEGURA + np.where(v17, MARGEN_BARO_V17, 0.0)))
         z_obj = np.where(v16, z_v16, z_obj)
-        z_obj = np.where(v17 & (fij | (self.modo == RECONFIRMAR)), np.maximum(z_obj, self.z_v17), z_obj)   # V17: SUBIR / BAJAR
+        z_obj = np.where(v17 & sigue17, np.maximum(z_obj, self.z_v17), z_obj)   # V17: SUBIR / BAJAR
         z_obj = np.where(np.minimum(d_pan, d_nube) < R_DESPEJE, np.maximum(z_obj, Z_TRANSITO), z_obj)
         alguien_cerca = (vis & (dist_s < 6.0)).any(1)
         # V15 · fase D: en los vuelos de búsqueda la altura se toma con más ganancia (sube 1 m en ~0.7 s, no en ~1.7 s)
@@ -3247,6 +3267,16 @@ class EntornoDronPersona(object):
         ys = self.dy + self.e_gps[:, 1] + self.dvy * np.abs(self.dvy) / (2 * A_FRENO_DRON)
         vcx = np.where((np.abs(xs) > self.A - 1.5) & (vcx * self.dx > 0), 0.0, vcx)
         vcy = np.where((np.abs(ys) > self.A - 1.5) & (vcy * self.dy > 0), 0.0, vcy)
+        # D-069: en la PÉRDIDA, los botones de mover de la red reemplazan el ir tras la predicción (QUEDARSE la deja), con la
+        # dirección hacia donde el dron cree que está; el reflejo de punto ciego y las guardas siguen mandando (abajo)
+        if vent17.any():
+            ux_p, uy_p = -hx_c / np.maximum(d_esc, 1e-6), -hy_c / np.maximum(d_esc, 1e-6)
+            vr_ = np.where(b17 == ACERCARSE, np.clip(K_RANGO * (d_esc - D_ACERCA_V17), 0.0, VEL_RADIAL_V17),
+                           np.where(b17 == ALEJARSE, -np.clip(K_RANGO * (D_ALEJA_V17 - d_esc), 0.0, VEL_RADIAL_V17), 0.0))
+            vl_ = np.where(b17 == RODEAR_IZQ, -VEL_ORBITA, np.where(b17 == RODEAR_DER, VEL_ORBITA, 0.0))
+            mueve = vent17 & np.isin(b17, (ACERCARSE, ALEJARSE, RODEAR_IZQ, RODEAR_DER))
+            vx_c = np.where(mueve, vr_ * ux_p + vl_ * uy_p, vx_c)
+            vy_c = np.where(mueve, vr_ * uy_p - vl_ * ux_p, vy_c)
         vx_c = np.where(self.ciego, vcx, vx_c)
         vy_c = np.where(self.ciego, vcy, vy_c)
         vx_c, vy_c, self.guarda = self._guarda_mapa(vx_c, vy_c)
@@ -3398,8 +3428,8 @@ class EntornoDronPersona(object):
         u_ia = np.where(m_ia, u, 0.0)
         # V17: lo que manda la red son sus consignas (adelante, de lado, altura pedida): la suavidad se mide sobre ellas
         u17 = np.stack([vx17 / VEL_RADIAL_V17, vy17 / VEL_ORBITA, (self.z_v17 - Z_SEGURA) / (Z_MAX_V17 - Z_SEGURA)], -1)
-        u_ia = np.where(v17[:, None], np.where(d17[:, None], u17, 0.0), u_ia)
-        mando = np.where(v17, d17, mando)
+        u_ia = np.where(v17[:, None], np.where((d17 | vent17)[:, None], u17, 0.0), u_ia)
+        mando = np.where(v17, d17 | vent17, mando)
         pen_delta = np.where(mando & self.mando_prev, K_DELTA * np.abs(u_ia - self.u_prev).sum(1), 0.0)
         # V17: lo que manda la red son velocidades y una altura: volar parejo no se cobra (solo los cambios: delta y sacudida)
         pen_esfuerzo = np.where(mando & ~v17, K_ESFUERZO * np.abs(u_ia).sum(1), 0.0)
@@ -3546,7 +3576,7 @@ class EntornoDronPersona(object):
                     t_readq_sum=self.t_readq_sum.copy(), n_readq=self.n_readq.copy(),
                     t_busq_est=self.t_busq_est.copy(), readq_est=self.readq_est.copy(),
                     # V17: botón aplicado, si la red decidía, M2 y reglas del ladrón
-                    boton=b17, decide17=d17, n_perd=self.n_perd.copy(), n_readq10=self.n_readq10.copy(),
+                    boton=b17, decide17=d17 | vent17, n_perd=self.n_perd.copy(), n_readq10=self.n_readq10.copy(),
                     ruleta=self.n_ruleta.copy(), escudo=self.n_escudo.copy())
         if auto_reset and done.any():
             self.reset(done)

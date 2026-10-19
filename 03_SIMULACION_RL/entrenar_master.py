@@ -574,7 +574,10 @@ def _copiar_pesos(dst, src, n_viejas=None):
 def desde_zip_v17(ruta, venv, lr, ent, semilla=None, gamma=0.99):
     """V17: modelo nuevo de 7 botones con las capas OCULTAS (actor y crítico) y la salida del crítico de otro modelo SB3
     (por ejemplo la V15: sus 192 entradas, las nuevas en cero). La salida de los botones arranca nueva: cambió su número."""
-    viejo = PPO.load(ruta, device="cpu", custom_objects={"learning_rate": lr})
+    try:                                                    # la V17 es MaskablePPO; la V15, PPO
+        viejo = MaskablePPO.load(ruta, device="cpu", custom_objects={"learning_rate": lr})
+    except (TypeError, ValueError, KeyError):
+        viejo = PPO.load(ruta, device="cpu", custom_objects={"learning_rate": lr})
     modelo = nuevo_ppo(venv, lr, ent, semilla, gamma)
     pv, pn = viejo.policy, modelo.policy
     for a, b in ((pn.mlp_extractor.policy_net[0], pv.mlp_extractor.policy_net[0]),
@@ -582,6 +585,8 @@ def desde_zip_v17(ruta, venv, lr, ent, semilla=None, gamma=0.99):
                  (pn.mlp_extractor.value_net[0], pv.mlp_extractor.value_net[0]),
                  (pn.mlp_extractor.value_net[2], pv.mlp_extractor.value_net[2]), (pn.value_net, pv.value_net)):
         _copiar_pesos(a, b)
+    if pv.action_net.weight.shape == pn.action_net.weight.shape:     # origen de 7 botones (V17): se afina, no se reinicia
+        _copiar_pesos(pn.action_net, pv.action_net)
     return modelo
 
 
@@ -857,7 +862,7 @@ def main():
         venv = VecDron(a.envs, semilla, red_p)
         if a.desde:
             modelo = desde_zip_v17(a.desde, venv, a.lr, a.ent, semilla, a.gamma)
-            desde = a.desde + " (capas ocultas; salida de 7 botones nueva)"
+            desde = a.desde + " (capas ocultas; la salida se copia si ya era de 7 botones)"
         else:
             modelo = nuevo_ppo(venv, a.lr, a.ent, semilla, a.gamma)
             desde = "cero"
