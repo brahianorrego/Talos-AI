@@ -51,3 +51,26 @@ complemento PCG Biome Sample de Epic), 8 cerros, el motor de avión de la exhibi
 - Medido: la secuencia del vuelo (432 cuadros, 1080p) se renderiza en 2 min 24 s; armar el nivel, 71 s.
 - Video: `04_VISOR_Y_MOTOR_GRAFICO/videos/vuelo_entre_canchas_unreal.mp4` (fuera de Git).
 - `vegetacion.py` se borró: los árboles ahora los pone `entorno_u_ue.py` (las plántulas de Epic se veían como cartulina y se descartaron).
+
+## Personas: maniquíes Manny y Quinn de la plantilla de Unreal (2026-10-19)
+
+Las personas ya no son cilindros: son **Manny (ladrón, rojo)** y **Quinn (civil, azul)**, los maniquíes que el motor trae en
+`Templates/TemplateResources/High/Characters/Content/Mannequins` (sin cuentas ni descargas). Se copiaron `Meshes`, `Rigs`,
+`Materials`, `Textures` y `Anims/Unarmed` a `Content/Characters/Mannequins/` del proyecto (ESA ruta exacta: los archivos se
+refieren entre sí con `/Game/Characters/Mannequins/...`). El Python de Unreal no trae NumPy, así que el trabajo se parte en dos:
+
+| Archivo | Dónde corre | Qué hace |
+|---|---|---|
+| `maniquies_volcar.py` | Unreal (una vez) | Vuelca a `_cache/maniquies.json` los 161 huesos, su pose y las claves de reposo, caminar, trotar, salto, caída y aterrizaje |
+| `maniquies_fk.py`, `maniquies_posturas.py`, `maniquies_ver.py` | Python del proyecto | Cuaternios, cinemática directa, las poses a mano (agachado, recostado, gateo) y dibujos de palitos para revisarlas sin abrir Unreal |
+| `maniquies_animar.py`, `maniquies_replay.py` | Python del proyecto | La animación de cada persona a partir de foto(): velocidad, `pos0`/`pos`/`pt`, salto y rumbo |
+| `maniquies_preparar.py` | Python del proyecto (lo llama `importar_repeticion.py`) | Escribe `_cache/preparado/` (animación en float32 y trayectoria por persona) |
+| `maniquies_unreal.py` | Unreal | Crea el AnimSequence, el actor con el maniquí a la estatura de la persona y la pista de animación |
+| `galeria_posturas.py` | Python del proyecto | Repetición sintética con todas las posturas, para revisar |
+
+Lo aprendido: `AnimSequence.data_model` es `None` en los archivos de la plantilla (vienen sin datos de edición): las poses se
+leen con `get_anim_pose_at_time` + `AnimPoseExtensions`; `AnimationLibrary.find_bone_path_to_root` tira el editor; un
+AnimSequence nuevo solo acepta 30 cps (o múltiplo/factor de 30): se hornea a 30 y Sequencer lo reproduce por tiempo; la
+velocidad real de la plantilla es 3 m/s al caminar y 6 m/s al trotar (movimiento de raíz) y el paso se ajusta con amplitud
+y ritmo; el indicador `run` de foto() parpadea y no se usa. Alturas medidas con los huesos: de pie 1.00, agachado 0.67,
+gateando 0.36 de la estatura (pruebas en `pruebas/test_maniquies.py`).

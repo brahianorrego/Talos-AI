@@ -61,3 +61,4 @@ desktop.ini
 # Videos y texturas generadas del visor y del motor gráfico (se regeneran con los scripts de 04_VISOR_Y_MOTOR_GRAFICO)
 04_VISOR_Y_MOTOR_GRAFICO/videos/
 04_VISOR_Y_MOTOR_GRAFICO/entorno/texturas/
+04_VISOR_Y_MOTOR_GRAFICO/unreal/_cache/

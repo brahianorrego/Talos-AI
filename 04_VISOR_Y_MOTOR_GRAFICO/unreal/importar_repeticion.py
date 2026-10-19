@@ -8,13 +8,16 @@ Uso dentro de Unreal (Herramientas -> Ejecutar script de Python), o sin abrir el
   UnrealEditor-Cmd.exe DronIA_Cancha.uproject -run=pythonscript -script="...\\importar_repeticion.py <repeticion.json> [desde_s] [hasta_s]"
 Si no se da la repetición, usa la última partida del entrenamiento V17 más reciente (03_SIMULACION_RL/salida_v17_*).
 
-Las personas son cilindros de su estatura (con el alto de su postura) hasta tener los MetaHumans (PLAN_UNREAL.md, pasos 7-8);
-el cambio a MetaHuman + animaciones se hará en este mismo script cuando estén creados.
+Las personas son los maniquíes Manny (ladrón) y Quinn (civil) que ya trae Unreal en la plantilla Third Person (maniquies_*.py): de la
+estatura de cada persona, animados según su postura y velocidad (de pie, agachado, recostado, gateando, trotando, salto). Si falta el
+contenido del maniquí, vuelven los cilindros de antes. Los MetaHumans quedan como mejora opcional (GUIA_BRAHIAN_UNREAL.md).
 """
+import array
 import glob
 import json
 import math
 import os
+import subprocess
 import sys
 
 import unreal
@@ -22,6 +25,7 @@ import unreal
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import dronia_ue as D  # noqa: E402
+import maniquies_unreal as MU  # noqa: E402
 
 SIM = os.path.normpath(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL"))
 NIVEL = D.CARPETA + "/Mapas/Cancha_V17"
@@ -77,6 +81,8 @@ def main(ruta=None, desde=0.0, hasta=None):
     k1 = min(len(C), int(hasta / dt) + 1) if hasta else len(C)
     C = C[k0:k1]
     nombre = "Rep_" + os.path.splitext(os.path.basename(ruta))[0] + "_" + os.path.basename(os.path.dirname(ruta))
+    if desde or hasta:
+        nombre += f"_{int(desde)}-{int(hasta) if hasta else 'fin'}s"
     unreal.log(f"DRONIA: importando {ruta} ({len(C)} cuadros, {len(C) * dt:.1f} s)")
 
     nivel = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -108,14 +114,29 @@ def main(ruta=None, desde=0.0, hasta=None):
     for a in D.actores.get_all_level_actors():
         if str(a.get_folder_path()) == "Dron" and a.get_actor_label().startswith("Dron_rep"):
             a_carpeta(a, "Dron")
-    personas = {}
-    for c in C:
-        for p in c.get("pers", []):
-            clave = p.get("id", p.get("rol"))
-            if clave not in personas:
-                rol = p.get("rol", "peaton")
-                fig = D.persona(f"{rol}_{clave}", p.get("est", 1.72), COLOR_ROL.get(rol, (0.3, 0.3, 0.3)))
-                personas[clave] = (a_carpeta(fig, "Personas"), p.get("est", 1.72))
+    maniquies = MU.disponible() and os.environ.get("DRONIA_CILINDROS") != "1"
+    n = int(round((len(C) - 1) * dt * FPS)) + 1
+    personas, meta = {}, None
+    if maniquies:                                       # NumPy no está en el Python de Unreal: se prepara afuera, con el del proyecto
+        py = os.path.join(SIM, ".venv", "Scripts", "python.exe")
+        orden = [py, "-I", os.path.join(AQUI, "maniquies_preparar.py"), ruta, str(desde)] + ([str(hasta)] if hasta else [])
+        r = subprocess.run(orden, capture_output=True, text=True)
+        unreal.log("DRONIA: " + (r.stdout.strip() or r.stderr.strip()[-600:]))
+        with open(os.path.join(AQUI, "_cache", "preparado", "meta.json"), encoding="utf-8") as f:
+            meta = json.load(f)
+        pares = [(clave, rol, est) for clave, (rol, est) in meta["personas"].items()]
+    else:
+        pares = []
+        for c in C:
+            for p in c.get("pers", []):
+                clave = str(p.get("id", p.get("rol")))
+                if all(clave != q[0] for q in pares):
+                    pares.append((clave, p.get("rol", "peaton"), p.get("est", 1.72)))
+    for clave, rol, est in pares:
+        color = COLOR_ROL.get(rol, (0.3, 0.3, 0.3))
+        fig = MU.figura(f"{rol}_{clave}", rol, color, est) if maniquies else D.persona(f"{rol}_{clave}", est, color)
+        personas[clave] = (a_carpeta(fig, "Personas"), est)
+    unreal.log(f"DRONIA: {len(personas)} personas, {'maniquíes' if maniquies else 'cilindros'}")
     cam = D.actores.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(0, 0, 500))
     cam.set_actor_label("Camara_cine")
     a_carpeta(cam, "Camara")
@@ -126,7 +147,6 @@ def main(ruta=None, desde=0.0, hasta=None):
     cc.set_editor_property("focus_settings", enfoque)
 
     # secuencia
-    n = int(round((len(C) - 1) * dt * FPS)) + 1
     carpeta = D.CARPETA + "/Secuencias"
     ruta_sec = carpeta + "/" + nombre
     if D.biblioteca.does_asset_exist(ruta_sec):
@@ -138,6 +158,23 @@ def main(ruta=None, desde=0.0, hasta=None):
 
     _, ch_dron = pista_transformacion(sec, dron, n)
     ch_pers = {k: pista_transformacion(sec, fig, n)[1] for k, (fig, _) in personas.items()}
+    if maniquies:
+        ruta_p = os.path.join(AQUI, "_cache", "preparado")
+        for clave, (fig, est) in personas.items():
+            plano = array.array("f")
+            with open(os.path.join(ruta_p, f"anim_{clave}.f32"), "rb") as f:
+                plano.frombytes(f.read())
+            with open(os.path.join(ruta_p, f"tray_{clave}.json"), encoding="utf-8") as f:
+                t = json.load(f)
+            anim = MU.crear_anim(f"{nombre}_{clave}", plano, meta["n_anim"], meta["huesos"], meta["fps_anim"])
+            MU.pista_animacion(sec, fig, anim, n)
+            ch = ch_pers[clave]
+            for f in range(n):
+                if t["visible"][f]:
+                    poner(ch, f, (t["x"][f] * D.M, -t["y"][f] * D.M, t["h"][f] * D.M, 0.0, 0.0, t["yaw"][f]))
+                else:
+                    poner(ch, f, (None, None, -5000.0))
+        unreal.log("DRONIA: maniquíes animados")
     b_cam, ch_cam = pista_transformacion(sec, cam, n)
 
     psi_prev, cam_pos, cam_mira, yaw_cam = None, None, None, None
@@ -147,14 +184,14 @@ def main(ruta=None, desde=0.0, hasta=None):
         psi_prev = continuo(psi_prev, D.guinada(psi))
         poner(ch_dron, f, (x * D.M, -y * D.M, z * D.M, c.get("cr", 0.0), c.get("cp", 0.0), psi_prev))
         vistos = set()
-        for p in c.get("pers", []):
-            clave = p.get("id", p.get("rol"))
+        for p in (c.get("pers", []) if not maniquies else []):
+            clave = str(p.get("id", p.get("rol")))
             vistos.add(clave)
             est = p.get("est", 1.72)
             alto = p.get("alto") or est * ALTO_POSTURA[int(p.get("pos", 0) or 0)]
             px, py = p["p"]
             poner(ch_pers[clave], f, (px * D.M, -py * D.M, alto / 2 * D.M, 0.0, 0.0, None, 0.45, 0.45, alto))
-        for clave, ch in ch_pers.items():                   # quien no está en este cuadro, bajo el piso
+        for clave, ch in (ch_pers.items() if not maniquies else []):    # quien no está en este cuadro, bajo el piso
             if clave not in vistos:
                 poner(ch, f, (None, None, -5000.0))
         # cámara de cine: detrás y un poco arriba del dron, mirando al punto entre el dron y el ladrón
