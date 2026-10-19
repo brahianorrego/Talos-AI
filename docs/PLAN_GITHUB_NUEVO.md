@@ -77,3 +77,26 @@ Limpiar antes del primer commit las rutas con la carpeta de usuario de Windows e
 4. README completo con las imágenes; revisarlo en local ✋.
 5. `gh repo create` público y `git push` ✋ (dos confirmaciones separadas).
 6. Release de modelos ✋.
+
+## 7. Lo que Brahian debe aprobar antes del primer push (19-oct)
+
+El README ya trae la sección del plus con los resultados de la V17, las capturas y la ruta de búsqueda, **solo en local**
+(commit sin push). Antes de subir, Brahian decide:
+
+1. ✋ **Nombre y forma del repositorio** (secciones 1 y 2): sigue pendiente.
+2. ✋ **Las 7 imágenes nuevas** de `08_EVIDENCIA_Y_DIAGRAMAS/capturas/` (`unreal_partida_3000`, `unreal_maniquies_ladron_corriendo`,
+   `unreal_vuelo_cruce`, `estacion_modo_dron`, `estacion_modo_3d`, `dron_real_lado`, `v17_cancha_arriba`): las revisé una por
+   una en miniatura y son de la simulación o del modelo 3D, sin personas reales, caras, IPs ni redes. Dos detalles para ti:
+   `unreal_vuelo_cruce` muestra el **campus de la universidad** dibujado desde medidas de Google Earth (decide si quieres
+   mostrar el lugar real); y el README solo usa 5 de las 7 (`unreal_vuelo_cruce` y `v17_cancha_arriba` quedan sin enlazar).
+3. ✋ **Las cifras del plus.** Son honestas e incluyen las malas: la política V17.2 supera a "solo reglas" y empata con "siempre
+   subir" en la cancha de prueba, y en la cancha real queda por debajo de "siempre subir". Las filas "afinado" y "ruta de Brahian"
+   siguen **pendientes** hasta que termine la simulación de la noche: no subir hasta llenarlas o quitarlas.
+4. ✋ **D-069** (que la red decida tras perder al ladrón) toca la regla dura 3: confirmar por escrito antes de describirla como
+   política del plus.
+5. ✋ **Los paneles** (~1.5 × 2.2-2.3 m) son medidas dichas por Brahian, no medidas con cinta: el README lo dice así; actualizarlo
+   cuando se midan.
+6. ✋ **Videos y modelos de Unreal:** no suben (pesan; viven en `Videos\dron_ia\`). Si quieres un video corto en la portada, se
+   comprime a ≤ 10 MB y se revisa cuadro por cuadro.
+7. Repetir antes del push la búsqueda de secretos y rutas de usuario sobre lo que `git add` incluya; en este commit ya revisé el
+   README y los documentos nuevos.

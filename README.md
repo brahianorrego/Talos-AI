@@ -233,11 +233,43 @@ humano es quien dice cuál persona es el sospechoso.
 <sub>Visor 3D de la estación de tierra (three.js): el dron encontró a una persona y espera que el operador la confirme. A la derecha, lo que ve su cámara; abajo, el mapa del LiDAR.</sub>
 </div>
 
-**Con honestidad:** en la V15 la red decide casi al azar (su acción preferida tiene en promedio 17 % de probabilidad;
-al azar sería 10 %). Los buenos resultados vienen sobre todo de las reglas que la rodean. La V17 se diseña para
-corregirlo, con criterios medibles de "la IA aporta".
+### V17: la misión real en la cancha de la universidad
 
-<img src="08_EVIDENCIA_Y_DIAGRAMAS/redes/ppo_probabilidades.png" width="640" alt="Probabilidad media por acción de la política PPO frente al azar">
+Desde la V17 el plus se mide en el escenario que se va a montar: una cancha de fútbol, una zona de 30 × 30 m con dos conjuntos
+de dos paneles en V de 90° (cada panel de ~1.5 × 2.2-2.3 m, por confirmar con cinta), un ladrón y un civil. Plan:
+[`docs/PLAN_V17_REFUERZO.md`](docs/PLAN_V17_REFUERZO.md) · dibujo: [`docs/v17_zona_ia.png`](docs/v17_zona_ia.png).
+
+<div align="center">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/unreal_partida_3000.jpg" width="49%" alt="Partida de la simulación dibujada en Unreal Engine 5: el dron sobre la cancha con las dos V de paneles">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/unreal_maniquies_ladron_corriendo.jpg" width="49%" alt="El ladrón (maniquí) corre junto a una V de paneles mientras el dron lo sigue">
+<br><sub>Mundo realista en Unreal Engine 5 (solo dibuja lo que dice la simulación). Los personajes son maniquíes, no personas reales.</sub>
+</div>
+
+<div align="center">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/estacion_modo_dron.jpg" width="49%" alt="Estación de tierra, modo dron: lo que ve la cámara con la caja de YOLO y las órdenes de la Jetson">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/estacion_modo_3d.jpg" width="49%" alt="Estación de tierra, modo 3D: el dron y el ladrón en el mundo simulado">
+<br><sub>Estación de tierra web: el operador confirma al sospechoso con un botón (humano en el lazo).</sub>
+</div>
+
+<div align="center">
+<img src="08_EVIDENCIA_Y_DIAGRAMAS/capturas/dron_real_lado.jpg" width="40%" alt="Modelo 3D del dron real, de lado: Jetson, gimbal, LiDAR y cámara">
+<br><sub>Modelo 3D del dron real, usado en la estación y en Unreal.</sub>
+</div>
+
+**Con honestidad, resultados medidos (512 partidas por fila; margen de error de M1 ≈ ±4 puntos; informes en [`03_SIMULACION_RL/informes/`](03_SIMULACION_RL/informes/)):**
+
+- **La V15 no aportaba nada:** su política rendía igual que "quedarse quieto" y que el azar (custodia de 60 s: 11.3 %, 10.2 % y
+  7.8 %). Con el ladrón a la vista, 9 de sus 10 acciones hacían lo mismo ([diagnóstico](03_SIMULACION_RL/informes/diagnostico_v17_ia_aporta.md)).
+- **La V17 lo corrige** (7 acciones con efecto, máscara de acciones, recompensa por racha de 30 s seguidos a la vista). A 50 M pasos
+  en la cancha de prueba, la política da 54.3 % frente a 48.4 % de "solo reglas" y 56.2 % de "siempre subir": **supera a las reglas
+  solas y empata con la mejor regla simple.**
+- **Cancha real:** el escenario es mucho más difícil. M1: solo reglas 11.7 %, azar 13.5 %, posicionamiento 17.2 %, siempre subir
+  24.6 %, la V17.2 sin afinar 19.3 %. Afinado y ruta de búsqueda de Brahian: ver [`docs/PROGRESO_V17.md`](docs/PROGRESO_V17.md) y
+  [`docs/RUTA_BUSQUEDA_BRAHIAN.md`](docs/RUTA_BUSQUEDA_BRAHIAN.md).
+- **Todo es simulación**; el plus no ha volado.
+
+**Ruta de búsqueda enseñada** (consejos de Brahian, no reglas duras): 360° de entrada, ir detrás de cada V a 3.30 m, recorrer la
+parte de atrás en cuadrado, mirar de frente con vaivén, pasar a la otra V, nunca quedarse quieto y que funcione también sin subir.
 
 ## Historial de versiones
 
@@ -251,7 +283,7 @@ corregirlo, con criterios medibles de "la IA aporta".
 | V15 | 10-12 oct | 5 niveles, rendición, Kalman + partículas, reconfirmación con el operador; 229.4 M pasos |
 | Mínimo | 10-11 oct | Simulación del comité y decisor MLP (congelado) |
 | V16 | 12 oct | Misión de 2 paneles, posturas humanas, visor realista (programada, sin entrenar) |
-| V17 | — | Diagnóstico de la política y misión completa con paneles reales (en plan) |
+| V17 | 16-19 oct | Diagnóstico medido de la V15, 7 acciones con efecto, cancha real con dos V, líneas base B0-B4, estación de tierra y mundo en Unreal |
 
 Detalle: [`docs/BITACORA.md`](docs/BITACORA.md) y [`docs/DECISIONES.md`](docs/DECISIONES.md).
 
