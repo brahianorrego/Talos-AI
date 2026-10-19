@@ -305,6 +305,58 @@ Desde la V17.2 de 50 M (todos los pesos), paneles reales, suavidad vertical 0.1,
 Se medirá el **mismo modelo** con el interruptor encendido y apagado (512 partidas, semilla 123). D-069 se queda solo si M1
 sube ≥ 5 puntos con él y la seguridad sigue en 0.
 
+**Resultado:** la corrida se cortó a los 8.2 M pasos (se reinició la sesión que la había lanzado en el Terminal). Se midió el
+checkpoint de 8.0 M (`modelos_v17_4\checkpoints\dron_master_7999488_steps.zip`), el mismo modelo con el interruptor
+encendido y apagado (512 partidas, `informes/v17/v174_8M_con.json` y `_sin.json`):
+
+| | M1 | Vista (s) | M2 ≤ 10 s | Rendición | Vaivén de la red (/min) | Seguridad |
+|---|---:|---:|---:|---:|---:|---|
+| V17.4 **con** D-069 | **20.7 %** | 88.4 | 65.6 % | 2.0 % | 12.9 | 0 |
+| V17.4 **sin** D-069 | 17.8 % | 86.2 | 61.9 % | 3.3 % | 8.5 | 0 |
+| B3 siempre SUBIR | 24.6 % | 87.3 | 68.3 % | 4.1 % | 0 | 0 |
+
+- **D-069 no se queda:** sube M1 en +2.9 puntos, debajo de los 5 que pide el criterio. `PERDIDA_RED_V17` queda en `False`.
+- Ni siquiera en la pérdida la red usa rodear ni acercarse: solo SUBIR, BAJAR y QUEDARSE (75 %). No colapsa (probabilidad de
+  la preferida 0.66).
+
+## D-071 · Ruta de búsqueda de Brahian (B5) (19-oct)
+
+`BUSQUEDA_RUTA_V17` (en `False` por defecto) cambia la búsqueda determinista por la ruta de `docs/RUTA_BUSQUEDA_BRAHIAN.md`.
+Al perderlo, el dron va a la V donde lo vio por última vez y recorre su parte de atrás (la que no ve) de esquina a esquina, a
+`D_RUTA_B5` = 4.5 m y a la altura segura, mirando hacia donde vuela. Después se pone de frente a la boca con un vaivén de
+±30° durante 3 s, pasa a la otra V y repite hasta encontrarlo (o hasta los 90 s de siempre). Sigue siendo una regla
+determinista, así que la regla 3 no cambia. Prueba: `test_v17.TestRutaB5`.
+
+**¿La ruta vale la pena?** (512 partidas, cancha real, `informes/v17/ruta_b5.json` y `ruta_b5s.json`):
+
+| | M1 | Vista (s) | M2 ≤ 10 s | Rendición | Misión perdida | Seguridad |
+|---|---:|---:|---:|---:|---:|---|
+| **B5** ruta + SUBIR | 20.1 % | 78.8 | 60.7 % | 5.3 % | 3.9 % | 0 |
+| **B5s** ruta sin subir | 10.5 % | 71.9 | 50.3 % | 1.0 % | 5.7 % | alcanzado 0.2 % |
+| B3 / B0 (búsqueda de siempre) | 24.6 / 11.7 % | 87.3 / 84.6 | 68.3 / 60.0 % | 4.1 / 1.6 % | — | 0 |
+
+Con los valores de partida, **la ruta no le gana a la búsqueda actual**: B5 queda 4.5 puntos debajo de B3 y B5s 1.2 debajo de
+B0. En las dos baja la vista total: el recorrido largo pierde al ladrón que se queda cerca. Como las distancias eran valores
+de partida, se prueba `D_RUTA_B5` = 3.0 / 4.5 / 6.0 m con otra semilla (7, 256 partidas,
+`informes/v17/ruta_ajuste_d*.json`) antes de cerrar.
+
+## Entrenamiento en marcha y cómo retomarlo (19-oct)
+
+Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,
+con el registro en un archivo): siguen corriendo aunque se cierre o se reinicie Claude Code.
+
+- **V17.5 · afinado en la cancha real, sin D-069** (desde la V17.2 de 50 M, suavidad vertical 0.1, entropía 0.01, 10 M
+  pasos). Es la candidata a política V17 en la cancha real. **Inicio 2026-10-19 13:37.** Registro:
+  `03_SIMULACION_RL\modelos_v17_5.log` (errores en `modelos_v17_5.err`); modelos en `modelos_v17_5\`.
+- **Lanzarlo igual desde PowerShell** (desde `03_SIMULACION_RL`):
+  `Start-Process -FilePath .venv\Scripts\python.exe -ArgumentList "-u entrenar_master.py --desde modelos_v17_2\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_5 --dir-master modelos_v17_5 --dir-modelos modelos_v17_5" -WorkingDirectory . -RedirectStandardOutput modelos_v17_5.log -RedirectStandardError modelos_v17_5.err -WindowStyle Hidden`
+- **Si se corta, retomarlo desde su último modelo:** el mismo comando cambiando `--desde modelos_v17_2\ultimo.zip` por
+  `--continuar` (retoma `modelos_v17_5\ultimo.zip`; con `--continuar`, `--pasos` son los pasos que se agregan).
+- **Ver el avance:** la última línea `it …` del registro (pasos, pasos/s, entropía). **Detenerlo:** en el Administrador de
+  tareas, el `python.exe` que más memoria usa (~400 MB), o `Stop-Process -Id <PID>` (el PID sale al lanzarlo).
+- **Medirlo al terminar:**
+  `.venv\Scripts\python.exe herramientas\medir_ia_aporta.py v17 --pol modelos_v17_5\ultimo.zip,modelos_v17_5\ultimo.zip-est --n 512 --salida informes\v17\v175_10M.json`
+
 ## Repeticiones escogidas (D-065)
 
 `herramientas/grabar_repeticiones_v17.py`: corre partidas de una en una (1 hilo) con una política en la cancha V17 con
