@@ -259,3 +259,26 @@ privada): todo en un entorno, con la cancha de fútbol, la cancha cerrada y los 
 - Capturas: `mediciones/capturas/universidad_*.jpg`.
 - **Qué falta:** mismo entorno en Unreal (`unreal/`, lee el mismo JSON), medir con cinta las canchas, y los detalles de los edificios
   reales (ventanas, colores, la cubierta del coliseo).
+
+## Misión completa, vista del dron con tres cámaras y ruta de búsqueda (2026-10-19)
+
+- **Misión completa de punta a punta** (`entorno/mision_completa.py` → `estacion/mision_completa.json`, fuera de Git; opción "Misión completa" del
+  selector de la estación): despegue en el helipuerto del extremo sur de la cancha, **tránsito** con el piloto (3 m/s) y el mínimo vigilando,
+  **activación** con el interruptor CH7 en la zona y **zona de IA** con una partida V17 completa (por omisión `salida_v17_2`; otra: pasar su
+  ruta). En el tránsito hay un panel (el mínimo frena, sube a 3.30 m y el piloto lo pasa por arriba), un árbol (frena; el piloto lo rodea) y una
+  persona que cruza (frena y espera); tras cada frenada el operador da REANUDAR. Las reglas y los números salen de
+  `01_MINIMO_INDISPENSABLE/minimo_tesis/sistema.py` (solo lectura): es una versión cinemática y sin ruido de esa lógica, no una medida nueva.
+  Letreros de fase en pantalla con las fichas "MÍNIMO" y "CH7". Pruebas: `pruebas/test_mision_completa.py`.
+  En Unreal: `importar_repeticion.py ../estacion/mision_completa.json` (8 269 cuadros con maniquíes, árbol y helipuerto); los letreros salen de
+  `estacion/mision_letreros.json` y se escriben sobre el video con `blender/unir_video.py <cuadros> <salida.mp4> 24 <letreros.json>`.
+- **Vista del dron** (antes "Cámara del dron", tecla 1): tres cámaras como paneles que se encienden y se apagan (botones de arriba o las teclas
+  U, F, G, L): USB principal (la de siempre), **CSI CAM1 frontal ancha** (0°, HFOV 62.2°) y **CSI CAM0 al piso** (−90°, HFOV 62.2°); es la variante
+  F de `05_HARDWARE_Y_VARIANTES`; el HFOV de las IMX219 es nominal, sin medir. Las cajas de YOLO de las CSI son **simuladas** (persona dentro del
+  campo, a menos de 30 m y sin panel en medio). Más el **LiDAR 360°**: mapa de puntos con el haz inclinado (−10° por omisión; se elige en el
+  panel), calculado con la geometría de la escena; el TF03 real es de un solo haz, esto es lo que armaría uno que girara. Código: `estacion/camaras.js`.
+- **Ruta de búsqueda de Brahian** (`docs/RUTA_BUSQUEDA_BRAHIAN.md`, D-071): `entorno/ruta_busqueda.py` la calcula sobre los paneles de la partida
+  (entrada con giro de 360°, detrás de cada V a 4.5 m, cuadrado de 6.1 m, de frente a la boca con el vaivén de ±30°, a 3.30 m) y la estación la
+  dibuja como línea, puntos de paso y abanico (botón "Ruta (R)"; los puntos se ponen verdes cuando el dron pasa a menos de 1.5 m); Unreal la dibuja
+  igual (carpeta `Repeticion/Ruta`; `DRONIA_SIN_RUTA=1` la quita). Es el recorrido ideal que enseña el maestro B5: cuando Simulación grabe repeticiones
+  con la ruta, se verá cómo la sigue. Pruebas: `pruebas/test_ruta_busqueda.py`.
+- La estación normaliza la `fase` de la V17 (texto "zona") a los números 1 (piloto) y 2 (IA) que usa el visor.

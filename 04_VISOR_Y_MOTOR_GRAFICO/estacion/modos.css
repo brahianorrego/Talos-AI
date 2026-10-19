@@ -66,3 +66,24 @@ body.sin-paneles #abajo { left: 10px; right: 10px; }
 #b-confirmar { border-color: var(--precaucion); color: #fff; background: rgba(245, 197, 66, .18); font-weight: 600; white-space: nowrap; }
 #aviso { z-index: 31; }
 .caja:not(#centro) .slam-barra .mono { display: none; }           /* la ayuda del mapa solo cuando está grande */
+
+/* Vista del dron: las tres cámaras (camaras.js) y el LiDAR 360° */
+.vista-cam { position: relative; width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 4 / 3; box-shadow: 0 0 0 6px rgba(12, 17, 24, .96), 0 0 0 1px #2c3b4e inset; }
+.vista-cam .filtro { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, .38) 100%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .05) 0 1px, transparent 1px 3px); }
+.vista-cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#cam-csi0, #cam-csi1 { background: transparent !important; border: 1px solid var(--borde) !important; border-radius: 6px; box-shadow: none !important; }
+#cam-csi0 > .cab, #cam-csi1 > .cab { background: var(--panel); border: 0 !important; border-bottom: 1px solid var(--linea) !important; border-radius: 6px 6px 0 0; }
+#cam-csi0 > .cuerpo, #cam-csi1 > .cuerpo { border: 0 !important; box-shadow: none !important; padding: 6px !important; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+body.cam-off-usb #fpv, body.cam-off-csi1 #cam-csi1, body.cam-off-csi0 #cam-csi0, body.cam-off-lid #p-lid360 { display: none !important; }
+body:not([data-modo="dron"]) #cam-csi0, body:not([data-modo="dron"]) #cam-csi1 { display: none !important; }
+#camaras-ui { display: none; position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 8; align-items: center; gap: 6px; padding: 4px 10px;
+              background: rgba(8, 12, 18, .8); border: 1px solid var(--borde); border-radius: 6px; font-size: 11px; color: var(--suave); }
+#camaras-ui button { padding: 3px 9px; font-size: 11px; border-radius: 4px; border: 1px solid #33465c; background: #0d141c; color: #7d8da1; cursor: pointer; }
+#camaras-ui button.activo { color: #fff; border-color: var(--nominal, #2db7ff); background: rgba(45, 183, 255, .16); }
+body[data-modo="dron"] #camaras-ui { display: flex; }
+body[data-modo="dron"] #centro { top: 90px; }
+#sobre-bl { width: 250px; }
+body:not([data-modo="dron"]) #p-lid360 { }
+#sobre-bl #lid360-lienzo { width: 100%; height: 232px; display: block; border: 1px solid var(--linea); border-radius: 4px; }
+#sobre-bl .slam-ley { display: none; }
+#p-lid360 #lid360-lienzo { width: 100%; height: 300px; display: block; }

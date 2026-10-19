@@ -12,7 +12,9 @@ import argparse
 import json
 import http.server
 import os
+import sys
 import time
+import urllib.parse
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SIM = os.path.normpath(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL"))
@@ -34,8 +36,27 @@ def corridas_v17():
     return sorted(lista, key=lambda c: -c["t"])
 
 
+sys.path.insert(0, os.path.join(AQUI, "..", "entorno"))
+import ruta_busqueda  # noqa: E402
+
+
 class Manejador(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
+        if self.path.split("?")[0] == "/ruta.json":              # ruta de búsqueda de Brahian sobre los paneles y la posición inicial que manda la página
+            try:
+                q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                paneles = [[float(v) for v in p[:5]] for p in json.loads(q["paneles"][0])][:16]
+                inicio = [float(v) for v in json.loads(q["inicio"][0])][:3]
+                datos = json.dumps(ruta_busqueda.ruta(paneles, inicio)).encode("utf-8")
+                self.send_response(200)
+            except (KeyError, ValueError, TypeError, IndexError):
+                datos = b"{}"
+                self.send_response(400)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(datos)))
+            self.end_headers()
+            self.wfile.write(datos)
+            return
         if self.path.split("?")[0] == "/corridas.json":
             datos = json.dumps(corridas_v17()).encode("utf-8")
             self.send_response(200)

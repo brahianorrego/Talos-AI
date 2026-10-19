@@ -212,7 +212,7 @@
   <div class="der">
     <div class="autoria">Desarrollado por <b>Brahian Andrés Orrego Osorio</b></div>
     <div class="seg modos" id="modos" title="Elija qué quiere ver">
-      <button data-modo="dron" title="La cámara del dron con YOLO, la telemetría y el mapa (tecla 1)">Cámara del dron</button><button data-modo="3d" title="El mundo 3D de la simulación (tecla 2)">Simulación 3D</button><button data-modo="mapa" title="El mapa que arma el LiDAR (tecla 3)">Mapa</button><button data-modo="ing" title="Todo el análisis: estados, árbitro, decisiones, entrenamiento (tecla 4)">Ingeniería</button><button data-modo="vuelo" title="La pantalla del operador en el vuelo real (tecla 5)">Vuelo real</button>
+      <button data-modo="dron" title="Las cámaras del dron (USB, CSI frontal y CSI piso) con YOLO, la telemetría, el mapa y el LiDAR 360° (tecla 1)">Vista del dron</button><button data-modo="3d" title="El mundo 3D de la simulación (tecla 2)">Simulación 3D</button><button data-modo="mapa" title="El mapa que arma el LiDAR (tecla 3)">Mapa</button><button data-modo="ing" title="Todo el análisis: estados, árbitro, decisiones, entrenamiento (tecla 4)">Ingeniería</button><button data-modo="vuelo" title="La pantalla del operador en el vuelo real (tecla 5)">Vuelo real</button>
     </div>
 
     <select id="selector" title="Repetición a mostrar"></select>
@@ -1237,6 +1237,7 @@ function iniciarPartida(pt) {
     $("s2").style.left = (100 * n1 / C.length) + "%";
     $("marcas").innerHTML = eventos.filter(e => e.marca).map(e => `<div class="ev" style="left:${100 * e.k / N}%;background:${e.col}" title="${e.txt}"></div>`).join("");
     if (modoCam === "arriba" || modoCam === "orbita") ponerCamara(modoCam);
+    if (window.RUTA_CARGAR) RUTA_CARGAR();
   } catch (e) { console.warn(e); }
 }
 async function llenarSelector() {
@@ -1964,6 +1965,7 @@ function animar(ahora) {
     const trk = a.fase === 1 ? ["IA INACTIVA", COL.tenue] : a.trk === undefined ? (a.vis ? TRK[1] : TRK[3]) : TRK[a.trk];
     const cajas = cajasPersonas(a, pa);
     cajasActuales = cajas;
+    window.ESTADO_VISTA = { c: a, pers: pa, x: dx, y: dy, z: dz, psi, k };       // para camaras.js (cámaras CSI y LiDAR 360°)
     let cursorSim = null;
     const cajaCand = cajas.find(q => q.tipo === "cand");
     if (!operadorManual && cajaCand) {
@@ -2023,17 +2025,25 @@ function animar(ahora) {
       renderer.setScissorTest(false);
     }
   }
-  if (partida) {     // la cámara del dron se dibuja dentro del recuadro FPV
-    const rv = fpvVista.getBoundingClientRect(), x = rv.left, y = innerHeight - rv.bottom;
-    const ocultos = [dron, cono, laser, puntoLaser, lineaVista, pulso, rastroDron, rastroLadron, sombraDron, marcaUlt, marcaWp, mapaLidar, flechaEscape, lineaRuta, nube3d,
-                     ...[ladron, ...peatones].flatMap(p => [p.userData.etq, p.userData.marca])].filter(o => o && o.visible);
-    ocultos.forEach(o => o.visible = false);
-    renderer.setScissorTest(true);
-    renderer.setViewport(x, y, rv.width, rv.height);
-    renderer.setScissor(x, y, rv.width, rv.height);
-    renderer.render(escena, camDron);
-    ocultos.forEach(o => o.visible = true);
+  if (partida) {     // la cámara del dron se dibuja dentro del recuadro FPV; las otras dos (camaras.js) en sus recuadros
+    renderizarEnCaja(camDron, fpvVista);
+    if (window.CAMARAS_PASO) CAMARAS_PASO();
   }
+}
+// dibuja la escena vista por una cámara del dron dentro de un recuadro de la pantalla (sin las ayudas visuales de la simulación)
+function renderizarEnCaja(cam, el) {
+  const rv = el.getBoundingClientRect();
+  if (rv.width < 8 || rv.height < 8 || !el.offsetParent) return;
+  const x = rv.left, y = innerHeight - rv.bottom;
+  const ocultos = [dron, cono, laser, puntoLaser, lineaVista, pulso, rastroDron, rastroLadron, sombraDron, marcaUlt, marcaWp, mapaLidar, flechaEscape, lineaRuta, nube3d, window.RUTA_GRUPO,
+                   ...[ladron, ...peatones].flatMap(p => [p.userData.etq, p.userData.marca])].filter(o => o && o.visible);
+  ocultos.forEach(o => o.visible = false);
+  renderer.setScissorTest(true);
+  renderer.setViewport(x, y, rv.width, rv.height);
+  renderer.setScissor(x, y, rv.width, rv.height);
+  renderer.render(escena, cam);
+  renderer.setScissorTest(false);
+  ocultos.forEach(o => o.visible = true);
 }
 
 (async () => {
@@ -2047,6 +2057,7 @@ function animar(ahora) {
   setInterval(llenarSelector, 30000);
 })();
 </script>
+<script src="camaras.js"></script>
 <script src="modos.js"></script>
 <script src="dron_real.js"></script>
 <script src="universidad.js"></script>

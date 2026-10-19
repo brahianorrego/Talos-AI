@@ -72,6 +72,39 @@ def continuo(previo, nuevo):
     return previo + ((nuevo - previo + 180.0) % 360.0 - 180.0)
 
 
+def dibujar_ruta(paneles, inicio, a_carpeta):
+    """La ruta de búsqueda de Brahian (entorno/ruta_busqueda.py) como una línea y puntos de paso a 3.30 m, más el abanico del vaivén."""
+    sys.path.insert(0, os.path.join(AQUI, "..", "entorno"))
+    import ruta_busqueda as RB
+    r = RB.ruta(paneles, inicio)
+    cian = D.material("Ruta_cian", (0.1, 0.8, 1.0), 0.3)
+    amarillo = D.material("Ruta_amarillo", (0.96, 0.77, 0.26), 0.3)
+    blanco = D.material("Ruta_punto", (0.95, 0.95, 0.95), 0.3)
+
+    def tramo(p0, p1, mat, ancho=0.04):
+        a, b = D.ue(*p0), D.ue(*p1)
+        L = max(math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2) / D.M, 1e-3)
+        rot = unreal.MathLibrary.find_look_at_rotation(a, b)
+        c = D.forma("Cube", "Ruta_tramo", unreal.Vector((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2), (L, ancho, ancho), mat, rot=(rot.roll, rot.pitch, rot.yaw))
+        a_carpeta(c, "Ruta")
+
+    pl = r["polilinea"]
+    for p0, p1 in zip(pl[:-1], pl[1:]):
+        tramo(p0, p1, cian)
+    for v in r["v"]:
+        for p in v["puntos"]:
+            a_carpeta(D.forma("Sphere", "Ruta_punto", D.ue(p[0], p[1], p[2]), (0.2, 0.2, 0.2), blanco), "Ruta")
+        vv = v["vaiven"]
+        for sg in (-1, 1):
+            ang = math.radians(vv["psi"] + sg * vv["amplitud"])
+            tramo((vv["desde"][0], vv["desde"][1], 3.3), (vv["desde"][0] + math.cos(ang) * vv["largo"], vv["desde"][1] + math.sin(ang) * vv["largo"], 3.3), amarillo, 0.03)
+    ex, ey, ez = r["entrada"]
+    for k in range(24):                                      # el giro de 360° de entrada: un anillo de 1.5 m de radio
+        t0, t1 = 2 * math.pi * k / 24, 2 * math.pi * (k + 1) / 24
+        tramo((ex + 1.5 * math.cos(t0), ey + 1.5 * math.sin(t0), ez), (ex + 1.5 * math.cos(t1), ey + 1.5 * math.sin(t1), ez), amarillo, 0.03)
+    unreal.log(f"DRONIA: ruta de búsqueda dibujada ({len(pl)} puntos, {len(r['v'])} V)")
+
+
 def main(ruta=None, desde=0.0, hasta=None):
     ruta = ruta or ultima_repeticion()
     with open(ruta, encoding="utf-8") as f:
@@ -108,6 +141,10 @@ def main(ruta=None, desde=0.0, hasta=None):
     for a in D.actores.get_all_level_actors():
         if str(a.get_folder_path()) == "Paneles" and a.get_actor_label().startswith("panel_"):
             a_carpeta(a, "Paneles")
+
+    if os.environ.get("DRONIA_SIN_RUTA") != "1" and datos.get("paneles"):
+        c_ia = next((c for c in C if c.get("fase") in (2, "zona")), C[0])
+        dibujar_ruta(datos["paneles"], c_ia["d"][:3], a_carpeta)
 
     # árboles y helipuerto de la misión completa (entorno/mision_completa.py)
     for i, ar in enumerate(datos.get("arboles", [])):

@@ -1,7 +1,8 @@
 // Modos de la estación (pedido de Brahian, 17-oct): en vez de ventanas sueltas que se pueden cerrar y desordenar, cinco
 // pantallas ya organizadas que se eligen con los botones de arriba (o las teclas 1 a 5). Ningún panel se pierde: cada modo
 // pone los que necesita en su lugar y guarda los demás. El modo elegido se recuerda.
-//   Cámara del dron · la cámara con YOLO a pantalla completa, con la telemetría y el mapa SLAM encima, en las esquinas
+//   Vista del dron  · la cámara USB con YOLO, la telemetría y el mapa SLAM encima; más las cámaras CSI (frontal y piso) y el LiDAR 360°,
+//                     que se encienden y apagan con los botones de arriba o las teclas U, F, G y L (camaras.js)
 //   Simulación 3D   · el mundo 3D a pantalla completa; "Ocultar paneles" deja solo la simulación
 //   Mapa            · el mapa del LiDAR grande (rueda: acercar; arrastrar: mover; doble clic: centrar)
 //   Ingeniería      · todo el análisis alrededor del 3D: estados, decisiones, árbitro, tracker, entrenamiento
@@ -11,19 +12,19 @@
 (() => {
   const CLAVE = "estacion-modo-v3";
   const MODOS = {
-    dron:  { principal: "dron", centro: "fpv", sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"] }, abajo: ["reproductor"] },
+    dron:  { principal: "dron", centro: ["fpv", "cam-csi1", "cam-csi0"], sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"], "sobre-bl": ["p-lid360"] }, abajo: ["reproductor"] },
     "3d":  { principal: "3d", izq: ["fpv", "rc", "p-slam"], der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"], ocultable: true },
     mapa:  { principal: "mapa", centro: "p-slam", der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"] },
     ing:   { principal: "3d", izq: ["p-fsm", "p-dec", "p-obj"], der: ["p-cus", "p-tel", "p-arb", "monitor"], abajo: ["estado-linea", "log", "reproductor"] },
     vuelo: { principal: "dron", centro: "fpv", der: ["p-enlace", "p-tel", "rc", "p-arb", "p-slam"], abajo: ["estado-linea", "log"], derAncha: true },
   };
-  const PANELES = ["fpv", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
+  const PANELES = ["fpv", "cam-csi1", "cam-csi0", "p-lid360", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
   const $ = id => document.getElementById(id);
   const caja = (id, clase) => { const d = document.createElement("div"); d.id = id; d.className = "caja " + clase; document.body.appendChild(d); return d; };
   let modo = "dron";
 
   function iniciar() {
-    ["col-izq", "col-der", "centro", "abajo", "guardados", "sobre-tl", "sobre-br", "sobre-tr"].forEach(id => caja(id, id.startsWith("sobre") ? "sobre" : id));
+    ["col-izq", "col-der", "centro", "abajo", "guardados", "sobre-tl", "sobre-br", "sobre-tr", "sobre-bl"].forEach(id => caja(id, id.startsWith("sobre") ? "sobre" : id));
     PANELES.forEach(id => { const p = $(id); if (p) { p.classList.add("pnl"); $("guardados").appendChild(p); } });
     ["izq", "der", "dock"].forEach(id => { const c = $(id); if (c && !c.children.length) c.remove(); });
     // en la columna los paneles no se pliegan solos (la columna tiene su propio desplazamiento)
@@ -53,7 +54,7 @@
     PANELES.forEach(id => { const p = $(id); if (p) $("guardados").appendChild(p); });          // todo a guardar
     const meter = (destino, ids) => (ids || []).forEach(id => { const p = $(id); if (p) $(destino).appendChild(p); });
     meter("col-izq", M.izq); meter("col-der", M.der); meter("abajo", M.abajo);
-    if (M.centro) meter("centro", [M.centro]);
+    if (M.centro) meter("centro", [].concat(M.centro));
     Object.entries(M.sobre || {}).forEach(([d, ids]) => meter(d, ids));
     document.body.dataset.modo = m;
     document.body.classList.toggle("con-izq", !!M.izq);
@@ -64,6 +65,7 @@
     textoOcultar();
     window.PRINCIPAL = M.principal;
     document.body.dataset.principal = M.principal;
+    if (window.CAMARAS_APLICAR) CAMARAS_APLICAR();
     acomodar();
   }
 
@@ -81,6 +83,7 @@
     pon("sobre-tl", r.left + 12, r.top + 34);
     pon("sobre-tr", r.right - 12 - $("sobre-tr").offsetWidth, r.top + 34);
     pon("sobre-br", r.right - 12 - $("sobre-br").offsetWidth, r.bottom - 12 - $("sobre-br").offsetHeight);
+    pon("sobre-bl", r.left + 12, r.bottom - 12 - $("sobre-bl").offsetHeight);
   }
 
   window.PRINCIPAL = "dron";
