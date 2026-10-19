@@ -605,6 +605,15 @@ K_SUAVE_Z_V17 = 0.1            # peso en el eje vertical. La V17.3 lo subió a 0
 # la búsqueda determinista de siempre. Es un interruptor aparte de PERDIDA_IA (regla dura 3, que queda en False): aquel
 # entrega 60 s de búsqueda a la red con los botones viejos de la V15 y sin búsqueda determinista
 PERDIDA_RED_V17 = False
+# D-071 · RUTA DE BÚSQUEDA DE BRAHIAN (B5, docs/RUTA_BUSQUEDA_BRAHIAN.md), búsqueda DETERMINISTA alternativa (regla 3 intacta):
+# al perderlo, a la V donde se lo vio por última vez: su parte de atrás (la que el dron no ve) de esquina a esquina a
+# D_RUTA_B5 m y a la altura segura, después de frente a la boca con vaivén de ±AMP_BARRIDO_B5° durante T_BARRIDO_B5 s, y a la
+# otra V; se repite hasta encontrarlo. Valores de partida (no medidos)
+BUSQUEDA_RUTA_V17 = False
+D_RUTA_B5, MARGEN_RUTA_B5 = 4.5, 2.0
+T_BARRIDO_B5, AMP_BARRIDO_B5 = 3.0, 30.0
+PASO_RUTA_B5 = 4                 # valor de paso_muro mientras dura la ruta
+T_RUTA_B5_MAX = 30.0             # s máximos para recorrer la ruta de una V
 K_RACHA_V17 = 3.0
 # D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
 TF03_PITCH_V17 = -3.0
@@ -808,7 +817,8 @@ class EntornoDronPersona(object):
         self.insp_x, self.insp_y, self.insp_n = z(8), z(8), zi()                  # centros de paneles ya revisados
         self.inv_x, self.inv_y, self.zc_x, self.zc_y = z(), z(), z(), z()         # punto de separación y zona de pérdida
         self.nadir = zb()
-        self.ruta, self.ruta_n, self.ruta_i = z(3, 2), zi(), zi()          # ruta del flanqueo (hasta 3 puntos)
+        self.ruta, self.ruta_n, self.ruta_i = z(4, 2), zi(), zi()          # ruta del flanqueo (hasta 3 puntos; B5: 4)
+        self.b5_v, self.b5_vx, self.b5_vy = zi(), z(), z()   # D-071: V que recorre la ruta B5 y su vértice
         self.rx, self.ry, self.int_dx, self.int_dy = z(), z(), z(), z()     # punto actual y dirección al interior oculto
         self.vuelo_alto, self.flanco = zb(), zb()
         self.tvx, self.tvy, self.esc_vx, self.esc_vy = z(), z(), z(), z()       # velocidad estimada del objetivo y de escape
@@ -2372,11 +2382,11 @@ class EntornoDronPersona(object):
     def _seguir_ruta(self, activa):
         """Al llegar a un punto intermedio pasa al siguiente. Devuelve si el punto actual es el último."""
         ar = np.arange(self.n)
-        ri = np.clip(self.ruta_i, 0, 2)
+        ri = np.clip(self.ruta_i, 0, self.ruta.shape[1] - 1)
         _, d = self._ir_a(self.ruta[ar, ri, 0], self.ruta[ar, ri, 1])
         pasa = activa & (self.ruta_i < self.ruta_n - 1) & (d < D_LLEGADA_PASO)
         self.ruta_i = self.ruta_i + pasa.astype(int)
-        ri = np.clip(self.ruta_i, 0, 2)
+        ri = np.clip(self.ruta_i, 0, self.ruta.shape[1] - 1)
         self.rx = np.where(activa, self.ruta[ar, ri, 0], self.rx)
         self.ry = np.where(activa, self.ruta[ar, ri, 1], self.ry)
         return self.ruta_i >= self.ruta_n - 1
@@ -2503,6 +2513,36 @@ class EntornoDronPersona(object):
         self.mira_x[i], self.mira_y[i] = M
         self.obj_mx[i], self.obj_my[i] = M
         return True
+
+    def _planear_ruta_b5(self, i, otra=False):
+        """D-071 · ruta de Brahian para UNA V (la más cercana a donde se lo vio por última vez; con `otra`, la otra V):
+        esquina de atrás -> centro de atrás -> la otra esquina de atrás (la parte que el dron no ve, a D_RUTA_B5 m) -> de
+        frente a la boca. Usa la geometría de la cancha (las V son fijas y el 360° de entrada las mapea)."""
+        D = np.array([self.dx[i], self.dy[i]])
+        U = np.array([self.ult_x[i], self.ult_y[i]])
+        cen = [(self.pa[i, 2 * v] + self.pb[i, 2 * v] + self.pb[i, 2 * v + 1]) / 3 for v in range(2)]
+        v = 1 - int(self.b5_v[i]) if otra else int(np.argmin([np.hypot(*(c - U)) for c in cen]))
+        self.b5_v[i] = v
+        C, vert = cen[v], self.pa[i, 2 * v]
+        u = C - D
+        u = u / max(np.hypot(*u), 1e-6)                      # hacia el lado oculto (más allá de la V, visto desde el dron)
+        perp = np.array([-u[1], u[0]])
+        s = ANCHO_PANEL_V17 * np.sqrt(2) / 2 + MARGEN_RUTA_B5
+        H = C + D_RUTA_B5 * u
+        c1, c2 = H + s * perp, H - s * perp
+        if np.hypot(*(c2 - D)) < np.hypot(*(c1 - D)):
+            c1, c2 = c2, c1
+        boca = (self.pb[i, 2 * v] + self.pb[i, 2 * v + 1]) / 2 - vert
+        F = vert + D_RUTA_B5 * boca / max(np.hypot(*boca), 1e-6)
+        lim = self.A - 1.5
+        puntos = [np.clip(p, -lim, lim) for p in (c1, H, c2, F)]
+        self._poner_ruta(i, puntos, u, True)
+        self.inv_x[i], self.inv_y[i] = puntos[-1]
+        self.mira_x[i], self.mira_y[i] = vert
+        self.b5_vx[i], self.b5_vy[i] = vert
+        self.zc_x[i], self.zc_y[i] = C
+        self.obj_mx[i], self.obj_my[i] = C
+        self.paso_muro[i] = PASO_RUTA_B5
 
     def _planear_otro_extremo(self, i):
         """Paso 2 de la secuencia: detrás del mismo muro, por el extremo contrario al que acaba de revisar."""
@@ -2918,7 +2958,10 @@ class EntornoDronPersona(object):
             # (el bono y la multa los arma el reloj de ocultamiento, más abajo)
         else:
             for i in np.where(pierde)[0]:
-                self._planear_perdida(i)
+                if BUSQUEDA_RUTA_V17 and self.lvl_ep[i] == NIVEL_V17:
+                    self._planear_ruta_b5(i)                 # D-071: la ruta de Brahian en vez del flanqueo
+                else:
+                    self._planear_perdida(i)
             self.modo = np.where(pierde, INVESTIGAR, self.modo)
         self.t_modo = np.where(pierde, 0.0, self.t_modo)
         self.t_bloqueo = np.where(pierde, 0.0, self.t_bloqueo)
@@ -2934,8 +2977,9 @@ class EntornoDronPersona(object):
         canto = self.modo == MURO_CANTO
         ultimo_u = self._seguir_ruta(en_ruta | (canto & (self.canto_t < 0)))
         err_u, d_u = self._ir_a(self.rx, self.ry)
+        t_max_u = np.where(self.paso_muro == PASO_RUTA_B5, T_RUTA_B5_MAX, T_INVESTIGA_MAX)
         llega_u = (en_ruta & ultimo_u & (self.t_modo >= T_HISTERESIS)
-                   & ((d_u < D_LLEGADA) | (self.t_bloqueo > 1.0) | (self.t_modo > T_INVESTIGA_MAX)))
+                   & ((d_u < D_LLEGADA) | (self.t_bloqueo > 1.0) | (self.t_modo > t_max_u)))
         self._girar_hacia_interior(llega_u)
         # V15 · fase D: detrás del muro (pasos 1 y 2) el barrido es de GIRO_LADO, hacia la zona oculta
         lim_giro = np.where((self.paso_muro == 1) | (self.paso_muro == 2), GIRO_LADO, 360.0)
@@ -2962,6 +3006,11 @@ class EntornoDronPersona(object):
             else:
                 self._marcar_revisado(i)
             nuevo[i] = SIGUIENTE_OBSTACULO if self._planear_siguiente(i) else VENTAJA_ALTURA
+        # D-071: terminado el vaivén de frente a la boca, la ruta de la otra V
+        fin_b5 = (self.modo == ASOMO) & (self.paso_muro == PASO_RUTA_B5) & ~self.aso_gira & (self.t_modo >= T_BARRIDO_B5)
+        for i in np.where(fin_b5)[0]:
+            self._planear_ruta_b5(i, otra=True)
+            nuevo[i] = INVESTIGAR
         # paso 4: después del canto, 360° de búsqueda (alto) y luego lo de siempre
         self.paso_muro = np.where(fin_canto, 0, self.paso_muro)
         nuevo = np.where(fin_canto, ASOMO, nuevo)
@@ -2970,6 +3019,7 @@ class EntornoDronPersona(object):
         self.t_modo = np.where(llega_u | cambia, 0.0, self.t_modo)
         self.giro_acum = np.where(llega_u | cambia, 0.0, self.giro_acum)
         self.aso_gira = np.where(llega_u | fin_canto, True, self.aso_gira)          # al llegar detrás del muro rota de inmediato
+        self.aso_gira = np.where(llega_u & (self.paso_muro == PASO_RUTA_B5), False, self.aso_gira)   # D-071: vaivén, no 360°
         self._girar_hacia_interior(fin_canto)
         self.canto_t = np.where(cambia & (nuevo == MURO_CANTO), -1.0, self.canto_t)
         self.t_bloqueo = np.where(cambia, 0.0, self.t_bloqueo)
@@ -3320,6 +3370,13 @@ class EntornoDronPersona(object):
         yaw_ver = np.where(c_vis, tasa_t, np.where(np.abs(rel_c) > YAW_ZONA, np.clip(-1.5 * rel_c, -YAW_ULTIMO, YAW_ULTIMO), 0.0))
         yaw_vuelo = np.clip(-2.5 * np.degrees(err_v), -YAW_MAX_PRED, YAW_MAX_PRED)   # V15 · fase D: hasta 120°/s (RATE_Y_MAX)
         # mirar: detrás del panel al llegar a inspeccionarlo; en el ASOMO, primero hacia la última posición
+        # D-071: de frente a la boca, la nariz va y viene ±AMP_BARRIDO_B5° alrededor del vértice de la V
+        vb5 = aso & (self.paso_muro == PASO_RUTA_B5) & ~self.aso_gira
+        if vb5.any():
+            th = (np.arctan2(self.b5_vy - self.dy, self.b5_vx - self.dx)
+                  + np.radians(AMP_BARRIDO_B5) * np.sin(2 * np.pi * self.t_modo / T_BARRIDO_B5))
+            self.mira_x = np.where(vb5, self.dx + 5.0 * np.cos(th), self.mira_x)
+            self.mira_y = np.where(vb5, self.dy + 5.0 * np.sin(th), self.mira_y)
         err_m, d_m = self._ir_a(self.mira_x, self.mira_y)
         yaw_mira = np.clip(-2.0 * np.degrees(err_m), -YAW_MAX, YAW_MAX)
         mirando = (aso & ~self.aso_gira) | (insp & (self.t_vuelo < T_MIRA))

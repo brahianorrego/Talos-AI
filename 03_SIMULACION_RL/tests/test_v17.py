@@ -122,6 +122,27 @@ class TestPerdidaRed(unittest.TestCase):
         self.assertIn(E.INVESTIGAR, modos)
 
 
+class TestRutaB5(unittest.TestCase):
+    """D-071: la ruta de Brahian es una búsqueda determinista alternativa (apagada por defecto)."""
+
+    def test_ruta(self):
+        self.assertFalse(E.BUSQUEDA_RUTA_V17)
+        E.BUSQUEDA_RUTA_V17 = True
+        try:
+            env = E.EntornoDronPersona(32, semilla=4, nivel=E.NIVEL_V17)
+            pasos, modos = set(), set()
+            for _ in range(900):
+                env.step(np.full(32, E.SUBIR), AP(32), auto_reset=True)
+                b = env.modo >= E.INVESTIGAR
+                pasos |= set(env.paso_muro[b & (env.modo != E.PREDECIR)].tolist())
+                modos |= set(env.modo.tolist())
+                self.assertTrue((np.abs(env.ruta[env.ruta_n > 0]) < env.A).all())     # la ruta no sale de la geocerca
+        finally:
+            E.BUSQUEDA_RUTA_V17 = False
+        self.assertIn(E.PASO_RUTA_B5, pasos)
+        self.assertNotIn(E.BUSQUEDA_IA, modos)
+
+
 class TestFotoVisor(unittest.TestCase):
 
     def test_cmd_y_arb_en_cada_cuadro(self):
