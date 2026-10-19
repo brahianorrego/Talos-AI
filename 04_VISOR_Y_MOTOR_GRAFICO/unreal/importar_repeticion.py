@@ -109,6 +109,19 @@ def main(ruta=None, desde=0.0, hasta=None):
         if str(a.get_folder_path()) == "Paneles" and a.get_actor_label().startswith("panel_"):
             a_carpeta(a, "Paneles")
 
+    # árboles y helipuerto de la misión completa (entorno/mision_completa.py)
+    for i, ar in enumerate(datos.get("arboles", [])):
+        malla = unreal.load_asset("/PCGBiomeSample/Meshes/PCG_Tree_02")
+        if malla:
+            esc = ar["alto"] / 12.5
+            t = D.actores.spawn_actor_from_class(unreal.StaticMeshActor, D.ue(ar["p"][0], ar["p"][1], 0), unreal.Rotator(0, 0, 40))
+            t.static_mesh_component.set_static_mesh(malla)
+            t.set_actor_scale3d(unreal.Vector(esc, esc, esc))
+            t.set_actor_label(f"Arbol_mision_{i}")
+            a_carpeta(t, "Arboles")
+    if datos.get("pad"):
+        a_carpeta(D.forma("Cylinder", "Helipuerto", D.ue(datos["pad"][0], datos["pad"][1], 0.03), (2.6, 2.6, 0.06), D.material("Helipuerto", (0.18, 0.2, 0.25), 0.7)), "Paneles")
+
     # actores: dron y una figura por persona (por id)
     dron = D.dron("Dron_rep")
     for a in D.actores.get_all_level_actors():
@@ -195,12 +208,12 @@ def main(ruta=None, desde=0.0, hasta=None):
             if clave not in vistos:
                 poner(ch, f, (None, None, -5000.0))
         # cámara de cine: detrás y un poco arriba del dron, mirando al punto entre el dron y el ladrón
-        lad = next((p for p in c.get("pers", []) if p.get("rol") == "ladron"), None)
+        lad = next((p for p in c.get("pers", []) if p.get("rol") == "ladron" and math.hypot(p["p"][0] - x, p["p"][1] - y) < 25.0), None)   # lejos: mira hacia delante (tránsito)
         lx, ly = lad["p"] if lad else (x + math.cos(psi) * 5, y + math.sin(psi) * 5)
         ux, uy = x - lx, y - ly
         L = max(math.hypot(ux, uy), 1e-3)
         objetivo = unreal.Vector((x + ux / L * 4.5 + uy / L * 2.0) * D.M, -(y + uy / L * 4.5 - ux / L * 2.0) * D.M, (z + 0.6) * D.M)
-        mira = unreal.Vector((0.4 * x + 0.6 * lx) * D.M, -(0.4 * y + 0.6 * ly) * D.M, 1.3 * D.M)
+        mira = unreal.Vector((0.4 * x + 0.6 * lx) * D.M, -(0.4 * y + 0.6 * ly) * D.M, (1.3 if lad else max(1.3, z - 0.5)) * D.M)   # en el tránsito mira al dron, no al suelo
         cam_pos = objetivo if cam_pos is None else cam_pos + (objetivo - cam_pos) * 0.12
         cam_mira = mira if cam_mira is None else cam_mira + (mira - cam_mira) * 0.15
         rot = unreal.MathLibrary.find_look_at_rotation(cam_pos, cam_mira)
