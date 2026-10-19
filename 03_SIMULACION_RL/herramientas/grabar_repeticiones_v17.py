@@ -34,15 +34,16 @@ def main():
     ap.add_argument("--max-partidas", type=int, default=60)
     ap.add_argument("--semilla", type=int, default=500, help="semilla de la primera partida (luego +1, +2, ...)")
     ap.add_argument("--salida", default="repeticiones_v17")
+    ap.add_argument("--tipos", default=",".join(TIPOS), help="solo estos tipos (los demás quedan como estén)")
     a = ap.parse_args()
     torch.set_num_threads(1)                                   # de a una partida y un hilo: no le quita CPU al entrenamiento
     from sb3_contrib import MaskablePPO
     pol = EM.PoliticaSB3(MaskablePPO.load(a.modelo, device="cpu"))
     red_p = EM.red_ladron(None)
     os.makedirs(a.salida, exist_ok=True)
-    hechas = {}
+    hechas = {t: None for t in TIPOS if t not in a.tipos.split(",")}     # None: no se buscan en esta corrida
     for k in range(a.max_partidas):
-        if len(hechas) == len(TIPOS):
+        if all(t in hechas for t in TIPOS):
             break
         semilla = a.semilla + k
         vio = set()
@@ -70,12 +71,19 @@ def main():
                 json.dump(rep_t, f, ensure_ascii=False)
         print("semilla %d: %s · %s · %.0f s" % (semilla, rep["resultado"], ", ".join(sorted(vio)) or "-", time.time() - t0),
               flush=True)
-    filas = ["| %s | %s | %s |" % (t, TIPOS[t], hechas.get(t, "no salió en %d partidas" % a.max_partidas)) for t in TIPOS]
+    # el LEEME sale de los archivos que hay en la carpeta (también los de corridas anteriores)
+    def fila(t):
+        ruta = os.path.join(a.salida, "%s.json" % t)
+        if not os.path.exists(ruta):
+            return "| %s | %s | no salió |" % (t, TIPOS[t])
+        r = json.load(open(ruta, encoding="utf-8"))
+        return "| %s | %s | %s (`%s`) |" % (t, TIPOS[t], r["semilla"], r["modelo"])
+    filas = [fila(t) for t in TIPOS]
     with open(os.path.join(a.salida, "LEEME.md"), "w", encoding="utf-8") as f:
         f.write("# Repeticiones escogidas de la cancha V17\n\nGrabadas con `herramientas/grabar_repeticiones_v17.py`, "
                 "modelo `%s`, paneles de %.1f m × %.1f-%.1f m (D-066), %s. Formato: el de `salida_*/replay_v17.json` "
                 "(una lista de cuadros de `entorno.foto()`), más `tipo`, `descripcion`, `semilla` y `modelo`.\n\n"
-                "| Archivo (`<tipo>.json`) | Qué muestra | Semilla |\n|---|---|---|\n%s\n"
+                "| Archivo (`<tipo>.json`) | Qué muestra | Semilla (modelo) |\n|---|---|---|\n%s\n"
                 % (a.modelo.replace("\\", "/"), E.ANCHO_PANEL_V17, E.ALTO_PANEL_V17[0], E.ALTO_PANEL_V17[1],
                    time.strftime("%Y-%m-%d"), "\n".join(filas)))
     print("listo:", hechas)
