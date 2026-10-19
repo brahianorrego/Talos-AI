@@ -22,7 +22,7 @@ PIEZAS = [
     ("soporte_camara_frente", "Soporte de cámara IMX219 al frente"),
     ("soporte_camara_abajo", "Soporte de cámara IMX219 al piso"),
 ]
-MONTAJE = ["asm_base", "asm_plataforma", "asm_cuna"]
+MONTAJE = ["asm_base", "asm_plataforma", "asm_plataforma_ancho", "asm_cuna"]
 
 
 def binario(nombre):
@@ -60,14 +60,14 @@ input[type=range]{width:min(360px,70vw)}
 <div class="fila" id="extra"></div>
 <canvas id="vista"></canvas>
 <div class="nota" id="info"></div>
-<div class="nota">Arrastra para girar, rueda para acercar, Mayús + arrastrar para mover. Las piezas impresas están <b>diseñadas por nosotros</b> (no se descargaron de ningún sitio) y <b>aún no se han impreso</b>. Los servos MG90D, la cámara USB y el TF-Luna son <b>ilustraciones</b> con sus medidas aproximadas: la fijación definitiva de la cámara USB y del riel del pod está pendiente de medir (ver <code>piezas_3d/ESTADO_IMPRESION.md</code>). El deslizador de cabeceo se detiene en −44° y +14°, que es donde el pin de plástico choca con la ranura.</div>
+<div class="nota">Arrastra para girar, rueda para acercar, Mayús + arrastrar para mover. Las piezas impresas están <b>diseñadas por nosotros</b> (no se descargaron de ningún sitio) y <b>aún no se han impreso</b>. Los servos MG90D, la cámara USB y el TF-Luna son <b>ilustraciones</b> con sus medidas aproximadas: la fijación definitiva de la cámara USB y del riel del pod está pendiente de medir (ver <code>piezas_3d/ESTADO_IMPRESION.md</code>). El módulo va <b>colgado bajo el chasis</b> (de cabeza). El deslizador de cabeceo se detiene donde el pin de plástico choca con la ranura: −44° y +14° con la regla dura 1. El botón de rango ancho muestra solo la <b>capacidad mecánica</b> (mirar hasta el suelo, −89°, y +44°): <b>no está aprobado</b> y la fórmula del PWM no lo cubre.</div>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const PIEZAS=__PIEZAS__, MONTAJE=__MONTAJE__;
 const Z_EJE=45, YA=-32, YB=28.6;
 const COLORES={Gris:0x70757e,Blanco:0xeceae4,Negro:0x1d1e22};
-let ren,esc,cam,grupoMontaje,grupoCuna,piezaMalla,modo='montaje',colorSel='Gris',rot={x:-0.55,z:0.75},dist=260,mira=new THREE.Vector3(0,0,15),auto=false,tilt=0,verElec=true;
+let colgado=true,ancho=false,mallaPlat,chasis,ren,esc,cam,grupoMontaje,grupoCuna,piezaMalla,modo='montaje',colorSel='Gris',rot={x:-0.55,z:0.75},dist=260,mira=new THREE.Vector3(0,0,15),auto=false,tilt=0,verElec=true;
 const cv=document.getElementById('vista'),info=document.getElementById('info');
 const matPLA=()=>new THREE.MeshPhysicalMaterial({color:COLORES[colorSel],roughness:.52,metalness:0,clearcoat:.12,clearcoatRoughness:.6});
 const piezasPLA=[];
@@ -111,8 +111,8 @@ function luna(){ // TF-Luna: 35 de ancho con orejas, 21.25 de alto, 12 de fondo;
  return g}
 function construir(){
  grupoMontaje=new THREE.Group();grupoMontaje.name='montaje';
- const g0=geom(MONTAJE_B64.asm_base),g1=geom(MONTAJE_B64.asm_plataforma),g2=geom(MONTAJE_B64.asm_cuna);
- grupoMontaje.add(pla(g0),pla(g1));
+ const g0=geom(MONTAJE_B64.asm_base),g1=geom(MONTAJE_B64.asm_plataforma),g2=geom(MONTAJE_B64.asm_cuna);window.gAncho=geom(MONTAJE_B64.asm_plataforma_ancho);window.gRegla=g1;
+ mallaPlat=pla(g1);grupoMontaje.add(pla(g0),mallaPlat);
  // servo de pan (eje +Z en el origen)
  const sp=servo();sp.name='elec';grupoMontaje.add(sp);
  // servo de tilt: T(0,YA,Z_EJE) · Ry(180°) · Rx(−90°)
@@ -124,6 +124,14 @@ function construir(){
  const base=caja(8,22,3,matPLA(),34,13,1.5);piezasPLA.push(base);base.castShadow=true;grupoCuna.add(base);
  grupoMontaje.add(grupoCuna);
  grupoMontaje.position.set(0,0,0);esc.add(grupoMontaje);
+ // placa del chasis del dron (solo de referencia): la base se atornilla a su cara de abajo
+ chasis=caja(150,110,3,M(0x23262b,.35,.4),0,0,0);chasis.name='chasis';esc.add(chasis);
+ orientar();
+}
+function orientar(){ // colgado = de cabeza bajo el chasis: el módulo se gira 180° sobre X y la base queda arriba
+ grupoMontaje.rotation.x=colgado?Math.PI:0;
+ chasis.visible=colgado&&modo==='montaje';chasis.position.z=colgado?27.9:-27.9-3;
+ grupoCuna.rotation.y=(colgado?1:-1)*tilt*Math.PI/180;
 }
 const MONTAJE_B64={__MONTAJE_B64__};
 function iniciar(){
@@ -150,13 +158,18 @@ function extras(){const d=document.getElementById('extra');d.innerHTML='';
  const a=document.createElement('button');a.textContent=auto?'Detener giro':'Girar solo';a.classList.toggle('on',auto);a.onclick=()=>{auto=!auto;extras()};d.appendChild(a);
  if(modo==='montaje'){
   const e=document.createElement('button');e.textContent=verElec?'Ocultar servos y sensores':'Mostrar servos y sensores';e.onclick=()=>{verElec=!verElec;setElec();extras()};d.appendChild(e);
-  const l=document.createElement('label');l.innerHTML='Cabeceo: <b id="tv">'+tilt+'</b>° <input type="range" min="-44" max="14" step="1" value="'+tilt+'">';
-  l.querySelector('input').oninput=ev=>{tilt=+ev.target.value;document.getElementById('tv').textContent=tilt;grupoCuna.rotation.y=-tilt*Math.PI/180};d.appendChild(l)}}
+  const c1=document.createElement('button');c1.textContent=colgado?'Módulo colgado (de cabeza) ✓':'Módulo hacia arriba';c1.classList.toggle('on',colgado);
+  c1.onclick=()=>{colgado=!colgado;orientar();extras();dibujar()};d.appendChild(c1);
+  const c2=document.createElement('button');c2.textContent=ancho?'Rango ancho (NO aprobado) ✓':'Rango de la regla (−45° a +15°)';c2.classList.toggle('on',ancho);
+  c2.onclick=()=>{ancho=!ancho;mallaPlat.geometry=ancho?window.gAncho:window.gRegla;if(!ancho)tilt=Math.max(-44,Math.min(14,tilt));orientar();extras();dibujar()};d.appendChild(c2);
+  const mn=ancho?-89:-44,mx=ancho?44:14;
+  const l=document.createElement('label');l.innerHTML='Cabeceo del mundo (+ = mira arriba): <b id="tv">'+tilt+'</b>° <input type="range" min="'+mn+'" max="'+mx+'" step="1" value="'+tilt+'">';
+  l.querySelector('input').oninput=ev=>{tilt=+ev.target.value;document.getElementById('tv').textContent=tilt;orientar();dibujar()};d.appendChild(l)}}
 function setElec(){grupoMontaje.traverse(o=>{if(o.name==='elec')o.visible=verElec})}
 function aplicarModo(){
  if(piezaMalla){esc.remove(piezaMalla);piezasPLA.splice(piezasPLA.indexOf(piezaMalla),1);piezaMalla.geometry.dispose();piezaMalla=null}
- grupoMontaje.visible=(modo==='montaje');extras();
- if(modo==='montaje'){mira.set(0,0,12);dist=250;rot={x:-0.5,z:0.8};setElec();
+ grupoMontaje.visible=(modo==='montaje');if(chasis)chasis.visible=colgado&&modo==='montaje';extras();
+ if(modo==='montaje'){mira.set(0,0,colgado?-18:12);dist=colgado?330:250;rot={x:colgado?-0.25:-0.5,z:0.8};setElec();
   info.innerHTML='<b>Montaje completo</b> (pan-tilt de la variante D): base, plataforma con el servo de giro, mejillas con el servo de subir-bajar y cuna con el TF-Luna y la cámara USB. Eje X hacia adelante.'}
  else{const i=+modo.slice(5),p=PIEZAS[i],g=geom(p.b64),bb=g.boundingBox,c=new THREE.Vector3(),s=new THREE.Vector3();bb.getCenter(c);bb.getSize(s);
   g.translate(-c.x,-c.y,-c.z);piezaMalla=pla(g);piezaMalla.position.z=0;esc.add(piezaMalla);mira.set(0,0,0);dist=Math.max(s.x,s.y,s.z)*2.6;rot={x:-0.6,z:0.7};

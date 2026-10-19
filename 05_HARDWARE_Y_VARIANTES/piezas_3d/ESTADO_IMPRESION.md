@@ -124,3 +124,25 @@ mejillas con ventana: es lo primero que hay que mirar al imprimir.
 `VISTA_3D.html` (se regenera con `python generar_vista_3d.py`) muestra ahora el **montaje completo** con PLA gris, blanco o negro, los
 dos servos MG90D (con su etiqueta rosa y sus cables), el TF-Luna y la cámara USB como ilustración, sombras y un deslizador de
 cabeceo que se detiene en los topes. Los servos, el TF-Luna y la cámara son formas aproximadas, no modelos exactos.
+
+## Módulo colgado (de cabeza) y rango de cabeceo (2026-10-19, pedido de Brahian)
+
+`pan_tilt_servos.scad` ahora tiene `colgado = true` (por defecto): la placa de la base se atornilla a la **cara de abajo del chasis**
+y la cuna cuelga. Los ángulos de los topes se calculan para el **mundo** (cabeceo + = la cámara mira arriba): colgado, mirar hacia
+abajo es el lado libre del giro (la cuna se aleja de la plataforma). Comprobado con la prueba de intersección en el modelo:
+
+| Rango | Libre entre | Choca en |
+|---|---|---|
+| **Regla dura 1** (`rango_ancho = false`, por defecto) | −44° y +14° | −46° y +15° |
+| **Ancho** (`rango_ancho = true`) | −89° y +44° | −90° y +46° (y libre en todo el intermedio) |
+
+- **El rango ancho es solo capacidad mecánica y NO está aprobado:** la regla dura 1 (CLAUDE.md) fija −45°…+15° y la fórmula
+  `pwm = 1500 + θ·500/45` no llega más allá de −45° (daría menos de 1000 µs). El STL `pan_tilt_plataforma_ancho_NO_APROBADA.stl`
+  existe para poder verlo y decidir, **no para imprimir** mientras la regla siga. Ampliar la regla toca la simulación, las pruebas y
+  la Jetson: lo decide el Supervisor/Brahian.
+- **Consecuencias de ir colgado:** (1) la cámara USB queda de cabeza: se gira la placa 180° al montarla (o se voltea la imagen por
+  software con una línea); (2) el servo del tilt gira al revés: se corrige con `SERVO9_REVERSED` al calibrar (guía §3.1); (3) los
+  soportes de cámara y de LiDAR se atornillan a la cara de la cubierta que queda hacia la carga (ahora la de abajo); (4) el chasis
+  tiene que tener espacio libre debajo del punto de montaje: **medir el dron** (patas, batería).
+- La versión con el módulo hacia arriba quedó en `_v1/pan_tilt_servos_v2_recto.scad` (o `colgado = false`).
+- `VISTA_3D.html` abre colgado bajo una placa de chasis de referencia y tiene botones para voltearlo y para ver el rango ancho.

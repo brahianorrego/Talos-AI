@@ -89,6 +89,10 @@ servo en la Pixhawk con los parámetros del canal (`SERVO9_MIN`, `SERVO9_TRIM`, 
 7. **Anota** en una tabla: orden (µs), ángulo medido, repetición 1/2/3, ¿zumbido?, ¿pasa del tope? Esa tabla es la evidencia
    para el documento del proyecto de grado.
 
+**El módulo va colgado bajo el chasis (de cabeza):** el servo de subir-bajar gira al revés que en el dibujo, así que si 1000 µs
+mira hacia arriba en vez de hacia abajo, se pone `SERVO9_REVERSED = 1`. La placa verde de la cámara se monta girada 180° para que la
+imagen salga derecha.
+
 Esta prueba la hace la parte física; sin ella no se vuela con el pan-tilt.
 
 ## 4. Imprimir el pan-tilt de la variante D

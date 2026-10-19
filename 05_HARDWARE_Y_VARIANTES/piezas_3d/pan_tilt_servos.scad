@@ -14,7 +14,7 @@
 // los servos y el cuerno que te lleguen y cambia solo estos números.
 
 parte = "vista";
-angulo_vista = 0;        // grados de cabeceo para la vista armada (prueba -45 y 15: el pin debe tocar el final de la ranura)
+angulo_vista = 0;        // cabeceo del MUNDO para la vista armada (prueba -44 y 14: el pin debe tocar el final de la ranura)
 $fn = 48;
 
 // ---- servo MG90D (cuerpo sin cuerno) — MEDIR ----
@@ -31,8 +31,13 @@ cuerno_h = 3.5;          // alto del cuerno sobre la cara de arriba del cuerpo �
 cuerno_r = 7.0;          // radio de los 4 agujeros del cuerno en cruz — MEDIR
 
 // ---- tope mecánico (regla dura 1: pitch entre -45° y +15°) ----
-tilt_min = -45;
-tilt_max = 15;
+// El módulo va COLGADO bajo el chasis (de cabeza, como un gimbal): la placa de la base se atornilla a la cara de abajo del
+// chasis y la cuna cuelga. Los ángulos de abajo son del MUNDO (cabeceo + = la cámara mira hacia arriba). Colgado, "mirar
+// hacia abajo" es el lado libre del giro (la cuna se aleja de la plataforma), por eso aquí cabe mirar hasta el nadir (−90°).
+colgado = true;
+rango_ancho = false;     // false = regla dura 1 (−45°..+15°). true = −90°..+45°: SOLO capacidad mecánica; NO usar mientras la regla dura siga vigente
+tilt_min = rango_ancho ? -90 : -45;
+tilt_max = rango_ancho ? 45 : 15;
 margen_interior_deg = 1.0;  // los topes quedan 1° DENTRO del rango, para que la tolerancia de impresión nunca lo amplíe
 R_tope = 16;                // radio del pin respecto al eje del tilt
 pin_d = 4;
@@ -59,8 +64,9 @@ z_eje = zp0 + plataforma_t + z_eje_rel;  // eje del tilt
 yA = -(cuna_w/2 + gap_cuerno);           // cara interior de la mejilla A (servo de tilt)
 yB = cuna_w/2 + gap_B;                   // cara interior de la mejilla B (ranura del tope)
 delta = asin(pin_d/2 / R_tope);          // ángulo que el pin ocupa a cada lado de su centro
-a_min = tilt_min + margen_interior_deg;
-a_max = tilt_max - margen_interior_deg;
+// Ángulos del tope en el marco del módulo (arriba = +): colgado, el mundo está invertido respecto al módulo.
+a_min = colgado ? -(tilt_max - margen_interior_deg) : tilt_min + margen_interior_deg;
+a_max = colgado ? -(tilt_min + margen_interior_deg) : tilt_max - margen_interior_deg;
 
 // ---- ayudas de forma (diseño): placas de esquinas redondas con el canto de arriba biselado ----
 module rrect2d(x0, x1, y0, y1, r) { hull() for (x = [x0 + r, x1 - r]) for (y = [y0 + r, y1 - r]) translate([x, y]) circle(r); }
@@ -177,9 +183,11 @@ if (parte == "asm_base") base_srv();
 if (parte == "asm_plataforma") plataforma_srv();
 if (parte == "asm_cuna") cuna_tilt();   // marco de la cuna: el eje del tilt en el origen
 if (parte == "vista") {
-    base_srv();
-    servo_fantasma();
-    plataforma_srv();
-    en_tilt() servo_fantasma();
-    color("orange") translate([0, 0, z_eje]) rotate([0, -angulo_vista, 0]) cuna_tilt();
+    rotate([colgado ? 180 : 0, 0, 0]) {
+        base_srv();
+        servo_fantasma();
+        plataforma_srv();
+        en_tilt() servo_fantasma();
+        color("orange") translate([0, 0, z_eje]) rotate([0, colgado ? angulo_vista : -angulo_vista, 0]) cuna_tilt();
+    }
 }
