@@ -245,6 +245,30 @@ gana a "solo reglas" por 5.9 puntos).
 La palanca grande que queda (D-059 C: que la red decida los primeros 2-3 s tras perderlo) toca la regla dura 3: **la decide
 Brahian**.
 
+## V17.3 a los 10 M y análisis del vaivén (19-oct)
+
+**V17.3** (paneles reales, suavidad vertical 0.5; 512 partidas, `informes/v17/v173_10M_det.json` y `_est.json`): **igual
+a B0**. QUEDARSE en el 100 % (determinista) y el 99.6 % (estocástica) de las decisiones, probabilidad de la preferida 0.996,
+entropía 0.03. M1 11.7 % / 10.9 % contra B0 11.7 %, B3 24.6 %, B4 19.5 %, B4\* 22.5 %. Altura pedida siempre 3.30 m.
+Seguridad igual a B0 (alcanzado 0-0.2 %, choque con panel 0-0.2 %). **Conclusión:** con la multa vertical de 0.5 la red no
+sale nunca de QUEDARSE. No se lanza nada más hasta que el Arquitecto lo revise con `supervisor-rl`.
+
+**Vaivén de la V17.2 a los 50 M, separado** (cancha vieja, 512 partidas, `informes/v17/v172_50M_det_vaiven.json`):
+- De los 16.8 cambios de sentido por minuto, **13.8 son de la red** (SUBIR después de BAJAR o al revés, en los pasos donde
+  decide) y ~3 son de la vuelta a 3.30 m de la búsqueda.
+- **Altura pedida donde decide:** 4.13 m con el ladrón a menos de 3 m de una V y 4.33 m en campo abierto. **No se pone más
+  alta cerca de las V**: sube y baja sin atar la altura a la situación. B4 sí lo hace un poco (4.3 contra 4.1 m en la cancha
+  real), y aun así no le gana a B3.
+
+## Repeticiones escogidas (D-065)
+
+`herramientas/grabar_repeticiones_v17.py`: corre partidas de una en una (1 hilo) con una política en la cancha V17 con
+los paneles reales y guarda en `repeticiones_v17/` (fuera de Git) la primera de cada tipo, en el formato de
+`replay_v17.json` más `tipo`, `descripcion`, `semilla` y `modelo`, con un `LEEME.md`. Tipos: rendición, re-encuentro
+estando alto (> 4 m), salto, civil curioso (mira o graba) y cambio de V (L3). `grabar_nivel` (`entrenar_master.py`) recibe
+ahora un gancho opcional `al_paso` para esto.
+`.venv\Scripts\python.exe herramientas\grabar_repeticiones_v17.py --modelo modelos_v17_2\ultimo.zip`
+
 ### D-063 · Altura segura con el error del barómetro
 
 B0, 256 partidas (`informes/v17/d063_*.json`). "Real bajo 3.30 m" = fracción del tiempo con alguien real a menos de 8 m y

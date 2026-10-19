@@ -593,7 +593,7 @@ def red_ladron(ruta):
     return red_p
 
 
-def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot):
+def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot, al_paso=None):
     """V15: una partida con la política actual FORZADA a un nivel del currículo (para la pestaña de ese nivel)."""
     env = EntornoDronPersona(1, semilla=semilla, nivel=nivel)
     cuadros = []
@@ -613,6 +613,8 @@ def grabar_nivel(red_d, red_p, nivel, semilla, iteracion, pasos_tot):
         cuadros.append(foto)
         _, _, done, info = env.step(ad, ap, auto_reset=False)
         maniobras += int(info["inicia"][0])
+        if al_paso is not None:                                 # V17: herramientas/grabar_repeticiones_v17.py
+            al_paso(env, info)
         if done[0]:
             resultado = resultado_de(info, 0)
             f = env.foto(0)
