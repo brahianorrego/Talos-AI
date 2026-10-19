@@ -21,6 +21,7 @@ PIEZAS = [
     ("soporte_lidar_luna_pantilt", "Variante D · soporte del TF-Luna en la cuna"),
     ("soporte_camara_frente", "Soporte de cámara IMX219 al frente"),
     ("soporte_camara_abajo", "Soporte de cámara IMX219 al piso"),
+    ("soporte_csi_doble", "Soporte de las dos cámaras CSI (piso + frontal ancha)"),
 ]
 MONTAJE = ["asm_base", "asm_plataforma", "asm_plataforma_ancho", "asm_cuna"]
 

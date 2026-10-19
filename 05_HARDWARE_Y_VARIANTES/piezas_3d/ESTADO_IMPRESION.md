@@ -146,3 +146,13 @@ abajo es el lado libre del giro (la cuna se aleja de la plataforma). Comprobado 
   tiene que tener espacio libre debajo del punto de montaje: **medir el dron** (patas, batería).
 - La versión con el módulo hacia arriba quedó en `_v1/pan_tilt_servos_v2_recto.scad` (o `colgado = false`).
 - `VISTA_3D.html` abre colgado bajo una placa de chasis de referencia y tiene botones para voltearlo y para ver el rango ancho.
+
+## Soportes de las cámaras CSI (IMX219), 2026-10-19
+
+`soporte_camara.scad` ahora usa las medidas del **dibujo mecánico oficial** del Raspberry Pi Camera Module 2 / V2.1 (placa de 23.862 × 25 mm,
+4 agujeros de Φ2.2 a 12.5 × 21 mm entre centros, lente sobre la columna de agujeros de 14.5 mm y a mitad de los 25 mm):
+<https://pip-assets.raspberrypi.com/categories/1205-design-files/documents/RP-008149-DS-1-camera-module-2-mechanical-drawing.pdf>. (Corregí un
+error mío: la posición del lente estaba del lado contrario.) Modos: `frente`, `abajo` (cámara al piso) y **`doble`** (`soporte_csi_doble.stl`: placa
+bajo el chasis con la cámara al piso y una pared colgante con la frontal ancha de la variante F; ≈ 10 g a 35 % de relleno, 66.5 × 49 × 35 mm).
+**Pendiente:** los módulos IMX219 "para Jetson" de otras marcas pueden tener otras medidas (comprobar el que llegue); el espesor de la placa (1 mm) es
+supuesto; el flex 15→22 pines (15–20 cm) sale por el borde de 25 mm de la placa y no entra en este diseño todavía.
