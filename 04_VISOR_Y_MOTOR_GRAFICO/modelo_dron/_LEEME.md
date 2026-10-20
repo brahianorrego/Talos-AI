@@ -1,12 +1,13 @@
 # Modelo 3D del dron real (hecho con primitivas)
 
-> **D-072 (20-oct): el dron cambió.** Brahian quitó el gimbal BaseCam y la cámara USB. Hoy el modelo (`piezas`) es el de las fotos
-> `08_EVIDENCIA_Y_DIAGRAMAS/fotos/19_dron_sin_gimbal_20oct_1` a `23`: **cámara CSI IMX219 fija arriba de la caja de acrílico de la Jetson, con
-> su cable flex dorado en lazo; TF03 fijo, la caja negra al frente a la altura de las placas, sobre una base impresa; y una estructura impresa
-> volteada bajo el chasis, sobre el frente de la batería azul, con dos separadores dorados y un agujero redondo.** El modelo anterior (BaseCam +
-> USB) se conserva como `piezas_gimbal` en el mismo JSON: `DRONIA_DRON=gimbal` (Unreal y Blender) o `?dron=gimbal` (estación y visor V16) lo
-> muestran. Lo que falta medir de la variante nueva está en `FALTAN` (a ojo: base impresa, estructura volteada, lazo del flex, inclinación de la CSI).
-> Vistas: `mediciones/capturas/dron_real_sin_gimbal_{tres_cuartos,lado,arriba}.jpg`. Pruebas: `pruebas/test_modelo_dron.py` (7).
+> **D-072 / D-073 (20-oct): hay tres modelos seleccionables** en el mismo `dron_real.json`: **`minimo`** (variante G, el dron de hoy: sin gimbal ni cámara USB,
+> CSI IMX219 fija arriba de la caja de acrílico con su flex dorado en lazo, TF03 fijo al frente sobre una base impresa y la estructura impresa
+> volteada bajo el chasis; fotos 19 a 23), **`plus`** (variante H, la meta del plus: **pan-tilt de 2 servos** colgado bajo el chasis con la CSI y el
+> TF-Luna encima, una **2.ª CSI fija mirando al piso**, TF03 fijo y la batería corrida 4 cm hacia atrás; hecho con la forma de
+> `05_HARDWARE_Y_VARIANTES/piezas_3d/pan_tilt_servos.scad`, sin fotos todavía) y `gimbal` (el de antes, BaseCam + USB, solo historia). Se eligen con
+> `DRONIA_DRON=minimo|plus|gimbal` (Unreal y Blender) o `?dron=` (estación y visor V16). En `plus` las piezas llevan `grupo` ("pan" o "tilt") y el JSON
+> trae `pivotes_plus`: la estación y Unreal los **mueven con el pan y el tilt de la partida** (`c.gmb` = tilt; `c.pan`, hoy 0). Lo que falta medir está en `FALTAN`.
+> Vistas: `mediciones/capturas/dron_real_sin_gimbal_{tres_cuartos,lado,arriba}.jpg` (mínimo) y `dron_real_plus_*.jpg`. Pruebas: `pruebas/test_modelo_dron.py`.
 
 Pedido por el Coordinador con las fotos de Brahian (`08_EVIDENCIA_Y_DIAGRAMAS/fotos/` 08, 09, 10, 14 a 18). **No es
 fotorrealista**: es un modelo proporcionado de **77 piezas** (cajas y cilindros) con los colores del dron.

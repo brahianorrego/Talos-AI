@@ -2,7 +2,8 @@
 // se apagan con los botones de arriba (teclas P, G y L):
 //   · CSI principal FIJA al chasis, inclinada 5° hacia abajo, HFOV 62.2° (IMX219; el dato es nominal, sin medir), con la telemetría y las cajas
 //     de YOLO que calcula la simulación (la simulación aún modela una cámara con gimbal: las cajas siguen su campo de visión)
-//   · CSI al piso, fija al chasis, -90°, HFOV 62.2° (la segunda cámara; en el dron real la batería taparía parte de su imagen)
+//   · CSI al piso, fija al chasis, -90°, HFOV 62.2° (solo en el dron plus, variante H; el mínimo no la tiene)
+// El botón "Dron" cambia entre el mínimo (G: CSI fija) y el plus (H: CSI y TF-Luna en un pan-tilt de 2 servos, más la CSI al piso).
 //   · LiDAR 360°: mapa de puntos alrededor del dron, vista desde arriba con el frente hacia arriba; se calcula en el navegador con la
 //     geometría de la escena (paneles, personas, árboles y edificios) con el haz inclinado (−10° por omisión): solo choca con lo que mide más que la altura del haz a esa distancia. El TF03 real es de un solo haz hacia
 //     adelante: este mapa es lo que armaría un LiDAR que girara (el giro de 360° del dron lo hace con el yaw); es una vista simulada.
@@ -190,12 +191,18 @@
   }
 
   // ---------------------------------------------------------------------------------------------------------- encendido y apagado
+  // la CSI al piso solo existe en el dron "plus" (variante H); el "mínimo" (G) solo tiene la CSI fija
+  const hayPiso = () => typeof MODO_DRON !== "undefined" && MODO_DRON === "plus";
+  const ef = id => id === "csi0" ? activas.csi0 && hayPiso() : !!activas[id];
   function aplicar() {
-    document.body.classList.toggle("cam-off-usb", !activas.usb);
-    document.body.classList.toggle("cam-off-csi0", !activas.csi0);
-    document.body.classList.toggle("cam-off-lid", !activas.lid);
-    barra.querySelectorAll("button").forEach(b => b.classList.toggle("activo", !!activas[b.dataset.vista]));
-    const vis = CAMS.filter(c => activas[c.id]);
+    document.body.classList.toggle("cam-off-usb", !ef("usb"));
+    document.body.classList.toggle("cam-off-csi0", !ef("csi0"));
+    document.body.classList.toggle("cam-off-lid", !ef("lid"));
+    barra.querySelectorAll("button[data-vista]").forEach(b => b.classList.toggle("activo", ef(b.dataset.vista)));
+    const bp = barra.querySelector('[data-vista="csi0"]'), bu = barra.querySelector('[data-vista="usb"]');
+    if (bp) bp.style.display = hayPiso() ? "" : "none";
+    if (bu) bu.textContent = hayPiso() ? "CSI en pan-tilt" : "CSI fija";
+    const vis = CAMS.filter(c => ef(c.id));
     const centro = $("centro");
     if (centro) {                                      // rejilla: 1 cámara sola, 2 en columnas, 3 = la principal grande y las otras dos apiladas
       const n = vis.length;
@@ -213,6 +220,14 @@
     aplicar();
   });
   window.CAMARAS_APLICAR = aplicar;
+  // botón "Dron": mínimo (G) o plus (H)
+  const bDron = document.createElement("button");
+  bDron.id = "b-dron"; bDron.className = "btn"; bDron.title = "Qué dron mostrar: el del mínimo (CSI fija, variante G) o el del plus (pan-tilt de 2 servos y CSI al piso, variante H)";
+  const refR = $("b-ruta") || $("b-vuelo");
+  if (refR && refR.parentNode) refR.parentNode.insertBefore(bDron, refR.nextSibling);
+  window.BOTON_DRON = () => { bDron.textContent = "Dron: " + ({ minimo: "Mínimo", plus: "Plus", gimbal: "Antes" }[MODO_DRON] || MODO_DRON); };
+  bDron.onclick = () => { if (window.DRON_CAMBIAR) DRON_CAMBIAR(MODO_DRON === "plus" ? "minimo" : "plus"); };
+  BOTON_DRON();
   addEventListener("keydown", ev => {
     if (/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || ev.ctrlKey || ev.altKey) return;
     const m = { KeyP: "usb", KeyG: "csi0", KeyL: "lid" }[ev.code];
@@ -294,7 +309,7 @@
     const e = window.ESTADO_VISTA;
     if (!e || !partida) return;
     if (grupoRuta.visible) pasoRuta(e);
-    CAMS.filter(c => c.hfov && activas[c.id]).forEach(c => {
+    CAMS.filter(c => c.hfov && ef(c.id)).forEach(c => {
       const cam = camCsi[c.id], el = filas[c.id].vista;
       colocar(cam, c, e);
       const r = el.getBoundingClientRect();
@@ -302,6 +317,6 @@
       renderizarEnCaja(cam, el);
       dibujarCsi(c, e);
     });
-    if (activas.lid && lienzo.offsetParent) dibujarLidar(e);
+    if (ef("lid") && lienzo.offsetParent) dibujarLidar(e);
   };
 })();

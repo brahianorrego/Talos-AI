@@ -2,9 +2,10 @@
 """
 Modelo del DRON REAL como lista de piezas simples (cajas y cilindros), hecho a ojo con las fotos de
 08_EVIDENCIA_Y_DIAGRAMAS/fotos (08, 09, 10, 14 a 18 y, desde el 20-oct, 19 a 23) y con los datos de 05_HARDWARE_Y_VARIANTES/hardware.md.
-DOS VARIANTES (D-072): "sin_gimbal" (la de hoy: sin BaseCam ni cámara USB; cámara CSI IMX219 y TF03 fijos) y "gimbal" (la de antes). El JSON
-trae `piezas` (la de hoy) y `piezas_gimbal` (la anterior); los programas muestran la de hoy y la anterior con DRONIA_DRON=gimbal (Unreal, Blender)
-o ?dron=gimbal (visores).
+TRES VARIANTES (D-072): "minimo" (variante G, el dron de hoy: sin BaseCam ni cámara USB; cámara CSI IMX219 y TF03 fijos), "plus" (variante H, la
+meta: pan-tilt de 2 servos con la CSI y el TF-Luna encima, una 2.ª CSI fija al piso y el TF03 fijo; la batería corrida hacia atrás) y "gimbal" (el
+de antes, BaseCam + USB, solo historia). El JSON trae `piezas` (minimo), `piezas_plus` (con "grupo": "pan" o "tilt" en lo que se mueve y los `pivotes`
+de los dos ejes) y `piezas_gimbal`. Los programas eligen con DRONIA_DRON=minimo|plus|gimbal (Unreal, Blender) o ?dron= (visores).
 NO es fotorrealista: es proporcionado, con los colores del dron, y lo usan Unreal (unreal/dronia_ue.py), Blender
 (blender/video_cancha_v17.py) y el visor web (modelo_dron/dron_real.json, que genera este archivo).
 
@@ -25,7 +26,7 @@ import os
 
 COLORES = {
     "carbono": (0.020, 0.020, 0.025), "negro": (0.010, 0.010, 0.012), "rojo": (0.55, 0.030, 0.030), "dorado": (0.60, 0.40, 0.08),
-    "turquesa": (0.03, 0.55, 0.60), "acrilico": (0.80, 0.85, 0.90), "azul": (0.03, 0.15, 0.70), "gris": (0.20, 0.20, 0.22),
+    "turquesa": (0.03, 0.55, 0.60), "acrilico": (0.80, 0.85, 0.90), "azul": (0.03, 0.15, 0.70), "servo": (0.02, 0.05, 0.20), "gris": (0.20, 0.20, 0.22),
     "amarillo": (0.80, 0.50, 0.03), "verde": (0.03, 0.30, 0.08), "placa": (0.04, 0.10, 0.35), "espuma": (0.015, 0.015, 0.015), "flex": (0.70, 0.45, 0.06),
 }
 
@@ -46,6 +47,7 @@ FALTAN = [
     "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
     "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
     "Cables: no se modelan",
+    "Variante plus (H): hoy se modela con el scad del pan-tilt como forma (sin fotos): posición del pan-tilt bajo el chasis, de la 2.ª CSI al piso y de la batería corrida 4 cm hacia atrás (a ojo); Brahian mandará fotos",
     "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)",
 ]
 
@@ -59,8 +61,9 @@ def _p(nombre, forma, centro, tam, color, **kw):
     return d
 
 
-def piezas(variante="sin_gimbal"):
+def piezas(variante="minimo"):
     P = []
+    variante = "minimo" if variante == "sin_gimbal" else variante
     # --- chasis: dos placas de carbono, el Pixhawk entre ellas y la placa de la batería
     P += [_p("placa_inferior", "caja", (0, 0, -0.025), (0.19, 0.19, 0.003), "carbono"),
           _p("placa_superior", "caja", (0, 0, 0.025), (0.17, 0.17, 0.003), "carbono"),
@@ -111,7 +114,7 @@ def piezas(variante="sin_gimbal"):
               _p("tf03", "caja", (0.200, 0.0, -0.222), (0.047, 0.074, 0.0365), "negro"),
               _p("camara_usb_placa", "caja", (0.193, 0.0, -0.1995), (0.026, 0.028, 0.002), "verde"),
               _p("camara_usb_lente", "cilindro", (0.206, 0.0, -0.1965), (0.016, 0.022), "negro", eje="x")]
-    else:
+    elif variante == "minimo":
         # --- 20-oct (fotos 19 a 23): sin gimbal ni cámara USB. TF03 fijo en una base impresa, adelante y abajo, a la altura de las placas
         P += [_p("base_impresa", "caja", (0.112, 0.0, -0.032), (0.062, 0.088, 0.004), "negro"),
               _p("tf03", "caja", (0.118, 0.0, -0.011), (0.047, 0.074, 0.0365), "negro"),
@@ -127,7 +130,49 @@ def piezas(variante="sin_gimbal"):
               _p("estructura_agujero", "cilindro", (0.075, 0.0, -0.0702), (0.032, 0.0012), "gris", eje="z"),
               _p("estructura_poste", "cilindro", (0.060, 0.030, -0.056), (0.005, 0.045), "dorado", eje="z"),
               _p("estructura_poste", "cilindro", (0.060, -0.030, -0.056), (0.005, 0.045), "dorado", eje="z")]
+    elif variante == "plus":
+        P += [_p("tf03", "caja", (0.118, 0.0, -0.011), (0.047, 0.074, 0.0365), "negro"),          # TF03 fijo al chasis (−5°), como en G
+              _p("tf03_ventana", "caja", (0.1418, 0.0, -0.011), (0.0012, 0.058, 0.022), "gris")]
+    if variante == "plus":
+        P = [dict(p, centro=(-0.040, p["centro"][1], p["centro"][2])) if p["nombre"] in ("bateria", "velcro_azul") else p for p in P]   # batería atrás por el CG
+        P += _pantilt()
     return P
+
+
+# pan-tilt de 2 servos (05_HARDWARE_Y_VARIANTES/piezas_3d/pan_tilt_servos.scad, solo como referencia de forma): colgado bajo el chasis, eje de pan vertical
+# en x = 0.075, eje de tilt horizontal (a lo largo de y) 0.072 m más abajo; la cuna lleva la CSI y el TF-Luna. Medidas del scad (MG90D de la hoja de datos).
+PIVOTE_PAN = (0.075, 0.0, -0.0365)
+PIVOTE_TILT = (0.075, 0.0, -0.1085)
+
+
+def _pantilt():
+    px, _, pz = PIVOTE_PAN
+    tx, _, tz = PIVOTE_TILT
+    return [
+        # fijo al chasis
+        _p("pantilt_base", "caja", (px, 0.0, -0.0345), (0.064, 0.056, 0.003), "negro"),
+        _p("servo_pan", "caja", (px + 0.0055, 0.0, -0.0473), (0.0228, 0.0122, 0.0225), "servo"),
+        _p("tf03_base", "caja", (0.118, 0.0, -0.0315), (0.052, 0.080, 0.003), "negro"),
+        # gira con el PAN (yaw): plataforma, mejillas y servo del tilt
+        _p("pan_plataforma", "caja", (px, 0.0, -0.0675), (0.052, 0.056, 0.003), "negro", grupo="pan"),
+        _p("pan_mejilla_a", "caja", (px, -0.0285, -0.0875), (0.052, 0.004, 0.040), "negro", grupo="pan"),
+        _p("pan_mejilla_b", "caja", (px, 0.0275, -0.0875), (0.052, 0.003, 0.040), "negro", grupo="pan"),
+        _p("servo_tilt", "caja", (tx - 0.0055, -0.0315, tz), (0.0228, 0.0225, 0.0122), "servo", grupo="pan"),
+        # gira con el PAN y el TILT (cabeceo, tope −44°/+14°): cuna con la CSI y el TF-Luna
+        _p("cuna_cubierta", "caja", (tx + 0.015, 0.0, tz), (0.030, 0.044, 0.003), "negro", grupo="tilt"),
+        _p("cuna_pared_izq", "caja", (tx + 0.015, 0.0215, tz), (0.030, 0.0025, 0.040), "negro", grupo="tilt"),
+        _p("cuna_pared_der", "caja", (tx + 0.015, -0.0215, tz), (0.030, 0.0040, 0.040), "negro", grupo="tilt"),
+        _p("cuna_frente", "caja", (tx + 0.030, 0.0, tz), (0.004, 0.044, 0.050), "negro", grupo="tilt"),
+        _p("csi_placa", "caja", (tx + 0.0335, 0.0, tz + 0.013), (0.003, 0.024, 0.025), "verde", grupo="tilt"),
+        _p("csi_lente", "cilindro", (tx + 0.0365, 0.0, tz + 0.013), (0.009, 0.004), "negro", eje="x", grupo="tilt"),
+        _p("luna", "caja", (tx + 0.0425, 0.0, tz - 0.013), (0.0135, 0.035, 0.0213), "negro", grupo="tilt"),
+        _p("luna_lente", "cilindro", (tx + 0.0502, 0.0, tz - 0.013), (0.008, 0.003), "gris", eje="x", grupo="tilt"),
+        _p("csi_flex", "caja", (tx + 0.023, 0.0, tz + 0.034), (0.001, 0.016, 0.040), "flex", grupo="tilt"),
+        # 2.ª CSI fija mirando al piso (CAM1, −90°): al costado izquierdo, fuera de la batería, bajo el chasis
+        _p("csi_piso_soporte", "caja", (-0.010, 0.060, -0.0298), (0.049, 0.044, 0.0065), "negro"),
+        _p("csi_piso_placa", "caja", (-0.010, 0.060, -0.0345), (0.025, 0.024, 0.003), "verde"),
+        _p("csi_piso_lente", "cilindro", (-0.010, 0.060, -0.0372), (0.009, 0.004), "negro", eje="z"),
+    ]
 
 
 def tamano_total():
@@ -148,7 +193,8 @@ def tamano_total():
 if __name__ == "__main__":
     aqui = os.path.dirname(os.path.abspath(__file__))
     datos = {"unidades": "m", "marco": "x adelante, y izquierda, z arriba; origen = centro de la placa del medio",
-             "colores": COLORES, "variante": "sin_gimbal", "piezas": piezas(), "piezas_gimbal": piezas("gimbal"), "faltan": FALTAN}
+             "colores": COLORES, "variante": "minimo", "piezas": piezas(), "piezas_plus": piezas("plus"), "pivotes_plus": {"pan": PIVOTE_PAN, "tilt": PIVOTE_TILT},
+             "piezas_gimbal": piezas("gimbal"), "faltan": FALTAN}
     for destino in (os.path.join(aqui, "dron_real.json"),                                        # Unreal y Blender
                     os.path.join(aqui, "..", "v16", "simulacion", "recursos", "dron_real.json"),  # visor V16
                     os.path.join(aqui, "..", "estacion", "dron_real.json")):                      # estación de tierra

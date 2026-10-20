@@ -164,6 +164,8 @@ def main(ruta=None, desde=0.0, hasta=None):
     for a in D.actores.get_all_level_actors():
         if str(a.get_folder_path()) == "Dron" and a.get_actor_label().startswith("Dron_rep"):
             a_carpeta(a, "Dron")
+    # variante plus (H): el pan y el tilt del pan-tilt de 2 servos siguen a la partida (c["gmb"] = tilt en grados, c["pan"] = pan; hoy el pan es 0)
+    pantilt = {g: next((a for a in D.actores.get_all_level_actors() if a.get_actor_label() == f"Dron_rep_{g}"), None) for g in ("pan", "tilt")}
     maniquies = MU.disponible() and os.environ.get("DRONIA_CILINDROS") != "1"
     n = int(round((len(C) - 1) * dt * FPS)) + 1
     personas, meta = {}, None
@@ -225,6 +227,10 @@ def main(ruta=None, desde=0.0, hasta=None):
                 else:
                     poner(ch, f, (None, None, -5000.0))
         unreal.log("DRONIA: maniquíes animados")
+    ch_pt = {g: pista_transformacion(sec, a, n)[1] for g, a in pantilt.items() if a}
+    for g, a in pantilt.items():
+        if a:
+            a_carpeta(a, "Dron")
     b_cam, ch_cam = pista_transformacion(sec, cam, n)
 
     psi_prev, cam_pos, cam_mira, yaw_cam = None, None, None, None
@@ -233,6 +239,9 @@ def main(ruta=None, desde=0.0, hasta=None):
         x, y, z, psi = c["d"][:4]
         psi_prev = continuo(psi_prev, D.guinada(psi))
         poner(ch_dron, f, (x * D.M, -y * D.M, z * D.M, c.get("cr", 0.0), c.get("cp", 0.0), psi_prev))
+        if ch_pt:                                                       # pitch hacia arriba positivo en la simulación y en Unreal; el yaw de Unreal es horario
+            poner(ch_pt["pan"], f, (None, None, None, 0.0, 0.0, -float(c.get("pan", 0.0) or 0.0)))
+            poner(ch_pt["tilt"], f, (None, None, None, 0.0, float(c.get("gmb", 0.0) or 0.0), 0.0))
         vistos = set()
         for p in (c.get("pers", []) if not maniquies else []):
             clave = str(p.get("id", p.get("rol")))

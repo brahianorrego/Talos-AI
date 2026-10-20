@@ -414,8 +414,17 @@ const protocolo = c => c.fase === 2 && c.modo >= 3;
 const candidato = c => (c.pers || []).find(p => p.cand);
 // D-072 (20-oct): el dron ya no tiene gimbal ni cámara USB: la cámara principal es la CSI IMX219 FIJA al chasis (HFOV 62.2° nominal, sin medir),
 // inclinada 5° hacia abajo. Con ?camara=gimbal se ve la cámara de antes (USB en gimbal, HFOV 38.9°).
-const CAM_FIJA = new URLSearchParams(location.search).get("camara") !== "gimbal", PITCH_FIJO = -5;
-const HFOV = CAM_FIJA ? 62.2 : 38.9, VFOV = CAM_FIJA ? 48.3 : 29.7;
+// D-073 (20-oct): DOS drones. "minimo" = variante G (CSI fija, sin pan-tilt) y "plus" = variante H (CSI y TF-Luna sobre un pan-tilt de 2 servos, sin roll,
+// más una 2.ª CSI al piso). Se elige con el botón "Dron" de arriba, o con ?dron=minimo|plus|gimbal (gimbal = el de antes, historia).
+let MODO_DRON = (() => {
+  const q = new URLSearchParams(location.search).get("dron");
+  if (["minimo", "plus", "gimbal"].includes(q)) return q;
+  try { return localStorage.getItem("estacion-dron") || "minimo"; } catch (e) { return "minimo"; }
+})();
+const CAM_VIEJA = MODO_DRON === "gimbal" || new URLSearchParams(location.search).get("camara") === "gimbal", PITCH_FIJO = -5;
+const camFija = () => !CAM_VIEJA && MODO_DRON === "minimo", camPantilt = () => !CAM_VIEJA && MODO_DRON === "plus";
+const HFOV = CAM_VIEJA ? 38.9 : 62.2, VFOV = CAM_VIEJA ? 29.7 : 48.3;
+let panDeg = 0;                                                   // el pan del pan-tilt (la V17 lo deja en 0; si la repetición trae c.pan, se usa)
 const mundo = (x, y, z = 0) => new THREE.Vector3(x, z, -y);
 const $ = id => document.getElementById(id);
 const lerp = (a, b, f) => a + (b - a) * f;
@@ -1564,7 +1573,8 @@ function dibujarSLAM(c, k) {
   $("sl-imp").textContent = c.lh && c.lt ? `${c.lh[0].toFixed(1)}, ${c.lh[1].toFixed(1)}, ${c.lh[2].toFixed(1)}` : "–";
   $("sl-npts").textContent = `${kp}${c.npts !== undefined ? " · " + c.npts + " en memoria" : ""}`;
   $("sl-det").textContent = String((c.det || []).length);
-  if (CAM_FIJA) { $("sl-gmb-et").textContent = "Cámara"; $("sl-gmb").textContent = `CSI fija ${PITCH_FIJO}°`; }
+  if (camFija()) { $("sl-gmb-et").textContent = "Cámara"; $("sl-gmb").textContent = `CSI fija ${PITCH_FIJO}°`; }
+  else if (camPantilt()) { $("sl-gmb-et").textContent = "Pan-tilt"; $("sl-gmb").textContent = `PAN ${panDeg >= 0 ? "+" : ""}${panDeg.toFixed(0)}° · TILT ${(c.gmb ?? 0).toFixed(0)}°`; $("sl-gmb").style.color = c.gmb !== undefined && c.gmb <= -44.9 ? COL.precaucion : ""; }
   else {
     $("sl-gmb").textContent = c.gmb !== undefined ? c.gmb.toFixed(1) + "°" : "–";
     $("sl-gmb").style.color = c.gmb !== undefined && c.gmb <= -44.9 ? COL.precaucion : "";
@@ -1609,7 +1619,11 @@ function enCampo(c, p) { return Math.abs(difAngGrados(Math.atan2(p.p[1] - c.d[1]
 
 // ======================================================================= HUD de la cámara FPV
 const camDron = new THREE.PerspectiveCamera(VFOV, Math.tan(HFOV / 2 * Math.PI / 180) / Math.tan(VFOV / 2 * Math.PI / 180), 0.1, 700);
-if (CAM_FIJA) $("fpv-titulo").textContent = "Cámara CSI fija · YOLO";
+function aplicarModoDron() {
+  $("fpv-titulo").textContent = camFija() ? "Cámara CSI fija · YOLO" : camPantilt() ? "Cámara CSI en pan-tilt · YOLO" : "Cámara FPV · gimbal · YOLO";
+  if (window.BOTON_DRON) BOTON_DRON();
+}
+aplicarModoDron();
 const fpvVista = $("fpv-vista"), hud = $("hud-fpv"), hctx = hud.getContext("2d");
 function cajasPersonas(c, pers) {
   const W = fpvVista.clientWidth, H = fpvVista.clientHeight, cajas = [];
@@ -1710,11 +1724,12 @@ function dibujarHUD(s) {
   texto("● REC " + reloj(s.t), 8, 13, "left", "#ff6b6b", 600, 9);
   texto(`R ${s.roll >= 0 ? "+" : ""}${s.roll.toFixed(1)}°  P ${s.pitch >= 0 ? "+" : ""}${s.pitch.toFixed(1)}°`, W - 8, 13, "right", C2, 500, 8.5);
   texto("LiDAR " + (s.lidarTxt ?? (s.lidar < 19.9 ? s.lidar.toFixed(2) + " m" : "> 20 m")), 8, H - 8, "left", C1, 500, 9);
-  texto(CAM_FIJA ? `CSI FIJA ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : `GMB ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 38.9°`, W - 8, H - 8, "right", C1, 500, 9);
-  if (CAM_FIJA) {                                              // cartel: sin gimbal
-    g.font = "600 9px 'Roboto Mono', monospace"; const tw = g.measureText("CÁMARA FIJA · SIN GIMBAL").width + 14;
+  texto(camPantilt() ? `PAN ${s.pan >= 0 ? "+" : ""}${s.pan.toFixed(0)}° · TILT ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : camFija() ? `CSI FIJA ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : `GMB ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 38.9°`, W - 8, H - 8, "right", C1, 500, 9);
+  if (camFija() || camPantilt()) {                             // cartel: cámara fija sin gimbal, o la CSI en el pan-tilt de 2 servos
+    const cartel = camFija() ? "CÁMARA FIJA · SIN GIMBAL" : "CSI EN PAN-TILT · 2 SERVOS · SIN ROLL";
+    g.font = "600 9px 'Roboto Mono', monospace"; const tw = g.measureText(cartel).width + 14;
     g.fillStyle = "rgba(6,12,18,.82)"; g.fillRect(W / 2 - tw / 2, 4, tw, 16); g.strokeStyle = "rgba(245,197,66,.8)"; g.strokeRect(W / 2 - tw / 2, 4, tw, 16);
-    texto("CÁMARA FIJA · SIN GIMBAL", W / 2, 15.5, "center", "#f5c542", 600, 9);
+    texto(cartel, W / 2, 15.5, "center", "#f5c542", 600, 9);
   }
   // detecciones de YOLO con el ID del tracker
   s.cajas.forEach(k => {
@@ -1946,7 +1961,7 @@ function animar(ahora) {
     const origen = mundo(dx, dy, dz - 0.12);
     let fin;
     if (a.lh && a.lt) { const q = b.lh || a.lh; fin = mundo(lerp(a.lh[0], q[0], f), lerp(a.lh[1], q[1], f), lerp(a.lh[2], q[2], f)); }
-    else if (a.lh) { const Ld = 20, th_ = CAM_FIJA ? PITCH_FIJO * Math.PI / 180 : gimbalPitch.rotation.z; fin = mundo(dx + Ld * Math.cos(th_) * Math.cos(psi), dy + Ld * Math.cos(th_) * Math.sin(psi), dz - 0.12 + Ld * Math.sin(th_)); }
+    else if (a.lh) { const Ld = 20, th_ = camFija() ? PITCH_FIJO * Math.PI / 180 : gimbalPitch.rotation.z; fin = mundo(dx + Ld * Math.cos(th_) * Math.cos(psi), dy + Ld * Math.cos(th_) * Math.sin(psi), dz - 0.12 + Ld * Math.sin(th_)); }
     else if (a.las && lad) fin = mundo(lad.p[0], lad.p[1], 1.1);
     else { const Ld = a.lid ? Math.min(a.lid, 20) : 20; fin = mundo(dx + Ld * Math.cos(psi), dy + Ld * Math.sin(psi), a.lid && a.lid < 19.9 ? dz - 0.12 : Math.max(dz - 1.6, 0.05)); }
     laser.geometry.setFromPoints([origen, fin]);
@@ -1970,10 +1985,14 @@ function animar(ahora) {
     if (a.fase === 1) { const [adel, der] = a.piloto || [0, 0]; dibujarRadio([giro, a.d[2] < 2.2 ? 0.9 : subida], [der, adel], 1, !!a.bloq); }
     else dibujarRadio([giro, subida / 0.7], [vDer / 1.5, vAdel / 1.5], 2, false);
     // cámara del dron (FPV) y su HUD
-    const pitch = CAM_FIJA ? (PITCH_FIJO - chasis.rotation.z * 180 / Math.PI) * Math.PI / 180 : gimbalPitch.rotation.z;     // fija: el cabeceo del cuerpo la mueve
-    if (CAM_FIJA) camDron.position.copy(mundo(dx + 0.06 * Math.cos(psi), dy + 0.06 * Math.sin(psi), dz + 0.13));          // arriba de la caja de acrílico
+    const pitch = camFija() ? (PITCH_FIJO - chasis.rotation.z * 180 / Math.PI) * Math.PI / 180 : gimbalPitch.rotation.z;     // fija: el cabeceo del cuerpo la mueve
+    panDeg = camPantilt() ? (a.pan !== undefined ? lerp(a.pan, b.pan ?? a.pan, f) : 0) : 0;
+    const psiCam = psi + panDeg * Math.PI / 180;                                                                            // el pan gira la cámara respecto al cuerpo
+    if (camFija()) camDron.position.copy(mundo(dx + 0.06 * Math.cos(psi), dy + 0.06 * Math.sin(psi), dz + 0.13));          // arriba de la caja de acrílico
+    else if (camPantilt()) camDron.position.copy(mundo(dx + 0.108 * Math.cos(psi), dy + 0.108 * Math.sin(psi), dz - 0.095)); // en la cuna del pan-tilt, bajo el chasis
     else camDron.position.copy(mundo(dx + 0.08 * Math.cos(psi), dy + 0.08 * Math.sin(psi), dz - 0.12));
-    camDron.lookAt(camDron.position.clone().add(new THREE.Vector3(Math.cos(psi) * Math.cos(pitch), Math.sin(pitch), -Math.sin(psi) * Math.cos(pitch))));
+    camDron.lookAt(camDron.position.clone().add(new THREE.Vector3(Math.cos(psiCam) * Math.cos(pitch), Math.sin(pitch), -Math.sin(psiCam) * Math.cos(pitch))));
+    if (window.PANTILT) { PANTILT.pan.rotation.y = panDeg * Math.PI / 180; PANTILT.tilt.rotation.z = pitch; }               // el modelo 3D mueve sus dos servos
     camDron.updateMatrixWorld();
     const trk = a.fase === 1 ? ["IA INACTIVA", COL.tenue] : a.trk === undefined ? (a.vis ? TRK[1] : TRK[3]) : TRK[a.trk];
     const cajas = cajasPersonas(a, pa);
@@ -1990,7 +2009,7 @@ function animar(ahora) {
         if (k === kc && !confirmados.has(kc)) { confirmados.add(kc); clicVisual = { x: tx, y: ty, t0: performance.now() }; }
       }
     }
-    dibujarHUD({ esperando: esperaClic !== null, cursor: cursorSim, gimbal: pitch * 180 / Math.PI, hdg: ((90 - psi * 180 / Math.PI) % 360 + 360) % 360, roll: chasis.rotation.x * 180 / Math.PI,
+    dibujarHUD({ esperando: esperaClic !== null, cursor: cursorSim, gimbal: pitch * 180 / Math.PI, pan: panDeg, hdg: ((90 - psi * 180 / Math.PI) % 360 + 360) % 360, roll: chasis.rotation.x * 180 / Math.PI,
                  pitch: -chasis.rotation.z * 180 / Math.PI, alt: dz, gs: Math.hypot(dv[0], dv[1]), lidar: a.lid || 20, lidarTxt: lidarTxt(a), t: k * dt, trk, cajas });
     actualizarLetrero(a);
     $("cursor").style.left = (100 * k / (C.length - 1)) + "%";

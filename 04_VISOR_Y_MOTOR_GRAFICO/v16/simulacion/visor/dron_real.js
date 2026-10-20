@@ -31,7 +31,7 @@ export async function aplicarModeloReal(dron, ruta = "recursos/dron_real.json") 
     return mats[k];
   };
   const rotores = {};
-  const piezas = new URLSearchParams(location.search).get("dron") === "gimbal" ? modelo.piezas_gimbal : modelo.piezas;     // ?dron=gimbal: el dron de antes
+  const piezas = { plus: modelo.piezas_plus, gimbal: modelo.piezas_gimbal }[new URLSearchParams(location.search).get("dron")] || modelo.piezas;     // ?dron=plus (variante H, sin animar) | gimbal (el de antes); por omisión el mínimo (G)
   piezas.forEach(p => {
     const [x, y, z] = p.centro;
     let geo, eje = p.eje || "z";

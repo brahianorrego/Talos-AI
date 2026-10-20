@@ -213,7 +213,19 @@ def dron(etiqueta="Dron", z_centro=3.3):
     raiz.set_folder_path("Dron")
     mats = {}
     piezas = []
-    for p in (modelo["piezas_gimbal"] if os.environ.get("DRONIA_DRON") == "gimbal" else modelo["piezas"]):    # DRONIA_DRON=gimbal: el dron de antes
+    var = os.environ.get("DRONIA_DRON", "minimo")                                   # minimo (G) | plus (H) | gimbal (el de antes)
+    grupos = {}
+    if var == "plus":                                                               # pan y tilt: dos puntos sin forma que Sequencer puede girar (Dron_rep_pan y _tilt)
+        for g in ("pan", "tilt"):
+            pv = modelo["pivotes_plus"][g]
+            a = actores.spawn_actor_from_class(unreal.StaticMeshActor, ue(pv[0], pv[1], z_centro + pv[2]), unreal.Rotator(0, 0, 0))
+            a.set_actor_label(f"{etiqueta}_{g}")
+            a.set_folder_path("Dron")
+            grupos[g] = a
+        grupos["tilt"].attach_to_actor(grupos["pan"], "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
+        grupos["pan"].attach_to_actor(raiz, "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
+    clave = {"minimo": "piezas", "plus": "piezas_plus", "gimbal": "piezas_gimbal"}.get(var, "piezas")
+    for p in modelo[clave]:
         col = tuple(modelo["colores"][p["color"]])
         if p["color"] not in mats:
             mats[p["color"]] = (material_translucido("Dron_" + p["color"], col, 0.22) if p.get("translucido")
@@ -228,9 +240,9 @@ def dron(etiqueta="Dron", z_centro=3.3):
             escala, forma_ue = (d, d, h), "Cylinder"
             eje = p.get("eje", "z")
             rot = (0.0, 90.0, -yaw) if eje == "x" else ((90.0, 0.0, -yaw) if eje == "y" else (incl, 0.0, -yaw))
-        piezas.append(forma(forma_ue, f"{etiqueta}_{p['nombre']}", ue(x, y, z_centro + z), escala, mats[p["color"]], 0.0, "Dron", rot=rot))
-    for pz in piezas:
-        pz.attach_to_actor(raiz, "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
+        piezas.append((p.get("grupo"), forma(forma_ue, f"{etiqueta}_{p['nombre']}", ue(x, y, z_centro + z), escala, mats[p["color"]], 0.0, "Dron", rot=rot)))
+    for grupo, pz in piezas:
+        pz.attach_to_actor(grupos.get(grupo, raiz), "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
     return raiz
 
 
