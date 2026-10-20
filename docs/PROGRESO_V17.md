@@ -443,6 +443,27 @@ se detuvo a 1.3 M para relanzarla así. Comando (PowerShell, desde `03_SIMULACIO
 `Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd.exe /c ".venv\Scripts\python.exe -u entrenar_master.py --hw H --set BUSQUEDA_RUTA_V17=1 --desde modelos_v17_2\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_7 --dir-master modelos_v17_7 --dir-modelos modelos_v17_7 > modelos_v17_7.log 2>&1"'; CurrentDirectory=(Get-Location).Path}`
 Medirla: `herramientas\medir_ia_aporta.py v17 --hw H --set BUSQUEDA_RUTA_V17=1 --pol modelos_v17_7\ultimo.zip,modelos_v17_7\ultimo.zip-est --n 512 --salida informes\v17\h_v177.json`
 
+**Resultado de la V17.7 a los 10 M** (terminó 07:50; 512 partidas, `informes/v17/h_v177_det.json` y `_est.json`; sobrevivió
+pasando los 8.2 M gracias al lanzamiento vía WMI):
+
+| | M1 | Racha media (s) | Vista (s) | M2 | Rendición | Misión perdida | Vaivén de la red (/min) | Seguridad |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| **V17.7 determinista** | **91.0 %** | 41.8 | 128.1 | 99.4 % | 59.0 % | 0.2 % | 30.6 | 0 |
+| V17.7 estocástica | 92.6 % | 41.7 | 126.3 | 99.4 % | 60.4 % | 0.2 % | 42.7 | alcanzado 0.2 % |
+| B5 ruta + SUBIR | 92.0 % | 41.7 | 126.4 | 99.3 % | 59.8 % | 0 % | 0 | 0 |
+| B5s ruta + QUEDARSE | 87.3 % | 39.7 | 137.3 | 99.3 % | 44.9 % | 0 % | 0 | 0 |
+| B3 / B0 (búsqueda de siempre) | 78.3 / 62.3 % | 37.8 / 33.4 | 119.2 / 126.4 | 92.0 / 91.6 % | 38.7 / 20.9 % | 3.5 / 3.5 % | 0 | 0 |
+
+- **Empata con B5** (±2.4 puntos de ruido cerca del 92 %) y le gana a B3 por 12.7 y a B0 por 28.7 puntos.
+- **Lo honesto para el documento:** el salto viene del **pan-tilt** (B0: 3.7 → 62.3 %) y de la **ruta de Brahian** (+25
+  puntos, y es una regla). Encima de eso, la red rinde lo mismo que "siempre subir": aprendió sola la mejor regla simple, pero
+  sube y baja de más (30.6 cambios por minuto). Con el criterio de `RUTA_BUSQUEDA_BRAHIAN.md`: la red ≥ max(B3, B0) + 5 ✔ y la
+  red ≥ B5 − 3 ✔. No supera a B5 (misma búsqueda).
+- Se elige la **V17.7 como política del plus por ahora**. Las repeticiones con ella se graban en
+  `03_SIMULACION_RL\repeticiones_v17_h\` (fuera de Git), con
+  `herramientas\grabar_repeticiones_v17.py --modelo modelos_v17_7\ultimo.zip --hw H --set BUSQUEDA_RUTA_V17=1 --salida repeticiones_v17_h`.
+  Las de la V17.2 (sin pan) quedan en `repeticiones_v17\`.
+
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
 Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,

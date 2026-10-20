@@ -35,7 +35,14 @@ def main():
     ap.add_argument("--semilla", type=int, default=500, help="semilla de la primera partida (luego +1, +2, ...)")
     ap.add_argument("--salida", default="repeticiones_v17")
     ap.add_argument("--tipos", default=",".join(TIPOS), help="solo estos tipos (los demás quedan como estén)")
+    ap.add_argument("--hw", default="BASE", help="hardware simulado: BASE, G (cámara fija) o H (pan-tilt, el plus)")
+    ap.add_argument("--set", action="append", default=[], help="NOMBRE=VALOR de entorno.py (por ejemplo BUSQUEDA_RUTA_V17=1)")
     a = ap.parse_args()
+    E.aplicar_hw(a.hw)
+    for kv in a.set:
+        k, v = kv.split("=", 1)
+        viejo = getattr(E, k)
+        setattr(E, k, v if isinstance(viejo, str) else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
     torch.set_num_threads(1)                                   # de a una partida y un hilo: no le quita CPU al entrenamiento
     from sb3_contrib import MaskablePPO
     pol = EM.PoliticaSB3(MaskablePPO.load(a.modelo, device="cpu"))
@@ -66,7 +73,7 @@ def main():
         for t in nuevos:
             hechas[t] = semilla
             rep_t = dict(rep, tipo=t, descripcion=TIPOS[t], semilla=semilla, modelo=a.modelo.replace("\\", "/"),
-                         paneles_v17=[E.ANCHO_PANEL_V17, list(E.ALTO_PANEL_V17)])
+                         paneles_v17=[E.ANCHO_PANEL_V17, list(E.ALTO_PANEL_V17)], hw=a.hw, set=a.set)
             with open(os.path.join(a.salida, "%s.json" % t), "w", encoding="utf-8") as f:
                 json.dump(rep_t, f, ensure_ascii=False)
         print("semilla %d: %s · %s · %.0f s" % (semilla, rep["resultado"], ", ".join(sorted(vio)) or "-", time.time() - t0),
@@ -81,10 +88,10 @@ def main():
     filas = [fila(t) for t in TIPOS]
     with open(os.path.join(a.salida, "LEEME.md"), "w", encoding="utf-8") as f:
         f.write("# Repeticiones escogidas de la cancha V17\n\nGrabadas con `herramientas/grabar_repeticiones_v17.py`, "
-                "modelo `%s`, paneles de %.1f m × %.1f-%.1f m (D-066), %s. Formato: el de `salida_*/replay_v17.json` "
+                "hardware `%s` %s, modelo `%s`, paneles de %.1f m × %.1f-%.1f m (D-066), %s. Formato: el de `salida_*/replay_v17.json` "
                 "(una lista de cuadros de `entorno.foto()`), más `tipo`, `descripcion`, `semilla` y `modelo`.\n\n"
                 "| Archivo (`<tipo>.json`) | Qué muestra | Semilla (modelo) |\n|---|---|---|\n%s\n"
-                % (a.modelo.replace("\\", "/"), E.ANCHO_PANEL_V17, E.ALTO_PANEL_V17[0], E.ALTO_PANEL_V17[1],
+                % (a.hw, " ".join(a.set), a.modelo.replace("\\", "/"), E.ANCHO_PANEL_V17, E.ALTO_PANEL_V17[0], E.ALTO_PANEL_V17[1],
                    time.strftime("%Y-%m-%d"), "\n".join(filas)))
     print("listo:", hechas)
 
