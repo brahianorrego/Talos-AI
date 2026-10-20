@@ -5,7 +5,7 @@ Modelo del DRON REAL como lista de piezas simples (cajas y cilindros), hecho a o
 TRES VARIANTES (D-072): "minimo" (variante G, el dron de hoy: sin BaseCam ni cámara USB; cámara CSI IMX219 y TF03 fijos), "plus" (variante H, la
 meta: pan-tilt de 2 servos con la CSI y el TF-Luna encima, una 2.ª CSI fija al piso y el TF03 fijo; la batería corrida hacia atrás) y "gimbal" (el
 de antes, BaseCam + USB, solo historia). El JSON trae `piezas` (minimo), `piezas_plus` (con "grupo": "pan" o "tilt" en lo que se mueve y los `pivotes`
-de los dos ejes) y `piezas_gimbal`. Los programas eligen con DRONIA_DRON=minimo|plus|gimbal (Unreal, Blender) o ?dron= (visores).
+de los dos ejes), `piezas_plus_abajo` (el pan-tilt colgado) y `piezas_gimbal`. Los programas eligen con DRONIA_DRON=minimo|plus|gimbal (Unreal, Blender) o ?dron= (visores).
 NO es fotorrealista: es proporcionado, con los colores del dron, y lo usan Unreal (unreal/dronia_ue.py), Blender
 (blender/video_cancha_v17.py) y el visor web (modelo_dron/dron_real.json, que genera este archivo).
 
@@ -47,7 +47,7 @@ FALTAN = [
     "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
     "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
     "Cables: no se modelan",
-    "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). Hardware recomienda ahora el pan-tilt ARRIBA, sobre la placa de arriba delante de la caja de la Jetson; aquí se modela la opción 2, COLGADO bajo el chasis. Rangos: pan ±89°, tilt −44°…+14°",
+    "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). El pan-tilt va ARRIBA (opción 1 de Hardware, la recomendada: sobre la placa de arriba, delante de la caja de la Jetson, corrido 15 mm hacia adelante para no tocarla); la opción 2, COLGADO bajo el chasis, es 'plus_abajo' (DRONIA_PAN_TILT=abajo o ?pantilt=abajo). Rangos: pan ±89°, tilt −44°…+14°",
     "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)",
 ]
 
@@ -64,6 +64,8 @@ def _p(nombre, forma, centro, tam, color, **kw):
 def piezas(variante="minimo"):
     P = []
     variante = "minimo" if variante == "sin_gimbal" else variante
+    abajo = variante == "plus_abajo"                  # pan-tilt colgado bajo el chasis (opción 2 de Hardware); "plus" lo lleva ARRIBA (opción 1, la recomendada)
+    variante = "plus" if abajo else variante
     # --- chasis: dos placas de carbono, el Pixhawk entre ellas y la placa de la batería
     P += [_p("placa_inferior", "caja", (0, 0, -0.025), (0.19, 0.19, 0.003), "carbono"),
           _p("placa_superior", "caja", (0, 0, 0.025), (0.17, 0.17, 0.003), "carbono"),
@@ -135,7 +137,7 @@ def piezas(variante="minimo"):
               _p("tf03_ventana", "caja", (TF03_PLUS[0] + 0.0238, TF03_PLUS[1], TF03_PLUS[2]), (0.0012, 0.058, 0.022), "gris")]
     if variante == "plus":
         P = [dict(p, centro=(p["centro"][0] + BATERIA_DX, p["centro"][1], p["centro"][2])) if p["nombre"] in ("bateria", "velcro_azul") else p for p in P]   # batería atrás por el CG
-        P += _pantilt()
+        P += _pantilt(arriba=not abajo)
     return P
 
 
@@ -162,18 +164,28 @@ TF03_PLUS = tuple(_M["MONTAJE_TF03_M"])
 BATERIA_DX = _M["MONTAJE_BATERIA_DESPLAZ_X_M"]
 
 
-def _pantilt():
-    px, _, pz = PIVOTE_PAN
-    tx, _, tz = PIVOTE_TILT
+def pivotes(arriba=True):
+    """Los ejes del pan y del tilt. ARRIBA (la opción 1 de Hardware, la recomendada): sobre la placa de arriba, delante de la caja de la Jetson, la pila de
+    abajo hacia arriba (base con separadores, servo del pan, plataforma, mejillas, cuna); el eje del tilt queda a la misma distancia de la base que colgado
+    (MONTAJE_EJE_PAN_M z menos MONTAJE_EJE_TILT_M z = 0.0735 m) y la pila se corre 15 mm hacia adelante para no tocar la caja. COLGADO (opción 2): bajo el chasis."""
+    s_ = 1 if arriba else -1
+    x = PIVOTE_PAN[0] + (0.015 if arriba else 0.0)
+    return (x, 0.0, s_ * abs(PIVOTE_PAN[2])), (x, 0.0, s_ * abs(PIVOTE_TILT[2]))
+
+
+def _pantilt(arriba=True):
+    (px, _, pz), (tx, _, tz) = pivotes(arriba)
+    s_ = 1 if arriba else -1
+    z = lambda v: s_ * v                                                           # alturas de la pila, simétricas respecto al chasis
     return [
         # fijo al chasis
-        _p("pantilt_base", "caja", (px, 0.0, -0.0345), (0.064, 0.056, 0.003), "negro"),
-        _p("servo_pan", "caja", (px + 0.0055, 0.0, -0.0473), (0.0228, 0.0122, 0.0225), "servo"),
+        _p("pantilt_base", "caja", (px, 0.0, z(0.0345)), (0.064, 0.056, 0.003), "negro"),
+        _p("servo_pan", "caja", (px + 0.0055, 0.0, z(0.0473)), (0.0228, 0.0122, 0.0225), "servo"),
         _p("tf03_base", "caja", (TF03_PLUS[0] - 0.006, TF03_PLUS[1], TF03_PLUS[2] - 0.021), (0.052, 0.080, 0.003), "negro"),
         # gira con el PAN (yaw): plataforma, mejillas y servo del tilt
-        _p("pan_plataforma", "caja", (px, 0.0, -0.0675), (0.052, 0.056, 0.003), "negro", grupo="pan"),
-        _p("pan_mejilla_a", "caja", (px, -0.0285, -0.0875), (0.052, 0.004, 0.040), "negro", grupo="pan"),
-        _p("pan_mejilla_b", "caja", (px, 0.0275, -0.0875), (0.052, 0.003, 0.040), "negro", grupo="pan"),
+        _p("pan_plataforma", "caja", (px, 0.0, z(0.0675)), (0.052, 0.056, 0.003), "negro", grupo="pan"),
+        _p("pan_mejilla_a", "caja", (px, -0.0285, z(0.0875)), (0.052, 0.004, 0.040), "negro", grupo="pan"),
+        _p("pan_mejilla_b", "caja", (px, 0.0275, z(0.0875)), (0.052, 0.003, 0.040), "negro", grupo="pan"),
         _p("servo_tilt", "caja", (tx - 0.0055, -0.0315, tz), (0.0228, 0.0225, 0.0122), "servo", grupo="pan"),
         # gira con el PAN y el TILT (cabeceo, tope −44°/+14°): cuna con la CSI y el TF-Luna
         _p("cuna_cubierta", "caja", (tx + 0.015, 0.0, tz), (0.030, 0.044, 0.003), "negro", grupo="tilt"),
@@ -210,7 +222,8 @@ def tamano_total():
 if __name__ == "__main__":
     aqui = os.path.dirname(os.path.abspath(__file__))
     datos = {"unidades": "m", "marco": "x adelante, y izquierda, z arriba; origen = centro de la placa del medio",
-             "colores": COLORES, "variante": "minimo", "piezas": piezas(), "piezas_plus": piezas("plus"), "pivotes_plus": {"pan": PIVOTE_PAN, "tilt": PIVOTE_TILT},
+             "colores": COLORES, "variante": "minimo", "piezas": piezas(), "piezas_plus": piezas("plus"), "pivotes_plus": dict(zip(("pan", "tilt"), pivotes(True))),
+             "piezas_plus_abajo": piezas("plus_abajo"), "pivotes_plus_abajo": dict(zip(("pan", "tilt"), pivotes(False))),
              "piezas_gimbal": piezas("gimbal"), "faltan": FALTAN}
     for destino in (os.path.join(aqui, "dron_real.json"),                                        # Unreal y Blender
                     os.path.join(aqui, "..", "v16", "simulacion", "recursos", "dron_real.json"),  # visor V16

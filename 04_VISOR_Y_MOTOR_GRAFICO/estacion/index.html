@@ -1991,7 +1991,8 @@ function animar(ahora) {
     panDeg = camPantilt() && a.fase !== 1 ? (a.pan !== undefined ? lerp(a.pan, b.pan ?? a.pan, f) : 0) : 0;      // en el tránsito, parqueado en 0°
     const psiCam = psi + panDeg * Math.PI / 180;                                                                            // el pan gira la cámara respecto al cuerpo
     if (camFija()) camDron.position.copy(mundo(dx + 0.06 * Math.cos(psi), dy + 0.06 * Math.sin(psi), dz + 0.13));          // arriba de la caja de acrílico
-    else if (camPantilt()) camDron.position.copy(mundo(dx + 0.108 * Math.cos(psi), dy + 0.108 * Math.sin(psi), dz - 0.095)); // en la cuna del pan-tilt, bajo el chasis
+    else if (camPantilt()) { const pv = window.PANTILT ? window.PANTILT.pivoteTilt : new THREE.Vector3(0.075, -0.11, 0), xf = pv.x + 0.0365;   // en la cuna del pan-tilt (arriba o colgado)
+      camDron.position.copy(mundo(dx + xf * Math.cos(psi), dy + xf * Math.sin(psi), dz + pv.y + 0.013)); }
     else camDron.position.copy(mundo(dx + 0.08 * Math.cos(psi), dy + 0.08 * Math.sin(psi), dz - 0.12));
     camDron.lookAt(camDron.position.clone().add(new THREE.Vector3(Math.cos(psiCam) * Math.cos(pitch), Math.sin(pitch), -Math.sin(psiCam) * Math.cos(pitch))));
     if (window.PANTILT) { PANTILT.pan.rotation.y = panDeg * Math.PI / 180; PANTILT.tilt.rotation.z = pitch; }               // el modelo 3D mueve sus dos servos

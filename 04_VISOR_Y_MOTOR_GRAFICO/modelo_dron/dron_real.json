@@ -2385,6 +2385,1395 @@
    "nombre": "pantilt_base",
    "forma": "caja",
    "centro": [
+    0.09,
+    0.0,
+    0.0345
+   ],
+   "tam": [
+    0.064,
+    0.056,
+    0.003
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "servo_pan",
+   "forma": "caja",
+   "centro": [
+    0.0955,
+    0.0,
+    0.0473
+   ],
+   "tam": [
+    0.0228,
+    0.0122,
+    0.0225
+   ],
+   "color": "servo"
+  },
+  {
+   "nombre": "tf03_base",
+   "forma": "caja",
+   "centro": [
+    0.112,
+    -0.075,
+    -0.032
+   ],
+   "tam": [
+    0.052,
+    0.08,
+    0.003
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "pan_plataforma",
+   "forma": "caja",
+   "centro": [
+    0.09,
+    0.0,
+    0.0675
+   ],
+   "tam": [
+    0.052,
+    0.056,
+    0.003
+   ],
+   "color": "negro",
+   "grupo": "pan"
+  },
+  {
+   "nombre": "pan_mejilla_a",
+   "forma": "caja",
+   "centro": [
+    0.09,
+    -0.0285,
+    0.0875
+   ],
+   "tam": [
+    0.052,
+    0.004,
+    0.04
+   ],
+   "color": "negro",
+   "grupo": "pan"
+  },
+  {
+   "nombre": "pan_mejilla_b",
+   "forma": "caja",
+   "centro": [
+    0.09,
+    0.0275,
+    0.0875
+   ],
+   "tam": [
+    0.052,
+    0.003,
+    0.04
+   ],
+   "color": "negro",
+   "grupo": "pan"
+  },
+  {
+   "nombre": "servo_tilt",
+   "forma": "caja",
+   "centro": [
+    0.0845,
+    -0.0315,
+    0.11
+   ],
+   "tam": [
+    0.0228,
+    0.0225,
+    0.0122
+   ],
+   "color": "servo",
+   "grupo": "pan"
+  },
+  {
+   "nombre": "cuna_cubierta",
+   "forma": "caja",
+   "centro": [
+    0.105,
+    0.0,
+    0.11
+   ],
+   "tam": [
+    0.03,
+    0.044,
+    0.003
+   ],
+   "color": "negro",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "cuna_pared_izq",
+   "forma": "caja",
+   "centro": [
+    0.105,
+    0.0215,
+    0.11
+   ],
+   "tam": [
+    0.03,
+    0.0025,
+    0.04
+   ],
+   "color": "negro",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "cuna_pared_der",
+   "forma": "caja",
+   "centro": [
+    0.105,
+    -0.0215,
+    0.11
+   ],
+   "tam": [
+    0.03,
+    0.004,
+    0.04
+   ],
+   "color": "negro",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "cuna_frente",
+   "forma": "caja",
+   "centro": [
+    0.12,
+    0.0,
+    0.11
+   ],
+   "tam": [
+    0.004,
+    0.044,
+    0.05
+   ],
+   "color": "negro",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "csi_placa",
+   "forma": "caja",
+   "centro": [
+    0.1235,
+    0.0,
+    0.123
+   ],
+   "tam": [
+    0.003,
+    0.024,
+    0.025
+   ],
+   "color": "verde",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "csi_lente",
+   "forma": "cilindro",
+   "centro": [
+    0.1265,
+    0.0,
+    0.123
+   ],
+   "tam": [
+    0.009,
+    0.004
+   ],
+   "color": "negro",
+   "eje": "x",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "luna",
+   "forma": "caja",
+   "centro": [
+    0.1325,
+    0.0,
+    0.097
+   ],
+   "tam": [
+    0.0135,
+    0.035,
+    0.0213
+   ],
+   "color": "negro",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "luna_lente",
+   "forma": "cilindro",
+   "centro": [
+    0.1402,
+    0.0,
+    0.097
+   ],
+   "tam": [
+    0.008,
+    0.003
+   ],
+   "color": "gris",
+   "eje": "x",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "csi_flex",
+   "forma": "caja",
+   "centro": [
+    0.113,
+    0.0,
+    0.144
+   ],
+   "tam": [
+    0.001,
+    0.016,
+    0.04
+   ],
+   "color": "flex",
+   "grupo": "tilt"
+  },
+  {
+   "nombre": "csi_piso_soporte",
+   "forma": "caja",
+   "centro": [
+    -0.01,
+    0.06,
+    -0.0293
+   ],
+   "tam": [
+    0.049,
+    0.044,
+    0.0065
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "csi_piso_placa",
+   "forma": "caja",
+   "centro": [
+    -0.01,
+    0.06,
+    -0.034
+   ],
+   "tam": [
+    0.025,
+    0.024,
+    0.003
+   ],
+   "color": "verde"
+  },
+  {
+   "nombre": "csi_piso_lente",
+   "forma": "cilindro",
+   "centro": [
+    -0.01,
+    0.06,
+    -0.0367
+   ],
+   "tam": [
+    0.009,
+    0.004
+   ],
+   "color": "negro",
+   "eje": "z"
+  }
+ ],
+ "pivotes_plus": {
+  "pan": [
+   0.09,
+   0.0,
+   0.0365
+  ],
+  "tilt": [
+   0.09,
+   0.0,
+   0.11
+  ]
+ },
+ "piezas_plus_abajo": [
+  {
+   "nombre": "placa_inferior",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    -0.025
+   ],
+   "tam": [
+    0.19,
+    0.19,
+    0.003
+   ],
+   "color": "carbono"
+  },
+  {
+   "nombre": "placa_superior",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    0.025
+   ],
+   "tam": [
+    0.17,
+    0.17,
+    0.003
+   ],
+   "color": "carbono"
+  },
+  {
+   "nombre": "pixhawk",
+   "forma": "caja",
+   "centro": [
+    -0.01,
+    0,
+    0.0
+   ],
+   "tam": [
+    0.082,
+    0.05,
+    0.016
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "placa_bateria",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    -0.078
+   ],
+   "tam": [
+    0.17,
+    0.09,
+    0.003
+   ],
+   "color": "carbono"
+  },
+  {
+   "nombre": "brazo0",
+   "forma": "cilindro",
+   "centro": [
+    0.1061,
+    0.1061,
+    0.0
+   ],
+   "tam": [
+    0.025,
+    0.2
+   ],
+   "color": "carbono",
+   "eje": "x",
+   "yaw": 45
+  },
+  {
+   "nombre": "bisagra0",
+   "forma": "caja",
+   "centro": [
+    0.0495,
+    0.0495,
+    0.0
+   ],
+   "tam": [
+    0.05,
+    0.04,
+    0.05
+   ],
+   "color": "negro",
+   "yaw": 45
+  },
+  {
+   "nombre": "soporte_motor0",
+   "forma": "caja",
+   "centro": [
+    0.1768,
+    0.1768,
+    -0.012
+   ],
+   "tam": [
+    0.04,
+    0.04,
+    0.03
+   ],
+   "color": "negro",
+   "yaw": 45
+  },
+  {
+   "nombre": "motor0",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    0.1768,
+    0.018
+   ],
+   "tam": [
+    0.028,
+    0.032
+   ],
+   "color": "rojo",
+   "eje": "z"
+  },
+  {
+   "nombre": "motor_base0",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    0.1768,
+    0.0
+   ],
+   "tam": [
+    0.024,
+    0.012
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "esc0",
+   "forma": "caja",
+   "centro": [
+    0.0919,
+    0.0919,
+    0.019
+   ],
+   "tam": [
+    0.055,
+    0.025,
+    0.012
+   ],
+   "color": "negro",
+   "yaw": 45
+  },
+  {
+   "nombre": "esc_etiqueta0",
+   "forma": "caja",
+   "centro": [
+    0.0919,
+    0.0919,
+    0.026
+   ],
+   "tam": [
+    0.04,
+    0.018,
+    0.0015
+   ],
+   "color": "amarillo",
+   "yaw": 45
+  },
+  {
+   "nombre": "helice0",
+   "forma": "caja",
+   "centro": [
+    0.1768,
+    0.1768,
+    0.046
+   ],
+   "tam": [
+    0.254,
+    0.02,
+    0.003
+   ],
+   "color": "negro",
+   "yaw": 65
+  },
+  {
+   "nombre": "cono0",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    0.1768,
+    0.052
+   ],
+   "tam": [
+    0.03,
+    0.03
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "brazo1",
+   "forma": "cilindro",
+   "centro": [
+    -0.1061,
+    0.1061,
+    0.0
+   ],
+   "tam": [
+    0.025,
+    0.2
+   ],
+   "color": "carbono",
+   "eje": "x",
+   "yaw": 135
+  },
+  {
+   "nombre": "bisagra1",
+   "forma": "caja",
+   "centro": [
+    -0.0495,
+    0.0495,
+    0.0
+   ],
+   "tam": [
+    0.05,
+    0.04,
+    0.05
+   ],
+   "color": "negro",
+   "yaw": 135
+  },
+  {
+   "nombre": "soporte_motor1",
+   "forma": "caja",
+   "centro": [
+    -0.1768,
+    0.1768,
+    -0.012
+   ],
+   "tam": [
+    0.04,
+    0.04,
+    0.03
+   ],
+   "color": "negro",
+   "yaw": 135
+  },
+  {
+   "nombre": "motor1",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    0.1768,
+    0.018
+   ],
+   "tam": [
+    0.028,
+    0.032
+   ],
+   "color": "rojo",
+   "eje": "z"
+  },
+  {
+   "nombre": "motor_base1",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    0.1768,
+    0.0
+   ],
+   "tam": [
+    0.024,
+    0.012
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "esc1",
+   "forma": "caja",
+   "centro": [
+    -0.0919,
+    0.0919,
+    0.019
+   ],
+   "tam": [
+    0.055,
+    0.025,
+    0.012
+   ],
+   "color": "negro",
+   "yaw": 135
+  },
+  {
+   "nombre": "esc_etiqueta1",
+   "forma": "caja",
+   "centro": [
+    -0.0919,
+    0.0919,
+    0.026
+   ],
+   "tam": [
+    0.04,
+    0.018,
+    0.0015
+   ],
+   "color": "amarillo",
+   "yaw": 135
+  },
+  {
+   "nombre": "helice1",
+   "forma": "caja",
+   "centro": [
+    -0.1768,
+    0.1768,
+    0.046
+   ],
+   "tam": [
+    0.254,
+    0.02,
+    0.003
+   ],
+   "color": "negro",
+   "yaw": 155
+  },
+  {
+   "nombre": "cono1",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    0.1768,
+    0.052
+   ],
+   "tam": [
+    0.03,
+    0.03
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "brazo2",
+   "forma": "cilindro",
+   "centro": [
+    -0.1061,
+    -0.1061,
+    0.0
+   ],
+   "tam": [
+    0.025,
+    0.2
+   ],
+   "color": "carbono",
+   "eje": "x",
+   "yaw": 225
+  },
+  {
+   "nombre": "bisagra2",
+   "forma": "caja",
+   "centro": [
+    -0.0495,
+    -0.0495,
+    0.0
+   ],
+   "tam": [
+    0.05,
+    0.04,
+    0.05
+   ],
+   "color": "negro",
+   "yaw": 225
+  },
+  {
+   "nombre": "soporte_motor2",
+   "forma": "caja",
+   "centro": [
+    -0.1768,
+    -0.1768,
+    -0.012
+   ],
+   "tam": [
+    0.04,
+    0.04,
+    0.03
+   ],
+   "color": "negro",
+   "yaw": 225
+  },
+  {
+   "nombre": "motor2",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    -0.1768,
+    0.018
+   ],
+   "tam": [
+    0.028,
+    0.032
+   ],
+   "color": "rojo",
+   "eje": "z"
+  },
+  {
+   "nombre": "motor_base2",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    -0.1768,
+    0.0
+   ],
+   "tam": [
+    0.024,
+    0.012
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "esc2",
+   "forma": "caja",
+   "centro": [
+    -0.0919,
+    -0.0919,
+    0.019
+   ],
+   "tam": [
+    0.055,
+    0.025,
+    0.012
+   ],
+   "color": "negro",
+   "yaw": 225
+  },
+  {
+   "nombre": "esc_etiqueta2",
+   "forma": "caja",
+   "centro": [
+    -0.0919,
+    -0.0919,
+    0.026
+   ],
+   "tam": [
+    0.04,
+    0.018,
+    0.0015
+   ],
+   "color": "amarillo",
+   "yaw": 225
+  },
+  {
+   "nombre": "helice2",
+   "forma": "caja",
+   "centro": [
+    -0.1768,
+    -0.1768,
+    0.046
+   ],
+   "tam": [
+    0.254,
+    0.02,
+    0.003
+   ],
+   "color": "negro",
+   "yaw": 245
+  },
+  {
+   "nombre": "cono2",
+   "forma": "cilindro",
+   "centro": [
+    -0.1768,
+    -0.1768,
+    0.052
+   ],
+   "tam": [
+    0.03,
+    0.03
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "brazo3",
+   "forma": "cilindro",
+   "centro": [
+    0.1061,
+    -0.1061,
+    0.0
+   ],
+   "tam": [
+    0.025,
+    0.2
+   ],
+   "color": "carbono",
+   "eje": "x",
+   "yaw": 315
+  },
+  {
+   "nombre": "bisagra3",
+   "forma": "caja",
+   "centro": [
+    0.0495,
+    -0.0495,
+    0.0
+   ],
+   "tam": [
+    0.05,
+    0.04,
+    0.05
+   ],
+   "color": "negro",
+   "yaw": 315
+  },
+  {
+   "nombre": "soporte_motor3",
+   "forma": "caja",
+   "centro": [
+    0.1768,
+    -0.1768,
+    -0.012
+   ],
+   "tam": [
+    0.04,
+    0.04,
+    0.03
+   ],
+   "color": "negro",
+   "yaw": 315
+  },
+  {
+   "nombre": "motor3",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    -0.1768,
+    0.018
+   ],
+   "tam": [
+    0.028,
+    0.032
+   ],
+   "color": "rojo",
+   "eje": "z"
+  },
+  {
+   "nombre": "motor_base3",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    -0.1768,
+    0.0
+   ],
+   "tam": [
+    0.024,
+    0.012
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "esc3",
+   "forma": "caja",
+   "centro": [
+    0.0919,
+    -0.0919,
+    0.019
+   ],
+   "tam": [
+    0.055,
+    0.025,
+    0.012
+   ],
+   "color": "negro",
+   "yaw": 315
+  },
+  {
+   "nombre": "esc_etiqueta3",
+   "forma": "caja",
+   "centro": [
+    0.0919,
+    -0.0919,
+    0.026
+   ],
+   "tam": [
+    0.04,
+    0.018,
+    0.0015
+   ],
+   "color": "amarillo",
+   "yaw": 315
+  },
+  {
+   "nombre": "helice3",
+   "forma": "caja",
+   "centro": [
+    0.1768,
+    -0.1768,
+    0.046
+   ],
+   "tam": [
+    0.254,
+    0.02,
+    0.003
+   ],
+   "color": "negro",
+   "yaw": 335
+  },
+  {
+   "nombre": "cono3",
+   "forma": "cilindro",
+   "centro": [
+    0.1768,
+    -0.1768,
+    0.052
+   ],
+   "tam": [
+    0.03,
+    0.03
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "placa_jetson",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    0.073
+   ],
+   "tam": [
+    0.12,
+    0.1,
+    0.003
+   ],
+   "color": "carbono"
+  },
+  {
+   "nombre": "separador_turquesa",
+   "forma": "cilindro",
+   "centro": [
+    0.045,
+    0.04,
+    0.0605
+   ],
+   "tam": [
+    0.012,
+    0.02
+   ],
+   "color": "turquesa",
+   "eje": "z"
+  },
+  {
+   "nombre": "poste_dorado",
+   "forma": "cilindro",
+   "centro": [
+    0.05,
+    0.04,
+    0.098
+   ],
+   "tam": [
+    0.005,
+    0.048
+   ],
+   "color": "dorado",
+   "eje": "z"
+  },
+  {
+   "nombre": "separador_turquesa",
+   "forma": "cilindro",
+   "centro": [
+    0.045,
+    -0.04,
+    0.0605
+   ],
+   "tam": [
+    0.012,
+    0.02
+   ],
+   "color": "turquesa",
+   "eje": "z"
+  },
+  {
+   "nombre": "poste_dorado",
+   "forma": "cilindro",
+   "centro": [
+    0.05,
+    -0.04,
+    0.098
+   ],
+   "tam": [
+    0.005,
+    0.048
+   ],
+   "color": "dorado",
+   "eje": "z"
+  },
+  {
+   "nombre": "separador_turquesa",
+   "forma": "cilindro",
+   "centro": [
+    -0.045,
+    0.04,
+    0.0605
+   ],
+   "tam": [
+    0.012,
+    0.02
+   ],
+   "color": "turquesa",
+   "eje": "z"
+  },
+  {
+   "nombre": "poste_dorado",
+   "forma": "cilindro",
+   "centro": [
+    -0.05,
+    0.04,
+    0.098
+   ],
+   "tam": [
+    0.005,
+    0.048
+   ],
+   "color": "dorado",
+   "eje": "z"
+  },
+  {
+   "nombre": "separador_turquesa",
+   "forma": "cilindro",
+   "centro": [
+    -0.045,
+    -0.04,
+    0.0605
+   ],
+   "tam": [
+    0.012,
+    0.02
+   ],
+   "color": "turquesa",
+   "eje": "z"
+  },
+  {
+   "nombre": "poste_dorado",
+   "forma": "cilindro",
+   "centro": [
+    -0.05,
+    -0.04,
+    0.098
+   ],
+   "tam": [
+    0.005,
+    0.048
+   ],
+   "color": "dorado",
+   "eje": "z"
+  },
+  {
+   "nombre": "jetson",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    0.09
+   ],
+   "tam": [
+    0.1,
+    0.08,
+    0.02
+   ],
+   "color": "verde"
+  },
+  {
+   "nombre": "caja_acrilico",
+   "forma": "caja",
+   "centro": [
+    0,
+    0,
+    0.1
+   ],
+   "tam": [
+    0.105,
+    0.085,
+    0.045
+   ],
+   "color": "acrilico",
+   "translucido": true
+  },
+  {
+   "nombre": "ventilador",
+   "forma": "caja",
+   "centro": [
+    0.0,
+    0.0,
+    0.1285
+   ],
+   "tam": [
+    0.04,
+    0.04,
+    0.012
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "antena_izq",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    0.108,
+    0.115
+   ],
+   "tam": [
+    0.008,
+    0.11
+   ],
+   "color": "negro",
+   "eje": "y"
+  },
+  {
+   "nombre": "antena_der",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    -0.108,
+    0.115
+   ],
+   "tam": [
+    0.008,
+    0.11
+   ],
+   "color": "negro",
+   "eje": "y"
+  },
+  {
+   "nombre": "gps_mastil",
+   "forma": "cilindro",
+   "centro": [
+    -0.07,
+    0.0,
+    0.11
+   ],
+   "tam": [
+    0.01,
+    0.04
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "gps",
+   "forma": "cilindro",
+   "centro": [
+    -0.07,
+    0.0,
+    0.136
+   ],
+   "tam": [
+    0.05,
+    0.012
+   ],
+   "color": "negro",
+   "eje": "z"
+  },
+  {
+   "nombre": "bateria",
+   "forma": "caja",
+   "centro": [
+    -0.01,
+    0.0,
+    -0.103
+   ],
+   "tam": [
+    0.155,
+    0.05,
+    0.045
+   ],
+   "color": "gris"
+  },
+  {
+   "nombre": "velcro_azul",
+   "forma": "caja",
+   "centro": [
+    -0.01,
+    0.0,
+    -0.103
+   ],
+   "tam": [
+    0.03,
+    0.054,
+    0.049
+   ],
+   "color": "azul"
+  },
+  {
+   "nombre": "pata",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    0.14,
+    -0.145
+   ],
+   "tam": [
+    0.016,
+    0.24
+   ],
+   "color": "carbono",
+   "eje": "z",
+   "inclinacion": 12
+  },
+  {
+   "nombre": "apoyo_espuma",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    0.17,
+    -0.245
+   ],
+   "tam": [
+    0.03,
+    0.34
+   ],
+   "color": "espuma",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    -0.15,
+    0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    0.15,
+    0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "pata",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    -0.14,
+    -0.145
+   ],
+   "tam": [
+    0.016,
+    0.24
+   ],
+   "color": "carbono",
+   "eje": "z",
+   "inclinacion": -12
+  },
+  {
+   "nombre": "apoyo_espuma",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    -0.17,
+    -0.245
+   ],
+   "tam": [
+    0.03,
+    0.34
+   ],
+   "color": "espuma",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    -0.15,
+    -0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    0.0,
+    -0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "anillo_rojo",
+   "forma": "cilindro",
+   "centro": [
+    0.15,
+    -0.17,
+    -0.245
+   ],
+   "tam": [
+    0.033,
+    0.01
+   ],
+   "color": "rojo",
+   "eje": "x"
+  },
+  {
+   "nombre": "tf03",
+   "forma": "caja",
+   "centro": [
+    0.118,
+    -0.075,
+    -0.011
+   ],
+   "tam": [
+    0.047,
+    0.074,
+    0.0365
+   ],
+   "color": "negro"
+  },
+  {
+   "nombre": "tf03_ventana",
+   "forma": "caja",
+   "centro": [
+    0.1418,
+    -0.075,
+    -0.011
+   ],
+   "tam": [
+    0.0012,
+    0.058,
+    0.022
+   ],
+   "color": "gris"
+  },
+  {
+   "nombre": "pantilt_base",
+   "forma": "caja",
+   "centro": [
     0.075,
     0.0,
     -0.0345
@@ -2680,7 +4069,7 @@
    "eje": "z"
   }
  ],
- "pivotes_plus": {
+ "pivotes_plus_abajo": {
   "pan": [
    0.075,
    0.0,
@@ -3883,7 +5272,7 @@
   "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
   "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
   "Cables: no se modelan",
-  "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). Hardware recomienda ahora el pan-tilt ARRIBA, sobre la placa de arriba delante de la caja de la Jetson; aquí se modela la opción 2, COLGADO bajo el chasis. Rangos: pan ±89°, tilt −44°…+14°",
+  "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). El pan-tilt va ARRIBA (opción 1 de Hardware, la recomendada: sobre la placa de arriba, delante de la caja de la Jetson, corrido 15 mm hacia adelante para no tocarla); la opción 2, COLGADO bajo el chasis, es 'plus_abajo' (DRONIA_PAN_TILT=abajo o ?pantilt=abajo). Rangos: pan ±89°, tilt −44°…+14°",
   "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)"
  ]
 }

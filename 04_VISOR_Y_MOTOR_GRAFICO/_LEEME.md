@@ -289,8 +289,8 @@ privada): todo en un entorno, con la cancha de fútbol, la cancha cerrada y los 
   lado derecho** a la altura de las placas, estructura impresa volteada bajo el chasis sobre el frente de la batería), `plus` (variante H: **pan-tilt de 2 servos** con
   solo la CSI#1 y el TF-Luna encima, **CSI#2 fija al piso**, TF03 fijo donde está) y `gimbal` (el de antes, historia). `DRONIA_DRON=minimo|plus|gimbal` (Unreal: por omisión
   plus; Blender: minimo) o `?dron=` en la estación. **Las posiciones del pan-tilt, de la CSI del piso, del TF03 y de la batería (corrida 10 mm atrás) las lee `dron_real.py` de
-  `05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json` (campos `MONTAJE_*`, que Hardware marca PROVISIONALES: nadie ha medido el dron).** Hardware recomienda ahora el pan-tilt
-  ARRIBA (sobre la placa de arriba, delante de la caja de la Jetson); aquí se modela la opción 2, COLGADO bajo el chasis. Rangos del plus: pan ±89°, tilt −44°…+14°.
+  `05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json` (campos `MONTAJE_*`, que Hardware marca PROVISIONALES: nadie ha medido el dron).** El **pan-tilt va ARRIBA por omisión** (opción 1 de Hardware, la recomendada: sobre la placa de arriba, delante de la caja de la Jetson, corrido 15 mm hacia adelante para no tocarla,
+  con la plataforma "arriba" de `pan_tilt_servos.scad`); la opción 2, COLGADO bajo el chasis, se ve con `DRONIA_PAN_TILT=abajo` (Unreal y Blender) o `?pantilt=abajo` (estación). Rangos del plus: pan ±89°, tilt −44°…+14°.
 - **Estación**: por omisión se ve el dron del **plus**; el botón "Dron: Plus / Mínimo" (arriba, junto a "Ruta") muestra el del mínimo. En el **tránsito** de la misión
   completa el pan-tilt está **parqueado en pan 0° / tilt −5°** (la cámara fija del mínimo; cartel "PARQUEADO 0° / −5° (TRÁNSITO)"); en la **zona de IA** la "Vista del dron" muestra
   la CSI#1 con "PAN ±x° · TILT ±y°" y la **CSI del piso**, y el modelo 3D mueve sus dos servos con la partida (`c.gmb` = tilt; `c.pan`, hoy 0: lo traerá `foto()` cuando Simulación

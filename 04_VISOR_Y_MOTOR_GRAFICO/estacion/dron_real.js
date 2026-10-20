@@ -15,7 +15,8 @@
   const tres = (x, y, z) => new THREE.Vector3(x, z, -y);
   const PIVOTE = tres(0.150, 0.0, -0.200);                    // eje del motor de pitch del gimbal viejo
   const GIMBAL = new Set(["gimbal_plataforma", "tf03", "camara_usb_placa", "camara_usb_lente", "gimbal_motor_pitch"]);
-  const CLAVE = { minimo: "piezas", plus: "piezas_plus", gimbal: "piezas_gimbal" };
+  const ABAJO = new URLSearchParams(location.search).get("pantilt") === "abajo";                 // ?pantilt=abajo: la opción 2 de Hardware (colgado bajo el chasis)
+  const CLAVE = { minimo: "piezas", plus: ABAJO ? "piezas_plus_abajo" : "piezas_plus", gimbal: "piezas_gimbal" };
   const mats = {};
   const material = p => {
     const k = p.color + (p.translucido ? "_t" : "");
@@ -40,7 +41,7 @@
     window.PANTILT = null;
     let pan = null, tilt = null;
     if (variante === "plus") {                                       // dos grupos anidados: el pan gira todo lo de encima; el tilt, además, la cuna
-      const pp = modelo.pivotes_plus;
+      const pp = ABAJO ? modelo.pivotes_plus_abajo : modelo.pivotes_plus;
       pan = new THREE.Group(); pan.position.copy(tres(...pp.pan));
       tilt = new THREE.Group(); tilt.position.copy(tres(...pp.tilt).sub(pan.position));
       pan.add(tilt); real.add(pan);

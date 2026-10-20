@@ -217,14 +217,14 @@ def dron(etiqueta="Dron", z_centro=3.3):
     grupos = {}
     if var == "plus":                                                               # pan y tilt: dos puntos sin forma que Sequencer puede girar (Dron_rep_pan y _tilt)
         for g in ("pan", "tilt"):
-            pv = modelo["pivotes_plus"][g]
+            pv = modelo["pivotes_plus_abajo" if os.environ.get("DRONIA_PAN_TILT") == "abajo" else "pivotes_plus"][g]
             a = actores.spawn_actor_from_class(unreal.StaticMeshActor, ue(pv[0], pv[1], z_centro + pv[2]), unreal.Rotator(0, 0, 0))
             a.set_actor_label(f"{etiqueta}_{g}")
             a.set_folder_path("Dron")
             grupos[g] = a
         grupos["tilt"].attach_to_actor(grupos["pan"], "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
         grupos["pan"].attach_to_actor(raiz, "", unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD, False)
-    clave = {"minimo": "piezas", "plus": "piezas_plus", "gimbal": "piezas_gimbal"}.get(var, "piezas")
+    clave = {"minimo": "piezas", "plus": "piezas_plus_abajo" if os.environ.get("DRONIA_PAN_TILT") == "abajo" else "piezas_plus", "gimbal": "piezas_gimbal"}.get(var, "piezas")
     for p in modelo[clave]:
         col = tuple(modelo["colores"][p["color"]])
         if p["color"] not in mats:

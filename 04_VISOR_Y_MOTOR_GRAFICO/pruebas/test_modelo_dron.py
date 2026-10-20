@@ -17,17 +17,18 @@ COPIAS = [os.path.join(RAIZ, "modelo_dron", "dron_real.json"), os.path.join(RAIZ
 
 class TestModeloDron(unittest.TestCase):
     def test_las_copias_del_json_son_iguales_al_modelo(self):
-        esperado = json.loads(json.dumps({"piezas": dron_real.piezas(), "piezas_plus": dron_real.piezas("plus"), "piezas_gimbal": dron_real.piezas("gimbal"), "colores": dron_real.COLORES}))
+        esperado = json.loads(json.dumps({"piezas": dron_real.piezas(), "piezas_plus": dron_real.piezas("plus"), "piezas_plus_abajo": dron_real.piezas("plus_abajo"), "piezas_gimbal": dron_real.piezas("gimbal"), "colores": dron_real.COLORES}))
         for ruta in COPIAS:
             with open(ruta, encoding="utf-8") as f:
                 d = json.load(f)
-            for k in ("piezas", "piezas_plus", "piezas_gimbal"):
+            for k in ("piezas", "piezas_plus", "piezas_plus_abajo", "piezas_gimbal"):
                 self.assertEqual(d[k], esperado[k], ruta + " está desactualizado: correr modelo_dron/dron_real.py")
             self.assertEqual(d["variante"], "minimo")
-            self.assertEqual(d["pivotes_plus"], json.loads(json.dumps({"pan": dron_real.PIVOTE_PAN, "tilt": dron_real.PIVOTE_TILT})))
+            self.assertEqual(d["pivotes_plus"], json.loads(json.dumps(dict(zip(("pan", "tilt"), dron_real.pivotes(True))))))
+            self.assertEqual(d["pivotes_plus_abajo"], json.loads(json.dumps(dict(zip(("pan", "tilt"), dron_real.pivotes(False))))))
 
     def test_cada_pieza_es_valida(self):
-        for variante in ("minimo", "plus", "gimbal"):
+        for variante in ("minimo", "plus", "plus_abajo", "gimbal"):
             for p in dron_real.piezas(variante):
                 self.assertIn(p["forma"], ("caja", "cilindro"))
                 self.assertIn(p["color"], dron_real.COLORES)
@@ -80,7 +81,17 @@ class TestModeloDron(unittest.TestCase):
         self.assertLess(P["csi_piso_placa"]["centro"][2], 0)             # la del piso, bajo el chasis y fuera de la batería
         self.assertGreater(abs(P["csi_piso_placa"]["centro"][1]), P["bateria"]["tam"][1] / 2)
         self.assertLess(P["bateria"]["centro"][0], 0.0)                  # batería corrida hacia atrás por el centro de gravedad (10 mm, de variante_H.json)
-        self.assertLess(dron_real.PIVOTE_TILT[2], dron_real.PIVOTE_PAN[2])
+        # por omisión el pan-tilt va ARRIBA (opción 1 de Hardware): sobre la placa de arriba, delante de la caja de la Jetson, sin tocarla
+        pan, tilt = dron_real.pivotes(True)
+        self.assertGreater(P["pantilt_base"]["centro"][2], P["placa_superior"]["centro"][2])
+        self.assertGreater(tilt[2], pan[2])
+        self.assertGreater(P["pan_mejilla_a"]["centro"][0] - P["pan_mejilla_a"]["tam"][0] / 2, P["caja_acrilico"]["centro"][0] + P["caja_acrilico"]["tam"][0] / 2)
+        self.assertAlmostEqual(tilt[2] - pan[2], 0.0735, places=3)       # el eje del tilt a 73.5 mm de la base, como dice Hardware
+        # la opción 2: colgado bajo el chasis (DRONIA_PAN_TILT=abajo / ?pantilt=abajo)
+        A = {p["nombre"]: p for p in dron_real.piezas("plus_abajo")}
+        self.assertLess(A["pantilt_base"]["centro"][2], A["placa_inferior"]["centro"][2])
+        self.assertLess(dron_real.pivotes(False)[1][2], dron_real.pivotes(False)[0][2])
+        self.assertEqual({k for k in A}, {k for k in P})                  # las mismas piezas, en otro lugar
 
     def test_el_tf03_va_en_el_lado_derecho_en_los_dos_drones(self):
         for v in ("minimo", "plus"):

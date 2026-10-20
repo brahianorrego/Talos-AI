@@ -39,7 +39,7 @@ def construir(nombre="dron", modelo=None):
             modelo = json.load(f)
     raiz = bpy.data.objects.new(nombre, None)
     bpy.context.scene.collection.objects.link(raiz)
-    clave = {"minimo": "piezas", "plus": "piezas_plus", "gimbal": "piezas_gimbal"}.get(os.environ.get("DRONIA_DRON", "minimo"), "piezas")    # DRONIA_DRON=minimo|plus|gimbal
+    clave = {"minimo": "piezas", "plus": "piezas_plus_abajo" if os.environ.get("DRONIA_PAN_TILT") == "abajo" else "piezas_plus", "gimbal": "piezas_gimbal"}.get(os.environ.get("DRONIA_DRON", "minimo"), "piezas")    # DRONIA_DRON=minimo|plus|gimbal
     for p in modelo[clave]:
         x, y, z = p["centro"]
         yaw, incl = math.radians(p.get("yaw", 0.0)), math.radians(p.get("inclinacion", 0.0))
