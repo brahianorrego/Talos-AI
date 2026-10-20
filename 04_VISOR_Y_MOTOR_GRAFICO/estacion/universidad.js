@@ -172,14 +172,24 @@
 
   // ---------------------------------------------------------------------------------------------- edificios con fachadas dibujadas
   const fachada = (tipo, ancho, alto) => {
-    const PPM = 14, W = Math.round(ancho * PPM), H = Math.round(alto * PPM), [c, g] = lienzo(W, H);
-    const ladrillo = (col, a, b) => { g.fillStyle = col; g.fillRect(a, b[0], W - a, b[1]); for (let i = 0; i < 900 * (ancho / 20); i++) { g.fillStyle = `rgba(${Math.random() < .5 ? "70,25,15" : "230,150,110"},${Math.random() * 0.16})`; g.fillRect(Math.random() * W, b[0] + Math.random() * b[1], 3 + Math.random() * 6, 2); } };
+    const PPM = 28, W = Math.round(ancho * PPM), H = Math.round(alto * PPM), [c, g] = lienzo(W, H);
+    const ladrillo = (col, a, b) => {                                    // hiladas de ladrillo (7.5 x 24 cm) con mortero y un tono distinto por ladrillo
+      const base = parseInt(col.slice(1), 16), R = base >> 16, G = (base >> 8) & 255, B = base & 255, ah = Math.max(2, 0.075 * PPM), aw = 0.24 * PPM;
+      g.fillStyle = "#c4bcae"; g.fillRect(a, b[0], W - a, b[1]);
+      for (let k = 0, y = b[0]; y < b[0] + b[1]; y += ah, k++) for (let x = -(k % 2 ? aw / 2 : 0); x < W; x += aw) {
+        const f = 0.82 + Math.random() * 0.3; g.fillStyle = `rgb(${Math.min(255, R * f) | 0},${Math.min(255, G * f) | 0},${Math.min(255, B * f) | 0})`; g.fillRect(x + 0.6, y + 0.6, aw - 1.2, ah - 1.2);
+      }
+    };
     if (tipo === "laboratorio") { g.fillStyle = "#c9c9c4"; g.fillRect(0, 0, W, H); ruido(g, W, H, 1500, .08); }
     else ladrillo(tipo === "torre" ? "#b0613f" : tipo === "caseta" ? "#a9563a" : "#b5563a", 0, [0, H]);
     const ventanas = (paso, ancV, altV, y0, col, marco) => {
       for (let y = y0; y + altV < H - 0.4 * PPM; y += paso * PPM) for (let x = 1.4 * PPM; x + ancV * PPM < W - 0.5 * PPM; x += (ancV + 1.3) * PPM) {
-        g.fillStyle = marco; g.fillRect(x - 3, y - 3, ancV * PPM + 6, altV * PPM + 6); g.fillStyle = col; g.fillRect(x, y, ancV * PPM, altV * PPM);
-        g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(x, y, ancV * PPM * 0.4, altV * PPM);
+        const m = 0.07 * PPM, w = ancV * PPM, h = altV * PPM;
+        g.fillStyle = "#aaa69e"; g.fillRect(x - 0.12 * PPM, y - 0.18 * PPM, w + 0.24 * PPM, 0.16 * PPM);                      // dintel de concreto
+        g.fillStyle = marco; g.fillRect(x - m, y - m, w + 2 * m, h + 2 * m); g.fillStyle = col; g.fillRect(x, y, w, h);
+        g.fillStyle = marco; g.fillRect(x + w / 3 - m / 2, y, m, h); g.fillRect(x + 2 * w / 3 - m / 2, y, m, h); g.fillRect(x, y + h * 0.55, w, m);   // divisiones
+        g.fillStyle = "rgba(255,255,255,.16)"; g.beginPath(); g.moveTo(x, y + h * 0.9); g.lineTo(x + w * 0.55, y); g.lineTo(x + w * 0.8, y); g.lineTo(x + w * 0.25, y + h * 0.9); g.fill();   // reflejo
+        g.fillStyle = "#a8a49c"; g.fillRect(x - 0.1 * PPM, y + h + m, w + 0.2 * PPM, 0.08 * PPM);                              // alféizar
       }
     };
     if (tipo === "apartamentos") { ventanas(3.0, 1.5, 1.4, 1.0 * PPM, "#2a3a4a", "#d9d3c7"); for (let y = 3 * PPM; y < H; y += 3 * PPM) { g.fillStyle = "rgba(210,205,195,.9)"; g.fillRect(0, y - 0.35 * PPM, W, 0.35 * PPM); } }
@@ -190,6 +200,8 @@
     else if (tipo === "coliseo") {                                                // ladrillo abajo, franja larga de ventanas arriba
       g.fillStyle = "#26323d"; g.fillRect(0, H * 0.18, W, H * 0.3); g.strokeStyle = "#c0523a"; g.lineWidth = 5; for (let x = 0; x < W; x += 3.2 * PPM) { g.beginPath(); g.moveTo(x, H * 0.18); g.lineTo(x, H * 0.48); g.stroke(); }
     }
+    g.fillStyle = "#8c867e"; g.fillRect(0, H - 0.5 * PPM, W, 0.5 * PPM);                      // zócalo de concreto
+    g.fillStyle = "#c4beb4"; g.fillRect(0, 0, W, 0.35 * PPM);                                   // cornisa
     return tex(c);
   };
   E.edificios.forEach(b => {
