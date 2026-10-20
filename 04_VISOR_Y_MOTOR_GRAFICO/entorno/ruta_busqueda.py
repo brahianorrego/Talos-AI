@@ -19,7 +19,7 @@ import math
 
 Z_RUTA = 3.30
 D_DETRAS = 4.5
-BOCA = 2.12
+BOCA = 2.12                      # boca de una V de 90° con alas de 1.5 m; con otro ángulo se usa la boca real de cada V (distancia entre los extremos de sus alas)
 MARGEN = 2.0
 AMP_VAIVEN = 30.0
 LARGO_VAIVEN = 6.0
@@ -51,7 +51,7 @@ def uves(paneles, tol=0.05):
                         eje = _norm((medio[0] - ap[0], medio[1] - ap[1]))
                         d = math.hypot(medio[0] - ap[0], medio[1] - ap[1])
                         lista.append({"apice": list(ap), "eje": list(eje), "centro": [ap[0] + eje[0] * d / 2, ap[1] + eje[1] * d / 2],
-                                      "alas": [list(ex1), list(ex2)]})
+                                      "alas": [list(ex1), list(ex2)], "boca": math.hypot(ex1[0] - ex2[0], ex1[1] - ex2[1])})
                         break
                 else:
                     continue
@@ -74,7 +74,7 @@ def ruta(paneles, inicio):
         c = v["centro"]
         M = (c[0] + u[0] * D_DETRAS, c[1] + u[1] * D_DETRAS)
         psi_M = math.degrees(math.atan2(-u[1], -u[0]))                    # mirando hacia la V
-        h = (BOCA + 2 * MARGEN) / 2
+        h = (v.get("boca", BOCA) + 2 * MARGEN) / 2
         esquinas = [(c[0] + h * (su * u[0] + sw * w[0]), c[1] + h * (su * u[1] + sw * w[1])) for su, sw in ((1, 1), (1, -1), (-1, -1), (-1, 1))]
         # el cuadrado se recorre empezando por la esquina más cercana al punto donde está el dron, hacia el lado que tenga menos giro
         k0 = min(range(4), key=lambda k: math.hypot(esquinas[k][0] - pos[0], esquinas[k][1] - pos[1]))
@@ -86,7 +86,7 @@ def ruta(paneles, inicio):
             pts.append([a[0], a[1], Z_RUTA, psi, f"V{n} · esquina {i + 1}"])
         pts.append([orden[-1][0], orden[-1][1], Z_RUTA, pts[0][3], f"V{n} · cierra el cuadrado"])
         pts.append([M[0], M[1], Z_RUTA, psi_M, f"V{n} · de frente a la boca"])
-        salida["v"].append({"apice": v["apice"], "eje": v["eje"], "centro": c, "alas": v["alas"], "puntos": pts, "cuadrado": [[p[0], p[1]] for p in pts[:5]],
+        salida["v"].append({"apice": v["apice"], "eje": v["eje"], "centro": c, "alas": v["alas"], "boca": v["boca"], "puntos": pts, "cuadrado": [[p[0], p[1]] for p in pts[:5]],
                             "vaiven": {"desde": [M[0], M[1]], "psi": psi_M, "amplitud": AMP_VAIVEN, "largo": LARGO_VAIVEN}})
         for p in pts:
             puntos_total.append([p[0], p[1], p[2]])

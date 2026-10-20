@@ -46,6 +46,16 @@ class TestRuta(unittest.TestCase):
     def test_empieza_por_la_v_mas_cercana(self):
         self.assertLess(self.r["v"][0]["centro"][1], 0.0)
 
+    def test_una_v_casi_plana_usa_su_boca_real(self):
+        """El ángulo entre los dos paneles de una V varía de 90° a ~170°: el cuadrado sale de la boca real (extremos de las alas)."""
+        a = math.radians(170)
+        alas = lambda s: [0.0, 5.0, s * 1.5 * math.sin(a / 2), 5.0 + 1.5 * math.cos(a / 2), 2.3]
+        r = R.ruta([alas(-1), alas(1), PANELES[0], PANELES[1]], (-2.0, -12.0, 1.85))
+        plana = max(r["v"], key=lambda v: v["boca"])
+        self.assertAlmostEqual(plana["boca"], 2 * 1.5 * math.sin(a / 2), places=2)
+        c = plana["cuadrado"]
+        self.assertAlmostEqual(math.hypot(c[1][0] - c[0][0], c[1][1] - c[0][1]), plana["boca"] + 2 * R.MARGEN, places=2)
+
     def test_con_una_repeticion_real(self):
         import json
         for ruta in sorted(glob.glob(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL", "salida_v17_*", "replay_v17.json")))[:1]:

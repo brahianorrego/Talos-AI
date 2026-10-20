@@ -16,7 +16,7 @@ import unreal
 M = 100.0                                           # 1 m = 100 cm
 CARPETA = "/Game/DronIA"
 FORMAS = "/Engine/BasicShapes/"
-ALA, ALTO_PANEL = 1.5, 2.25                         # D-066 (hasta medirlos con cinta)
+ALA, ALTO_PANEL, GROSOR_PANEL = 1.5, 2.30, 0.05          # paneles delgados de 5 cm, 1.50 m de ancho y 2.30 m de alto (Brahian, 20-oct)
 
 actores = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 herramientas = unreal.AssetToolsHelpers.get_asset_tools()
@@ -182,7 +182,7 @@ def panel_v(nombre, xv, yv, abre_al_sur, mats):
     for lado in (-1, 1):
         xb, yb = xv + lado * d, yv + s * d
         cx, cy, psi = (xv + xb) / 2, (yv + yb) / 2, math.atan2(yb - yv, xb - xv)
-        caja(f"{nombre}_panel_{'izq' if lado < 0 else 'der'}", cx, cy, ALTO_PANEL / 2 + 0.03, ALA - 0.04, 0.035, ALTO_PANEL - 0.08, tablero, psi, "Paneles")
+        caja(f"{nombre}_panel_{'izq' if lado < 0 else 'der'}", cx, cy, ALTO_PANEL / 2 + 0.03, ALA - 0.04, GROSOR_PANEL, ALTO_PANEL - 0.08, tablero, psi, "Paneles")
         for z in (0.06, ALTO_PANEL - 0.02):
             caja(f"{nombre}_marco", cx, cy, z, ALA, 0.05, 0.04, marco, psi, "Paneles")
         caja(f"{nombre}_bolsa", xb, yb, 0.07, 0.45, 0.30, 0.14, arena, psi, "Paneles")
@@ -194,8 +194,8 @@ def paneles_de_foto(paneles, mats):
     tablero, marco, _ = mats
     for i, (x1, y1, x2, y2, h) in enumerate(paneles):
         L, psi = math.hypot(x2 - x1, y2 - y1), math.atan2(y2 - y1, x2 - x1)
-        caja(f"panel_{i}", (x1 + x2) / 2, (y1 + y2) / 2, h / 2, L, 0.035, h, tablero, psi, "Paneles")
-        caja(f"panel_{i}_marco", (x1 + x2) / 2, (y1 + y2) / 2, h - 0.02, L, 0.05, 0.04, marco, psi, "Paneles")
+        caja(f"panel_{i}", (x1 + x2) / 2, (y1 + y2) / 2, h / 2, L, GROSOR_PANEL, h, tablero, psi, "Paneles")
+        caja(f"panel_{i}_marco", (x1 + x2) / 2, (y1 + y2) / 2, h - 0.02, L, GROSOR_PANEL + 0.01, 0.04, marco, psi, "Paneles")
 
 
 def dron(etiqueta="Dron", z_centro=3.3):
