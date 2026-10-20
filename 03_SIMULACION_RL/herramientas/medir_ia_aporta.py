@@ -192,7 +192,7 @@ def v17(pol, n, semilla, max_pasos):
     fin = {}
     pasos = np.zeros(n)
     t_real8 = t_real8_bajo = t_dec = t_tot = 0
-    acc_cnt = np.zeros(len(E.CLASES_V17))
+    acc_cnt = np.zeros(len(E.clases_v17()))
     ap = np.full(n, E.N_ACC_PERSONA - 1)
     reconf = cambio_nodet = 0
     ent_hecho = np.zeros(n, bool)
@@ -253,7 +253,7 @@ def v17(pol, n, semilla, max_pasos):
             dec = info["decide17"] & vivo
             t_dec += int(dec.sum())
             t_tot += int(vivo.sum())
-            acc_cnt += np.bincount(info["boton"][dec], minlength=len(E.CLASES_V17))
+            acc_cnt += np.bincount(info["boton"][dec], minlength=len(E.clases_v17()))
             dh = np.hypot(env.px - env.dx[:, None], env.py - env.dy[:, None])
             r8 = (env.activa & (dh < E.R_GENTE)).any(1) & vivo
             t_real8 += int(r8.sum())
@@ -311,7 +311,7 @@ def v17(pol, n, semilla, max_pasos):
                tramo_visto_medio_s=float(np.mean(tramos)) if tramos else float("nan"),
                tramo_visto_mediana_s=float(np.median(tramos)) if tramos else float("nan"), reconf_partida=float(reconf / n), cambio_nodet=cambio_nodet,
                ruleta_partidas=float(np.mean([f["rul"] > 0 for f in F])), escudo_partidas=float(np.mean([f["esc"] > 0 for f in F])),
-               acciones={c: round(float(x), 3) for c, x in zip(E.CLASES_V17, acc_cnt / max(acc_cnt.sum(), 1))})
+               acciones={c: round(float(x), 3) for c, x in zip(E.clases_v17(), acc_cnt / max(acc_cnt.sum(), 1))})
     if isinstance(pol, Red17) and pol.P:
         P = np.concatenate(pol.P)
         H = -(P * np.log(P + 1e-12)).sum(1)

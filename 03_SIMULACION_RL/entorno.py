@@ -568,6 +568,19 @@ Y_ACTIVA_V17 = -12.5
 # elige el árbitro), la geocerca, las alturas mínimas y la búsqueda siguen siendo reglas.
 QUEDARSE, RODEAR_IZQ, RODEAR_DER, ACERCARSE, ALEJARSE, SUBIR, BAJAR = range(7)
 CLASES_V17 = ["QUEDARSE", "RODEAR_IZQ", "RODEAR_DER", "ACERCARSE", "ALEJARSE", "SUBIR", "BAJAR"]
+# V17.8: con PAN_RED_V17 la red tiene 3 botones más para apuntar el pan-tilt (variante H) mientras la búsqueda determinista
+# vuela: corren ±PASO_PAN_RED° lo que pide la regla, o vuelven al centro. Con el ladrón a la vista, la regla lo centra
+PAN_IZQ, PAN_DER, PAN_CENTRO = 7, 8, 9
+CLASES_V17_PAN = CLASES_V17 + ["PAN_IZQ", "PAN_DER", "PAN_CENTRO"]
+PAN_RED_V17 = False
+BUSQUEDA_PAN = (PREDECIR, INVESTIGAR, ASOMO, SIGUIENTE_OBSTACULO, VENTAJA_ALTURA, MURO_CANTO)
+PASO_PAN_RED = 20.0              # ° por toque
+K_VAIVEN_V17 = 0.0               # V17.8: multa por cada cambio de sentido de la altura que pide la red (SUBIR tras BAJAR)
+
+
+def clases_v17():
+    """Los botones de la red en la cancha: 7, o 10 con PAN_RED_V17."""
+    return CLASES_V17_PAN if PAN_RED_V17 else CLASES_V17
 D_ACERCA_V17, D_ALEJA_V17 = 3.5, 6.0     # m (horizontal) a los que llevan ACERCARSE y ALEJARSE
 VEL_RADIAL_V17 = 1.5           # m/s máximos de ACERCARSE / ALEJARSE
 PASO_Z_V17, Z_MAX_V17 = 0.5, Z_TACTICO   # SUBIR / BAJAR cambian la altura pedida 0.5 m, entre Z_SEGURA y 5.5 m
@@ -761,6 +774,10 @@ CAM_PISO_ACTIVA = True
 PAN_ACTIVO = False
 PAN_MAX = 90.0                   # ° (PROVISIONAL: Hardware confirma el recorrido del servo en banco)
 PAN_VEL, PAN_BANDA = 600.0, 1.0  # °/s y zona muerta del servo
+# Robustez (pedido del Coordinador, 20-oct): perillas para estresar la cancha. Por defecto no cambian nada
+N_CIVILES_V17 = 1                # civiles en la cancha (D-051: 1)
+FACTOR_SERVO_H = 1.0             # >1: servos del pan-tilt más lentos (velocidad / f), con más retardo (x f) y ruido de pan
+RECALL_YOLO = 1.0                # factor sobre la probabilidad de detección de YOLO (0.7 = pierde 30 % de las detecciones)
 _HW_BASE = {}
 
 
@@ -953,6 +970,7 @@ class EntornoDronPersona(object):
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
         self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()
         self.pan, self.pan_meta = z(), z()               # D-075: ángulo del pan y el que pide la regla (°, + = izquierda)
+        self.pan_red, self.dir_z17 = z(), z()            # V17.8: corrimiento del pan que pide la red; sentido de su altura
         self.phi_racha = z()                             # V17.1: potencial de la racha en curso
         self.b4_meta = np.full(n, Z_SEGURA)              # D-067 · B4: altura meta de la regla   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
@@ -1007,6 +1025,9 @@ class EntornoDronPersona(object):
         # controladores de bajo nivel del hardware (control.py): la política solo da consignas
         self.ap = AutopilotoArduPilot(n, self.rng)
         self.gb = GimbalMixto(n, rng=self.rng)          # V16: BaseCam o servo por partida (GIMBAL_TIPO)
+        if FACTOR_SERVO_H != 1.0:                        # robustez: tilt más lento y con más retardo
+            self.gb.RETARDO = tuple(x * FACTOR_SERVO_H for x in GimbalMixto.RETARDO)
+            self.gb.SERVO_VEL = GimbalMixto.SERVO_VEL / FACTOR_SERVO_H
         # CURRÍCULO: 0 = condiciones suaves, 1 = las más exigentes (lo sube el entrenamiento según el desempeño)
         self.nivel = 0.0
         self.v_sprint = np.full(n, V_SPRINT[0])           # D-041: rapidez de esprint del ladrón (por partida)
@@ -1269,7 +1290,7 @@ class EntornoDronPersona(object):
         v16c = lv >= NIVEL_V16
         if v16c.any():                                                           # V16: 0, 1 o 2 civiles realistas
             npea = np.where(v16c, r.choice([0, 1, 2], size=k, p=list(P_CIVILES_V16)), npea)
-        npea = np.where(lv == NIVEL_V17, 1, npea)                                 # V17: 1 ladrón y 1 civil (D-051)
+        npea = np.where(lv == NIVEL_V17, min(N_CIVILES_V17, N_PERS - 2), npea)    # V17: 1 ladrón y 1 civil (D-051)
         for a, i in enumerate(idx):
             for j in range(1, N_PERS):
                 act = j <= npea[a]
@@ -1334,6 +1355,7 @@ class EntornoDronPersona(object):
         self.phi_racha[m] = 0.0
         self.b4_meta[m] = Z_SEGURA
         self.pan[m] = self.pan_meta[m] = 0.0
+        self.pan_red[m] = self.dir_z17[m] = 0.0
         self.z_v17[m] = Z_SEGURA
         # V16 · A3: tipo de gimbal, alcance del TF-Luna y ruido de navegación de la partida (solo en la V16)
         iv = np.where(m)[0][lv >= NIVEL_V16]
@@ -1787,7 +1809,7 @@ class EntornoDronPersona(object):
         # probabilidad de detección: la de la persona entera por la distancia, por una rampa según lo que asoma
         p_frac = np.clip((self.frac_vis - P_FRAC[0]) / (P_FRAC[1] - P_FRAC[0]), 0.0, 1.0)
         # V16: YOLO es menos seguro con el cuerpo agachado o gateando
-        p_det = p_det * self._f_postura(P_YOLO_POSTURA)
+        p_det = p_det * self._f_postura(P_YOLO_POSTURA) * RECALL_YOLO
         # V16 · A3 · DESENFOQUE POR MOVIMIENTO: la imagen de la persona se corre por la guiñada del dron, el movimiento del
         # gimbal y el de ella respecto al dron (velocidad angular, °/s)
         v16 = self.lvl_ep >= NIVEL_V16
@@ -2283,7 +2305,13 @@ class EntornoDronPersona(object):
         amenaza mandan las reglas: memoria del tracker, búsqueda y árbitro)."""
         base = ((self.modo == FIJADO) | (self.modo == BUSQUEDA_IA)) & (self.estado == VIGILANDO)
         v17 = self.lvl_ep == NIVEL_V17
-        return np.where(v17, (base & (self.obs_retraso[:, 0] > 0.5) & ~self.amenaza) | self._ventana_perdida(), base)
+        return np.where(v17, (base & (self.obs_retraso[:, 0] > 0.5) & ~self.amenaza) | self._ventana_perdida()
+                        | self._busqueda_pan(), base)
+
+    def _busqueda_pan(self):
+        """V17.8: con PAN_RED_V17 la red apunta el pan durante la búsqueda determinista (sin amenaza ni maniobra)."""
+        return ((self.lvl_ep == NIVEL_V17) & PAN_RED_V17 & np.isin(self.modo, BUSQUEDA_PAN) & (self.estado == VIGILANDO)
+                & ~self.amenaza)
 
     def _ventana_perdida(self):
         """D-069: la red decide en la PÉRDIDA (PREDECIR) de la cancha, si PERDIDA_RED_V17, sin amenaza ni maniobra."""
@@ -2304,9 +2332,14 @@ class EntornoDronPersona(object):
         """V17 · E4 (D-050): botones permitidos (n, 7) para MaskablePPO. Sin decisión, solo QUEDARSE (ese paso no enseña
         nada a la red ni suma entropía). Con decisión, nunca un botón sin efecto o prohibido: ACERCARSE ya a 3.5 m,
         ALEJARSE ya a 6 m, SUBIR a 5.5 m, BAJAR a la altura segura (3.30 m: nunca más abajo con el objetivo cerca)."""
-        mk = np.zeros((self.n, len(CLASES_V17)), bool)
+        mk = np.zeros((self.n, len(clases_v17())), bool)
         mk[:, QUEDARSE] = True
-        d = self.mascara_decision() & (self.lvl_ep == NIVEL_V17)
+        bp = self._busqueda_pan()
+        d = self.mascara_decision() & (self.lvl_ep == NIVEL_V17) & ~(bp & ~self._ventana_perdida())   # buscando: solo el pan
+        if PAN_RED_V17:
+            mk[:, PAN_IZQ] = bp & (self.pan_red < PAN_MAX - 1e-6)
+            mk[:, PAN_DER] = bp & (self.pan_red > -PAN_MAX + 1e-6)
+            mk[:, PAN_CENTRO] = bp & (self.pan_red != 0.0)
         qx_, qy_ = self._punto_perdida()
         d_obj = np.where(self._ventana_perdida(), np.hypot(qx_ - self.dx, qy_ - self.dy), self._d_obj())
         mk[:, RODEAR_IZQ] = mk[:, RODEAR_DER] = d
@@ -2811,7 +2844,7 @@ class EntornoDronPersona(object):
         acc_dron = np.asarray(acc_dron).astype(int)
         b17 = np.where(v17, acc_dron, QUEDARSE)
         if v17.any():
-            b17 = np.where(self.action_masks()[np.arange(n), np.clip(b17, 0, len(CLASES_V17) - 1)], b17, QUEDARSE)
+            b17 = np.where(self.action_masks()[np.arange(n), np.clip(b17, 0, len(clases_v17()) - 1)], b17, QUEDARSE)
         acc_dron = np.where(v17, 0, acc_dron)
         self._deriva_nav()                               # V16 · A3: deriva del GPS y del barómetro
         self.dz_est = self.dz + self.e_baro
@@ -3203,6 +3236,16 @@ class EntornoDronPersona(object):
         vx_b = np.where(d17, vx17, vx_b)
         vy_b = np.where(d17, vy17, vy_b)
         dz17 = d17 | vent17
+        # V17.8: multa al vaivén (cambio de sentido de la altura que pide la red) y botones del pan en la búsqueda
+        sb17 = dz17 & ((b17 == SUBIR) | (b17 == BAJAR))
+        s17 = np.where(b17 == SUBIR, 1.0, -1.0)
+        rc["control"] -= np.where(sb17 & (self.dir_z17 != 0) & (s17 != self.dir_z17), K_VAIVEN_V17, 0.0)
+        self.dir_z17 = np.where(sb17, s17, self.dir_z17)
+        dpan17 = v17 & PAN_RED_V17 & mando0 & np.isin(self.modo, BUSQUEDA_PAN) & ~eva
+        self.pan_red = np.where(dpan17 & (b17 == PAN_IZQ), self.pan_red + PASO_PAN_RED,
+                                np.where(dpan17 & (b17 == PAN_DER), self.pan_red - PASO_PAN_RED,
+                                         np.where((dpan17 & (b17 == PAN_CENTRO)) | fij, 0.0, self.pan_red)))
+        self.pan_red = np.clip(self.pan_red, -PAN_MAX, PAN_MAX)
         self.z_v17 = np.clip(self.z_v17 + np.where(dz17 & (b17 == SUBIR), PASO_Z_V17, np.where(dz17 & (b17 == BAJAR), -PASO_Z_V17, 0.0)),
                              Z_SEGURA, Z_MAX_V17)
         sigue17 = fij | (self.modo == RECONFIRMAR) | (pred & PERDIDA_RED_V17)
@@ -3478,10 +3521,12 @@ class EntornoDronPersona(object):
             my_ = np.where(pred, qy_p, self.mira_y)
             busca_p = pred | inv | cnt | (aso & ~self.aso_gira)
             rel_p = np.degrees(envolver(np.arctan2(my_ - self.dy, mx_ - self.dx) - self.psi))
-            pan_meta = np.where(tiene, self.pan - a_f, np.where(busca_p, rel_p, 0.0))
+            pan_meta = np.where(tiene, self.pan - a_f, np.where(busca_p, rel_p, 0.0) + self.pan_red)   # V17.8: + lo de la red
             self.pan_meta = np.clip(pan_meta, -PAN_MAX, PAN_MAX)
             err_p = self.pan_meta - self.pan
-            self.pan = np.clip(self.pan + np.where(np.abs(err_p) > PAN_BANDA, np.clip(err_p, -PAN_VEL * DT, PAN_VEL * DT), 0.0),
+            v_p = PAN_VEL / FACTOR_SERVO_H
+            ruido_p = self.rng.normal(0.0, 0.5 * (FACTOR_SERVO_H - 1.0), n) if FACTOR_SERVO_H > 1.0 else 0.0
+            self.pan = np.clip(self.pan + np.where(np.abs(err_p) > PAN_BANDA, np.clip(err_p, -v_p * DT, v_p * DT), 0.0) + ruido_p,
                                -PAN_MAX, PAN_MAX)
         e_f = np.take_along_axis(elev_s, np.clip(foco, 0, N_PERS - 1)[:, None], 1)[:, 0]
         off_v = e_f + self.cam_pitch                # > 0: la persona está por debajo del centro de la imagen
@@ -3693,7 +3738,7 @@ class EntornoDronPersona(object):
                     t_readq_sum=self.t_readq_sum.copy(), n_readq=self.n_readq.copy(),
                     t_busq_est=self.t_busq_est.copy(), readq_est=self.readq_est.copy(),
                     # V17: botón aplicado, si la red decidía, M2 y reglas del ladrón
-                    boton=b17, decide17=d17 | vent17, n_perd=self.n_perd.copy(), n_readq10=self.n_readq10.copy(),
+                    boton=b17, decide17=d17 | vent17 | dpan17, n_perd=self.n_perd.copy(), n_readq10=self.n_readq10.copy(),
                     ruleta=self.n_ruleta.copy(), escudo=self.n_escudo.copy())
         if auto_reset and done.any():
             self.reset(done)

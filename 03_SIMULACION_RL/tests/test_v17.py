@@ -185,6 +185,34 @@ class TestVarianteH(unittest.TestCase):
         self.assertFalse(E.PAN_ACTIVO)
 
 
+class TestPanRed(unittest.TestCase):
+    """V17.8: con PAN_RED_V17 la red apunta el pan en la búsqueda, pero NO mueve el dron (la búsqueda sigue determinista)."""
+
+    def test_pan_red(self):
+        self.assertFalse(E.PAN_RED_V17)
+        self.assertEqual(len(E.clases_v17()), 7)
+        E.aplicar_hw("H")
+        E.PAN_RED_V17 = True
+        try:
+            rng = np.random.default_rng(0)
+            env = E.EntornoDronPersona(32, semilla=3, nivel=E.NIVEL_V17)
+            vistos = set()
+            for _ in range(600):
+                mk = env.action_masks()
+                self.assertEqual(mk.shape[1], 10)
+                busca = np.isin(env.modo, E.BUSQUEDA_PAN)
+                self.assertFalse(mk[busca, 1:7].any())                          # buscando, la red no mueve el dron
+                self.assertFalse(mk[env.modo == E.FIJADO, 7:].any())            # con el objetivo, el pan es de la regla
+                a = np.argmax(rng.random(mk.shape) * mk + mk * 1e-9, 1)
+                vistos |= set(a[mk[np.arange(32), a] & busca].tolist())
+                env.step(a, AP(32), auto_reset=True)
+                self.assertTrue((np.abs(env.pan) <= E.PAN_MAX + EPS).all())
+            self.assertTrue({E.PAN_IZQ, E.PAN_DER} <= vistos)
+        finally:
+            E.PAN_RED_V17 = False
+            E.aplicar_hw("BASE")
+
+
 class TestFotoVisor(unittest.TestCase):
 
     def test_cmd_y_arb_en_cada_cuadro(self):

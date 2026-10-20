@@ -587,6 +587,13 @@ def desde_zip_v17(ruta, venv, lr, ent, semilla=None, gamma=0.99):
         _copiar_pesos(a, b)
     if pv.action_net.weight.shape == pn.action_net.weight.shape:     # origen de 7 botones (V17): se afina, no se reinicia
         _copiar_pesos(pn.action_net, pv.action_net)
+    elif pv.action_net.weight.shape[1] == pn.action_net.weight.shape[1] and pv.action_net.out_features < pn.action_net.out_features:
+        k = pv.action_net.out_features                      # V17.8: los botones nuevos (pan) arrancan con probabilidad baja
+        with torch.no_grad():
+            pn.action_net.weight.zero_()
+            pn.action_net.weight[:k].copy_(pv.action_net.weight)
+            pn.action_net.bias.fill_(-3.0)
+            pn.action_net.bias[:k].copy_(pv.action_net.bias)
     return modelo
 
 
@@ -795,7 +802,7 @@ class Maestro(BaseCallback):
 
 # ======================================================================= principal
 def main():
-    global SALIDA, MASTER, MODELOS
+    global SALIDA, MASTER, MODELOS, CLASES_ENT
     ap = argparse.ArgumentParser()
     ap.add_argument("--continuar", action="store_true", help="retomar <dir-master>/ultimo.zip (lo hace solo si existe)")
     ap.add_argument("--desde", default=None, help="V17: modelo SB3 (.zip) del que se copian las capas ocultas del actor y "
@@ -832,6 +839,7 @@ def main():
         setattr(E_, k, v if isinstance(viejo, str) else tuple(float(x) for x in v.split(",")) if isinstance(viejo, tuple)
                 else (bool(float(v)) if isinstance(viejo, bool) else type(viejo)(float(v))))
         print("constante cambiada: %s = %s" % (k, getattr(E_, k)), flush=True)
+    CLASES_ENT = E_.clases_v17()                            # V17.8: 10 botones con PAN_RED_V17
     Maestro.cada_rep = a.repeticiones
     sin_ahorro_de_energia()
     torch.set_num_threads(a.hilos)
