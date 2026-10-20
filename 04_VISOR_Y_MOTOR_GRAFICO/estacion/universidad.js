@@ -227,6 +227,22 @@
   }
 
   // ---------------------------------------------------------------------------------------------- árboles y autos (instancias)
+  // Los árboles son modelos de la extensión oficial Sapling Tree Gen de Blender (blender/arboles_sapling.py -> arboles/*.glb, de 1 m de alto, con hojas y corteza);
+  // si no cargan, quedan los de esferas de antes.
+  const ESPECIES_ARBOL = { frondoso: ["arce", "abedul", "alamo", "callistemon"], cipres: ["pino", "abeto"] };
+  const cargarModelos = () => Promise.all(Object.values(ESPECIES_ARBOL).flat().map(n => new Promise((ok, no) => new THREE.GLTFLoader().load(`arboles/${n}.glb`, g => {
+    const piezas = [];
+    g.scene.traverse(o => {
+      if (!o.isMesh) return;
+      const m = o.material.clone();
+      if (m.map && /hoja/i.test(m.name || o.name || "") || (m.map && m.map.image && o.name.toLowerCase().startsWith("leaves"))) { m.alphaTest = 0.45; m.transparent = false; m.side = THREE.DoubleSide; m.depthWrite = true; }
+      m.roughness = 0.9; m.metalness = 0;
+      piezas.push({ geo: o.geometry, mat: m });
+    });
+    ok([n, piezas]);
+  }, undefined, no)))).then(l => Object.fromEntries(l));
+  const modelos = await cargarModelos().catch(e => { console.warn("Árboles de Sapling no disponibles; quedan los de esferas:", e); return null; });
+  window.ARBOL_MODELOS = modelos;
   {
     const fr = E.arboles.filter(a => a.tipo === "frondoso"), ci = E.arboles.filter(a => a.tipo === "cipres");
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
@@ -242,6 +258,24 @@
     const conos = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 8), mat(0xffffff, { roughness: 1 }), ci.length);
     ci.forEach((a, i) => { const hC = a.alto * 0.8; m4.compose(T3(a.p[0], a.p[1], a.alto * 0.25 + hC / 2), q, new THREE.Vector3(a.copa, hC, a.copa)); conos.setMatrixAt(i, m4); conos.setColorAt(i, col.setRGB(0.05, 0.14 + 0.06 * a.semilla, 0.07).convertSRGBToLinear()); });
     [troncos, copasA, copasB, conos].forEach(m => { m.castShadow = true; m.receiveShadow = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; grupo.add(m); });
+    if (modelos) {                                                                  // los árboles de verdad: una instancia por árbol del campus, con su especie, giro y proporción
+      [troncos, copasA, copasB, conos].forEach(m => grupo.remove(m));
+      const porEspecie = {};
+      E.arboles.forEach((a, i) => {
+        const lista = ESPECIES_ARBOL[a.tipo], n = lista[Math.floor(a.semilla * 997 + i) % lista.length];
+        (porEspecie[n] = porEspecie[n] || []).push(a);
+      });
+      const qy = new THREE.Quaternion(), m4b = new THREE.Matrix4();
+      Object.entries(porEspecie).forEach(([n, arbs]) => modelos[n].forEach(({ geo, mat: mt }) => {
+        const im = new THREE.InstancedMesh(geo, mt, arbs.length);
+        arbs.forEach((a, i) => {
+          const ancho = a.alto * Math.min(1.1, Math.max(0.5, a.copa * 2 / (a.alto * 0.85)));
+          qy.setFromAxisAngle(new THREE.Vector3(0, 1, 0), a.semilla * 2 * Math.PI * 7.3);
+          m4b.compose(T3(a.p[0], a.p[1], 0), qy, new THREE.Vector3(ancho, a.alto, ancho)); im.setMatrixAt(i, m4b);
+        });
+        im.castShadow = true; im.receiveShadow = true; grupo.add(im);
+      }));
+    }
     // autos: carrocería y cabina
     const n = E.carros.length, cuerpo = new THREE.InstancedMesh(new THREE.BoxGeometry(4.3, 0.75, 1.75), mat(0xffffff, { roughness: 0.35, metalness: 0.3 }), n), cabina = new THREE.InstancedMesh(new THREE.BoxGeometry(2.2, 0.62, 1.55), mat(0x1b2530, { roughness: 0.15, metalness: 0.5 }), n);
     E.carros.forEach((c2, i) => {

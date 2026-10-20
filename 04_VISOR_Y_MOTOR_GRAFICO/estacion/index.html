@@ -8,6 +8,7 @@
      simulación 3D, mapa, ingeniería y vuelo real, y simulación en vivo (en_vivo.py). Funciona sin internet (lib/). -->
 <script src="lib/three.min.js"></script>
 <script src="lib/OrbitControls.js"></script>
+<script src="lib/GLTFLoader.js"></script>
 
 <style>
   :root {
@@ -717,6 +718,12 @@ function prepararEscenario(pt) {
     grupoPaneles.add(m, ao);
   });
   (pt.arboles || []).forEach(a => {                       // árboles de la misión (obstáculo del tránsito)
+    if (window.ARBOL_MODELOS && window.ARBOL_MODELOS.arce) {                  // el modelo de Sapling Tree Gen, escalado al alto del árbol
+      window.ARBOL_MODELOS.arce.forEach(({ geo, mat: mt }) => {
+        const m = new THREE.Mesh(geo, mt); m.scale.set(a.alto * 0.8, a.alto, a.alto * 0.8); m.position.set(a.p[0], 0, -a.p[1]); m.castShadow = true; grupoObst.add(m);
+      });
+      return;
+    }
     const tr = new THREE.Mesh(new THREE.CylinderGeometry(a.r * 0.8, a.r * 1.2, a.alto * 0.45, 8), est(0x4a3a2c, { roughness: 1 }));
     tr.position.set(a.p[0], a.alto * 0.225, -a.p[1]);
     const co = new THREE.Mesh(new THREE.SphereGeometry(a.copa, 12, 9), est(0x3f7d3a, { roughness: 0.9 }));
