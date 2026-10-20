@@ -44,3 +44,20 @@ el dron). Fuente: `VARIANTES.md` §0.
 - El **mínimo** se entrenó con el TF03 alineado a una cámara USB de 38.9° a −5°: ahora la cámara es otra (62.2° × 48.8°). La regla del
   proyecto ya dice que un cambio de esos obliga a **re-simular el mínimo** (`CLAUDE.md`).
 - Sin gimbal, con la cámara fija a −5°, el dron **no ve a menos de ~3.0 m ni el suelo hasta ~5.9 m** (`05_HARDWARE_Y_VARIANTES/COBERTURA.md`).
+
+## 5. Lo que el simulador debe cambiar para parecerse al dron de hoy (variante G)
+
+Para Simulación V17, **sin duplicar su encargo actual** (esto se hace después de cerrar la V17.5 y de la ruta de Brahian). Fuente de cada
+valor: `05_HARDWARE_Y_VARIANTES/config_sim/variante_G.json` y `VARIANTES.md` §0. `validar_variantes.py` ya lista estas diferencias.
+
+1. **Cámara principal:** CSI IMX219 de **62.2° × 48.8°** (nominal, sin medir) en lugar de la USB de 38.9° × 29.7° (`HFOV`, `VFOV`). Menos píxeles por
+   grado: el YOLO simulado debe ver más chica a la persona lejana.
+2. **Sin gimbal:** `GIMBAL_TIPO = "fijo"`, cámara a **−5°** y sin movimiento. Esto quita el seguimiento vertical con el gimbal: la persona
+   queda en el cuadro solo por cómo vuelan el dron y su cabeceo. Hay que revisar lo que dependía del gimbal (el reflejo de punto ciego, el 360° de
+   entrada a −3°/−12°, las acciones de la red). Es la diferencia más grande.
+3. **TF03 fijo a −5°** paralelo a la cámara (hoy `TF03_PITCH_V17 = −3°`) y **sin TF-Luna** ni cámara al piso en G (`CAM_PISO_ACTIVA = false`).
+4. **Zona ciega:** la cabeza se ve desde ~3.0 m y el suelo desde ~5.9 m (`COBERTURA.md`). La simulación debe dejar de ver a quien se acerca a menos de ~3 m.
+5. **Imagen real:** la CSI tiene ISP por software (exposición y balance de blancos en la CPU, ~12 ms por cuadro): añadir **sobreexposición a pleno sol**
+   (el sensor USB se dañó con el sol) y pérdidas de detección por brillo; el YOLO medido es **30.8 FPS**, no más.
+6. **Guardar la H como variante de entrenamiento aparte**, no como la única: la meta es el pan-tilt con tilt −45°..+15°, la CSI al piso y el TF-Luna.
+7. **No cambiar** las reglas duras ni el árbitro; la simulación puede seguir acotando el gimbal virtual a −45°..+15° (más estricto que sin gimbal).
