@@ -143,6 +143,25 @@ class TestRutaB5(unittest.TestCase):
         self.assertNotIn(E.BUSQUEDA_IA, modos)
 
 
+class TestHardwareActual(unittest.TestCase):
+    """D-072: cámara IMX219 fija a -5° (sin gimbal), TF03 paralelo, sin TF-Luna. La barrera -45..+15° se conserva."""
+
+    def test_camara_fija(self):
+        E.aplicar_hw("ACTUAL")
+        try:
+            self.assertEqual((E.HFOV, E.VFOV, E.GIMBAL_TIPO), (62.2, 48.8, "fijo"))
+            self.assertGreater(E.d_punto_ciego(3.8), 7.0)                  # sin inclinar la cámara, la zona ciega crece
+            env = E.EntornoDronPersona(16, semilla=2, nivel=E.NIVEL_V17)
+            for _ in range(300):
+                env.step(np.full(16, E.SUBIR), AP(16), auto_reset=True)
+                esperado = np.clip(env.chasis_pitch + E.CAM_FIJA_PITCH, E.GIMBAL_MIN, E.GIMBAL_MAX)
+                np.testing.assert_allclose(env.cam_pitch, esperado, atol=1e-9)
+                self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all() and (env.cam_pitch <= E.GIMBAL_MAX + EPS).all())
+        finally:
+            E.aplicar_hw("BASE")
+        self.assertEqual((E.HFOV, E.GIMBAL_TIPO, E.ANG_CIEGO), (38.9, "mixto", 45.0))
+
+
 class TestFotoVisor(unittest.TestCase):
 
     def test_cmd_y_arb_en_cada_cuadro(self):

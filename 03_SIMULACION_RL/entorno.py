@@ -748,9 +748,37 @@ def stand_off_fov():
     return b / np.tan(np.radians(HFOV / 2.0 - MARGEN_FOV)), b
 
 
+# D-072 · HARDWARE ACTUAL (20-oct): ya no hay gimbal. Cámara CSI IMX219 fija al chasis, inclinada CAM_FIJA_PITCH; TF03
+# paralelo en la misma base; sin TF-Luna (irá en el pan-tilt de después, D-056); cámara al piso planeada (CAM_PISO_ACTIVA).
+# aplicar_hw("ACTUAL") cambia las constantes del módulo ANTES de crear el entorno; aplicar_hw("BASE") vuelve atrás.
+CAM_FIJA_PITCH = -5.0
+ANG_CIEGO = 45.0                 # ° bajo el horizonte del borde inferior de la cámara (gimbal en su tope); ACTUAL: 5
+LUNA_ACTIVA = True
+CAM_PISO_ACTIVA = True
+_HW_BASE = {}
+
+
+def aplicar_hw(nombre):
+    """Configura el hardware simulado: "BASE" (gimbal BaseCam o servo, como la V16) o "ACTUAL" (D-072, cámara fija)."""
+    g = globals()
+    claves = ("HFOV", "VFOV", "BANDA_MUERTA", "BANDA_RECENTRA", "GIMBAL_BANDA", "GIMBAL_RECENTRA", "GIMBAL_TIPO",
+              "TF03_PITCH_V17", "ANG_CIEGO", "LUNA_ACTIVA", "CAM_PISO_ACTIVA")
+    if not _HW_BASE:
+        _HW_BASE.update({k: g[k] for k in claves})
+    g.update(_HW_BASE)
+    if nombre == "ACTUAL":
+        g.update(HFOV=62.2, VFOV=48.8, GIMBAL_TIPO="fijo", TF03_PITCH_V17=CAM_FIJA_PITCH, ANG_CIEGO=-CAM_FIJA_PITCH,
+                 LUNA_ACTIVA=False, CAM_PISO_ACTIVA=False)
+        g.update(BANDA_MUERTA=0.10 * g["HFOV"], BANDA_RECENTRA=0.04 * g["HFOV"], GIMBAL_BANDA=0.10 * g["VFOV"],
+                 GIMBAL_RECENTRA=0.04 * g["VFOV"])
+    elif nombre != "BASE":
+        raise ValueError("hardware desconocido: %s" % nombre)
+
+
 def d_punto_ciego(h):
-    """Radio horizontal de la zona ciega debajo del dron a la altura h (gimbal en su tope de -45°) más el margen."""
-    return h / np.tan(np.radians(-GIMBAL_MIN + VFOV / 2.0)) + MARGEN_CIEGO
+    """Radio horizontal de la zona ciega debajo del dron a la altura h (borde inferior de la cámara a ANG_CIEGO° bajo el
+    horizonte: gimbal en su tope de -45°, o la cámara fija de D-072) más el margen."""
+    return h / np.tan(np.radians(ANG_CIEGO + VFOV / 2.0)) + MARGEN_CIEGO
 
 
 def dist_nube_segmento(P, a, b):
@@ -1776,7 +1804,7 @@ class EntornoDronPersona(object):
         t_las, jp_las = t_l, jp_l
         if v16.any():
             t_lu, tipo_lu, jp_lu, hx_lu, hy_lu, hz_lu = self._lidar_camara(pitch=self.cam_pitch, alcance=self.luna_max)
-            t_las, jp_las = np.where(v16, t_lu, t_l), np.where(v16, jp_lu, jp_l)
+            t_las, jp_las = np.where(v16 & LUNA_ACTIVA, t_lu, t_l), np.where(v16 & LUNA_ACTIVA, jp_lu, jp_l)
             self.luna_hit = np.stack([hx_lu, hy_lu, hz_lu], -1)
         laser = visible & (jp_las[:, None] == np.arange(N_PERS)[None, :])
         d_lidar = t_las[:, None] + r.normal(0, 0.02, (n, N_PERS))
@@ -1813,7 +1841,7 @@ class EntornoDronPersona(object):
         # V16 · A3 · CÁMARA AL PISO: si ve a la persona seguida (debajo del dron), el tracker no la suelta y el Kalman se
         # corrige con su posición (el reflejo de punto ciego sabe dónde está); no cuenta como "a la vista" de la principal
         ar = np.arange(n)
-        if v16.any():
+        if v16.any() and CAM_PISO_ACTIVA:
             self.piso_vis, self.piso_x, self.piso_y = self._cam_piso(v16)
         else:
             self.piso_vis = np.zeros((n, N_PERS), bool)
@@ -3459,6 +3487,10 @@ class EntornoDronPersona(object):
         # el cabeceo del chasis con retardo (control.GimbalBaseCam)
         self.cam_pitch = self.gb.paso(self.gimbal_cmd, self.chasis_pitch - ch_p0, DT)
         self.gimbal, self.err_gmb = self.gb.ang.copy(), self.gb.err.copy()
+        if GIMBAL_TIPO == "fijo":                      # D-072: cámara fija al chasis; el seguimiento vertical no la mueve
+            self.cam_pitch = self.chasis_pitch + CAM_FIJA_PITCH
+            self.gimbal[:] = self.gimbal_cmd[:] = CAM_FIJA_PITCH
+            self.err_gmb[:] = 0.0
         # BARRERA DURA (regla 1, D-014): pase lo que pase, la cámara no baja de -45° ni sube de +15°
         self.cam_pitch = np.clip(self.cam_pitch, GIMBAL_MIN, GIMBAL_MAX)
         self.gimbal = np.clip(self.gimbal, GIMBAL_MIN, GIMBAL_MAX)

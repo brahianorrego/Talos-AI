@@ -374,8 +374,10 @@ if __name__ == "__main__":
     ap.add_argument("--max-seg", type=float, default=300.0)
     ap.add_argument("--esc", default="abierto,cambio_brusco,tras_muro,detras_punta,cambia_lado,debajo")
     ap.add_argument("--salida", default=None)
+    ap.add_argument("--hw", default="BASE", help="hardware simulado: BASE (gimbal, V16) o ACTUAL (D-072, cámara fija)")
     ap.add_argument("--set", action="append", default=[], help="NOMBRE=VALOR de entorno.py (se puede repetir)")
     a = ap.parse_args()
+    E.aplicar_hw(a.hw)                                      # D-072: antes de los --set
     for kv in a.set:
         k, v = kv.split("=", 1)
         viejo = getattr(E, k)

@@ -814,6 +814,7 @@ def main():
     ap.add_argument("--semilla", type=int, default=None)
     ap.add_argument("--repeticiones", type=int, default=5, help="cada cuántas iteraciones se graban repeticiones e hitos "
                                                                  "para el visor (0 = nunca, para corridas de prueba)")
+    ap.add_argument("--hw", default="BASE", help="hardware simulado: BASE (gimbal, V16) o ACTUAL (D-072, cámara fija)")
     ap.add_argument("--set", action="append", default=[], help="NOMBRE=VALOR: cambia una constante de entorno.py "
                                                                "(comparaciones con y sin un término)")
     ap.add_argument("--salida", default=SALIDA)
@@ -824,6 +825,7 @@ def main():
         f_.reconfigure(encoding="utf-8", errors="replace")
     SALIDA, MASTER, MODELOS = a.salida, a.dir_master, a.dir_modelos
     import entorno as E_
+    E_.aplicar_hw(a.hw)                                     # D-072: antes de los --set
     for kv in a.set:
         k, v = kv.split("=", 1)
         viejo = getattr(E_, k)
