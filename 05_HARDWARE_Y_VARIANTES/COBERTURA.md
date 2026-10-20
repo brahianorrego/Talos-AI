@@ -4,6 +4,25 @@ Análisis **geométrico** (sin simulación): qué ve cada variante a 3.30 m de a
 2.25 m. Se regenera con `03_SIMULACION_RL\.venv\Scripts\python.exe analisis_cobertura.py` (lee los `config_sim/variante_*.json`). El campo
 del IMX219 (62.2° × 48.8°) es **nominal, sin medir**; las alturas de cabeza (1.62 m) y torso (1.25 m) de una persona de 1.72 m son **estimadas**.
 
+## Combinación de sensores a 1.7–2.6 m (21-oct; pedido de Brahian, `ORDENES_BRAHIAN_20OCT.md` §A y §E)
+
+Dron a 1.7, 2.0, 2.6 y 3.30 m; persona de 1.72 m (torso a 1.25 m, estimado). Cámaras IMX219 62.2° × 48.8° (nominal); TF03 a −5° con haz de 0.5° (de memoria; alcance 30 m).
+
+| Altura | Cámara del pan-tilt (tilt −45°): ciega bajo el dron hasta (suelo / torso) | CSI#2 **al piso**: huella en el suelo / a la altura del torso | CSI#2 **atrás −15°** (lado largo horizontal): ve el torso desde / el suelo desde | CSI#2 abajo-atrás −45°: torso entre / suelo entre | TF03 −5°: da en una persona de pie desde (cabeza / torso) y en un panel de 2.25 m desde |
+|---|---|---|---|---|---|
+| **1.7 m** | 0.64 m / 0.17 m | 2.1 × 1.5 m / 0.5 × 0.4 m | 0.55 m / 2.1 m | 0.1–1.8 m / 0.4–6.9 m | 0 m / 5.1 m · panel 0 m |
+| **2.0 m** | 0.75 m / 0.28 m | 2.4 × 1.8 m / 0.9 × 0.7 m | 0.91 m / 2.4 m | 0.2–3.0 m / 0.5–8.1 m | 3.2 m / 8.6 m · panel 0 m |
+| **2.6 m** | 0.98 m / 0.51 m | 3.1 × 2.4 m / 1.6 × 1.2 m | 1.6 m / 3.2 m | 0.3–5.5 m / 0.6–10.5 m | 10.1 m / 15.4 m · panel 4.0 m |
+| **3.30 m** | 1.24 m / 0.77 m | 4.0 × 3.0 m / 2.5 × 1.9 m | 2.5 m / 4.0 m | 0.5–8.3 m / 0.8–13.3 m | 18.1 m / 23.4 m · panel 12 m |
+
+- **Azimut:** el pan-tilt (±89° + 31.1°) cubre **240°** y deja **120°** atrás sin ver. Una CSI#2 **atrás** suma 62° y deja **57° ciegos** (dos cuñas de 29°, a ±150°); abajo-atrás o al piso no suman casi nada en azimut.
+- **CSI#2 al piso sirve poco a esta altura:** a 2.0 m el torso solo cae en una huella de 0.9 × 0.7 m; solo protege lo que está justo debajo.
+- **TF03 a −5° y 2.0 m no da en la persona hasta los 3.2 m** (antes el haz pasa sobre la cabeza); a 2.6 m, hasta los 10 m. Con paneles de 2.25 m **sí da** desde 0 m a 2.0 m. El frenado LiDAR (< 3 m) **no protege de personas** a 2.6 m: lo cubre la cámara y el árbitro.
+- **TF-Luna** en el pan-tilt, siguiendo al ladrón a 4–6 m: con ropa clara (ρ≈0.5) ve hasta 6 m, **media** (ρ≈0.3) hasta 4.6 m, **oscura** (ρ≈0.1) solo hasta 2.7 m (interpolación mía sobre dos datos de hoja de datos). **No es fiable como única distancia**: la principal es la de la caja de YOLO + Kalman; el Luna confirma cuando hay retorno.
+
+**Recomendación (una combinación):** **CSI#1 + TF-Luna en el pan-tilt; CSI#2 fija MIRANDO ATRÁS** (pitch −15°, lado largo horizontal, bajo la placa trasera); **TF03 frontal fijo a −5°**; volar a **2.0 m** de base (sube a 3.30 m solo con el ladrón cerca). Razones con números: cubre **302° de azimut** (contra 240°) con una cámara que a 2.0 m ve el torso desde 0.9 m; la del piso a 2.0 m ve 0.9 × 0.7 m y el pan-tilt ya cubre el suelo desde 0.75 m. El TF03 queda para paneles y obstáculos grandes (los ve desde 0 m a 2.0 m).
+Posición provisional (sin medir) en `variante_H.json`: `CAM_TRASERA_ACTIVA`, `CAM_TRASERA_PITCH` (−15°), `CAM_TRASERA_AZIMUT` (180°), `CAM_TRASERA_PUERTO` (CAM1), `MONTAJE_CSI2_TRASERA_M` (−0.095, 0, −0.030 m); `CAM_PISO_ACTIVA` queda en `false`. **Riesgo:** una cámara que mira atrás ve patas, brazos y quizá hélices: probar el encuadre al montarla.
+
 ## Lo que dice, en sencillo (actualizado 2026-10-20, D-072)
 
 **Hoy el dron es la variante G** (CSI fija a −5° + TF03 fijo, sin gimbal ni USB) **y la meta es la H** (pan-tilt con CSI + TF-Luna, TF03 fijo, segunda CSI al
@@ -47,7 +66,7 @@ Supuestos: dron a **3.3 m**; persona de pie de **1.72 m** (cabeza = centro a 1.6
 | **E** | Principal USB (-45°) + Piso CSI (-90°) | 0.0–2.9 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
 | **F** | Principal USB (-45°) + Piso CSI (-90°) + Frontal ancha CSI (0°) | 0.0–2.9 m; 3.7–más de 15 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
 | **G** | Principal CSI (-5°) | 3.0–más de 15 m | 3.0–más de 15 m | 3.6–más de 15 m | 5.9 m |
-| **H** | Principal CSI (-45°) + Piso CSI (-90°) | 0.0–4.5 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
+| **H** | Principal CSI (-45°) | 0.6–4.5 m | 0.6–más de 15 m | 0.8–más de 15 m | 1.2 m |
 
 ### Cámara al piso: huella a 3.30 m
 

@@ -43,11 +43,7 @@
     0.0,
     -0.11
   ],
-  "MONTAJE_CSI2_PISO_M": [
-    -0.01,
-    0.06,
-    -0.034
-  ],
+  "MONTAJE_CSI2_PISO_M": null,
   "MONTAJE_TF03_M": [
     0.118,
     -0.075,
@@ -59,12 +55,24 @@
   "CAM_PRINCIPAL_MONTAJE": "pantilt",
   "CAM_PRINCIPAL_HFOV": 62.2,
   "CAM_PRINCIPAL_VFOV": 48.8,
-  "CAM_PISO_ACTIVA": true,
+  "CAM_PISO_ACTIVA": false,
   "CAM_PISO_HFOV": 62.2,
   "CAM_PISO_VFOV": 48.8,
   "CAM_PISO_PITCH": -90.0,
   "CAM_PISO_EJE_LARGO": "longitudinal",
-  "CAM_PISO_PUERTO": "CAM1",
+  "CAM_PISO_PUERTO": null,
+  "CAM_TRASERA_ACTIVA": true,
+  "CAM_TRASERA_HFOV": 62.2,
+  "CAM_TRASERA_VFOV": 48.8,
+  "CAM_TRASERA_PITCH": -15.0,
+  "CAM_TRASERA_AZIMUT": 180.0,
+  "CAM_TRASERA_EJE_LARGO": "horizontal",
+  "CAM_TRASERA_PUERTO": "CAM1",
+  "MONTAJE_CSI2_TRASERA_M": [
+    -0.095,
+    0.0,
+    -0.03
+  ],
   "CAM_FRONTAL_ANCHA_ACTIVA": false,
   "CAM_FRONTAL_ANCHA_HFOV": 62.2,
   "CAM_FRONTAL_ANCHA_VFOV": 48.8,
