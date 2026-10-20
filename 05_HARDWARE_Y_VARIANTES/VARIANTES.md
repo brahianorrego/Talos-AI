@@ -12,16 +12,21 @@ DESCARTADO** y se conserva solo como historia y como referencia de cálculo. Hoy
 
 | | **G · ACTUAL** | **H · META** |
 |---|---|---|
-| Cámara principal | CSI IMX219 (CAM0), **fija ~5° hacia abajo**, en una base impresa | CSI IMX219 (CAM0) en el **pan-tilt de 2 servos** |
+| Cámara principal | CSI IMX219 (CAM0), **fija ~5° hacia abajo**, en una base impresa | CSI IMX219 (CAM0) en el **pan-tilt de 2 servos** (giro y cabeceo, sin alabeo) |
 | Cámara al piso | no | **segunda CSI (CAM1), recta a −90°**, fija |
-| LiDAR | TF03 **fijo en la misma base, paralelo a la cámara** (−5°) | TF03 fijo (−5°) **+ TF-Luna en el pan-tilt**, mirando donde la cámara |
-| Gimbal / estabilización | ninguna (`GIMBAL_TIPO = "fijo"`) | servos MG90D, la Pixhawk estabiliza el tilt; topes −44°/+14° (regla dura 1); pan bloqueado en la V17 |
+| LiDAR | TF03 **fijo en la misma base, paralelo a la cámara** (−5°) | TF03 **fijo** (−5°, lado derecho del chasis) **+ TF-Luna en el pan-tilt**, mirando donde la cámara |
+| Gimbal / estabilización | ninguna (`GIMBAL_TIPO = "fijo"`) | 2 servos MG90D. **Tilt** con topes −44°/+14° (regla dura 1). **Pan libre** (D-056 revocada): ±89° con topes mecánicos. El alabeo y la estabilidad los lleva el dron |
 | Cobertura (cabeza de 1.72 m) | **ciega a menos de ~3.0 m**; suelo ciego hasta ~5.9 m | **sin anillo ciego**: ve desde ~0.6 m (tilt libre) y la CSI del piso cubre lo de justo debajo |
-| Masa añadida | +5 g (CSI) menos la BaseCam y la USB **(pesar el dron: 2 371 g era con gimbal)** | **+111 g** sobre G (pan-tilt 45 + servos 27 + BEC y cables 15 + TF-Luna con soporte 14 + CSI y soporte del piso 10), menos el soporte actual de la cámara (sin dato) |
-| Centro de gravedad | — | ΔCG ≈ **+6.7 mm** hacia adelante si el pan-tilt va a 150 mm del CG (111 g × 150 mm / 2 482 g): por encima de ~5 mm, **hay que correr la batería hacia atrás** o ponerlo más cerca del CG |
-| Potencia (desde la batería) | −USB (≈1 W) − motores del gimbal (sin dato) + CSI (0.8 W) | **+1.9 W típico, +9.5 W pico** sobre G (CSI 0.8 + Luna 0.35 + servos 0.6 + pérdida del BEC); estimados |
+| Masa añadida | +5 g (CSI) menos la BaseCam y la USB **(pesar el dron: 2 371 g era con gimbal)** | **+107 g** sobre G (pan-tilt impreso 44 + servos 27 + BEC y cables 15 + CSI#1 y TF-Luna 11 + CSI#2 con soporte 10), menos el soporte actual de la cámara (sin dato) |
+| Centro de gravedad | — | ΔCG ≈ **+2.8 mm** hacia adelante (momento 6 910 g·mm / 2 478 g, con el pan-tilt a 75–105 mm del centro, **supuestos**): por debajo de ~5 mm; si se quiere anularlo, la batería (≈ 700 g, est.) se corre **≈ 10 mm hacia atrás** |
+| Potencia (desde la batería) | −USB (≈1 W) − motores del gimbal (sin dato) + CSI (0.8 W) | **+3.5 W típico, +9.5 W pico** sobre G (CSI 0.8 + Luna 0.35 + 2 servos moviéndose 2.0 + pérdida del BEC 0.3); estimados |
 | Jetson (YOLO) | **≈ 30.8 FPS medido** (CSI sola) | 2 CSI: **≈ 20 FPS la principal y ≈ 10 la del piso, ESTIMADO** (no medido) |
-| Toca el mínimo | sí: el mínimo se entrenó con TF03 alineado a la cámara a −5° y HFOV 38.9° de la USB | sí |
+| Toca el mínimo | sí: el mínimo se entrenó con TF03 alineado a la cámara a −5° y HFOV 38.9° de la USB | sí (con el pan-tilt en pan 0° y tilt −5° la cámara repite la orientación de G; cambia dónde está el lente) |
+
+**Por qué el TF03 se queda fijo y en el pan-tilt solo van la CSI y el TF-Luna** (decisión del Coordinador, verificada con números): (1) el TF03 mide 44 × 42.9 × 31.8 mm y pesa ≈ 77 g con su
+cable grueso; la cuna del pan-tilt mide 44 mm por fuera (39 mm útiles): **no cabe**, y cargaría ≈ 100 g a 40 mm del eje del tilt (≈ 0.4 kg·cm contra 2.2 del MG90D, un 18 % solo en reposo); el
+TF-Luna, 8 g, pide ≈ 0.02 kg·cm. (2) La misión tiene dos fases: **tránsito con el mínimo** (frena con el TF03 frontal; el pan-tilt queda en **pan 0° y tilt −5° = la cámara fija del mínimo**) y **zona de IA** con
+pan y tilt libres; con el TF03 fijo el frenado de seguridad (LiDAR < 3 m) existe siempre. (3) El TF-Luna mira lo que la cámara y mide la distancia al objetivo (3.5–6 m, dentro de sus 8 m). (4) El TF03 fijo no obliga a sincronizar ángulos con los servos.
 
 **Diferencias que la simulación debe resolver** (lo dice `python validar_variantes.py` contra `03_SIMULACION_RL`): (1) el entorno modela la **cámara USB** (HFOV 38.9° × VFOV 29.7°) y
 las variantes G/H son de **62.2° × 48.8° nominal sin medir**; (2) falta `GIMBAL_TIPO = "fijo"`; (3) el TF03 del entorno está a −3° (`TF03_PITCH_V17`) y el real va a −5°.

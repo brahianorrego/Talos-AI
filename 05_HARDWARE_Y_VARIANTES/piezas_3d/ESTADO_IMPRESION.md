@@ -192,3 +192,58 @@ práctica), sujetarlo a la base sin tensión y no pasarlo por el eje de giro con
 | Qué hay que medir | Espacio libre delante de la caja acrílica; altura de las antenas y del cable dorado | Espacio libre debajo (patas, batería, el TF03 actual); distancia al suelo |
 
 Mi recomendación provisional es la **opción 2** (ya está colgado en el visor), **pero solo si el espacio bajo el chasis lo permite**; si no, la opción 1. Brahian decide con las medidas.
+
+## Pan-tilt PLUS (variante H) con giro Y cabeceo, sin alabeo (2026-10-20; D-056 revocada)
+
+Mínimo = variante G (CSI fija + TF03 fijo, sin gimbal). **Plus = variante H:** dos servos mueven el **giro (pan, yaw)** y el **cabeceo (tilt, pitch)**; **no hay alabeo (roll)**, ese y la estabilidad los lleva el dron.
+En el pan-tilt van **solo la CSI#1 y el TF-Luna**; el TF03 queda fijo (lado derecho del chasis) y la CSI#2 fija mirando al piso (CAM1).
+
+### Rangos mecánicos y topes (probados en el modelo por intersección)
+
+| Eje | Rango útil | Tope | Cómo se probó |
+|---|---|---|---|
+| **Tilt** (cabeceo) | **−44° a +14°** del mundo (regla dura 1: −45°…+15°; el tope queda 1° adentro) | pin en la cuna + ranura de arco en la mejilla | libre dentro, choca a −46° y +15° (módulo hacia arriba) |
+| **Pan** (giro) | **±89°** (≈ 178° en total; el tope queda 1° dentro de ±90°) | pin bajo la plataforma (radio 25 mm) contra dos **postes de la base** (a ±98° del centro, Ø5) | libre hasta 89° y −89°, choca desde 90° y −92° |
+
+Pan: el recorrido real del MG90D (1 000–2 000 µs ≈ 90–120°; con 500–2 500 µs hasta ≈ 180°) **se confirma en banco** (calibración como en la guía §3.1, con `SERVO10_*`); si el servo no llega a ±90°, bajar `pan_min/pan_max` en el `.scad`
+y volver a exportar. Los postes y el pin están por encima de las orejas del servo (sin roce).
+
+### Plataforma: dos versiones según dónde va
+
+El sentido de los topes del tilt cambia según el módulo vaya **arriba** (`colgado = false`, opción 1) o **colgado** (`colgado = true`, opción 2): **se imprime solo la que corresponde**
+(`pan_tilt_plataforma_ARRIBA.stl` o `pan_tilt_plataforma_COLGADO.stl`); la base y la cuna son las mismas.
+
+### Cable plano de la CSI#1 (que sobre para girar sin tensarse)
+
+El flex acompaña al giro de ±89° y al cabeceo de −44°/+14°. Mi cálculo (supuesto: recorrido de ≈ 25 mm de radio alrededor del eje): el giro de 178° acorta/alarga el recorrido unos **8 cm** (π × 25 mm),
+más ≈ 2 cm por el cabeceo: hay que dejar **≥ 10 cm de cable de sobra en lazo** (radio ≥ 15 mm, regla práctica mía), sujeto a la base con una amarra sin tensar. Cable **de 20 cm** para la opción 1 y **de 30 cm** para la 2
+(más de 30 cm da problemas de señal). **Riesgo:** el cable plano no está hecho para doblarse una y otra vez (fatiga); si falla, se cambia o se acorta el giro.
+
+### Dónde va el pan-tilt (viendo las fotos 19–23; lo que veo y lo que no)
+
+Veo: la Jetson en una caja acrílica transparente sobre cuatro separadores azules encima de la placa de arriba, con la CSI al frente y su cable dorado en lazo; GPS y 2 antenas arriba; el TF03 (caja negra con etiqueta) fijo al lado
+derecho del chasis a la altura de las placas; la batería colgada bajo el chasis con velcro azul y una pieza impresa negra con un agujero redondo en el frente; patas de carbono con espuma. **No tengo medidas del dron:** las posiciones de abajo son **provisionales**.
+
+| | **Opción 1 · arriba, delante de la caja de la Jetson** (recomendada) | **Opción 2 · colgado, adelante de la batería** |
+|---|---|---|
+| Se atornilla a | La placa metálica de arriba, **no** a la caja de acrílico (no es estructural) | La placa de abajo, delante de la batería |
+| Cable plano (CSI#1) | Corto: 20 cm sobran (la CSI de hoy ya está ahí, el puerto queda a pocos cm) | Largo: 30 cm, en el límite de la señal |
+| Vista | Libre al frente y hacia abajo; sin patas ni batería en el cuadro | Ve patas y batería al girar; más libertad hacia el suelo |
+| Centro de gravedad | Más alto, adelante | Más bajo, adelante |
+| Riesgo | Hélices o antenas en el cuadro a pan grande (probar); sitio disponible delante de la caja | Altura libre bajo el chasis y sobre las patas |
+| Qué medir | Espacio libre en la placa de arriba delante de la caja (largo × ancho) | Altura libre bajo la placa de abajo, y la pieza negra impresa del frente |
+
+**Mi recomendación provisional: opción 1** (el flex corto pesa más que cualquier otra cosa por el riesgo de fatiga). Brahian decide con las medidas.
+
+**CSI#2 al piso** (fija): bajo la placa de abajo, **a la izquierda del centro y un poco detrás** (propuesta provisional del Visor: x −0.010 m, y +0.060 m, z −0.034 m; origen en el centro de la placa del medio), para que la batería del centro no la tape y el TF03 de la derecha no le haga sombra. Alternativas: en una pata o inclinada si la placa no da espacio.
+
+### Peso y centro de gravedad de H (estimados; nadie ha pesado)
+
+Masa añadida **≈ 107 g**: pan-tilt impreso 44 g (base 12 + plataforma 22 + cuna 10), 2 servos MG90D 27 g, BEC y cables 15 g, CSI#1 + TF-Luna 11 g, CSI#2 con su soporte 10 g.
+Posiciones supuestas (x hacia adelante desde el centro de la placa del medio): pan-tilt 0.075–0.105 m, BEC 0 m, CSI#2 −0.010 m. Resultado: **ΔCG ≈ +2.8 mm hacia adelante** (6 910 g·mm / 2 478 g).
+Para anularlo, la batería (≈ 700 g, est.) se corre **≈ 10 mm hacia atrás**. *El Visor tenía provisionalmente 40 mm; con estas cuentas bastan ≈ 10 mm.*
+
+### Pan 0° / tilt −5° = la cámara fija del mínimo
+
+Con el pan en 0° y el tilt en −5° (`TILT_REPOSO_DEG = -5`) la cámara apunta con **la misma orientación** que en G (≈ 5° hacia abajo). Lo que cambia es **dónde está el lente** (en el eje del pan-tilt, no en la base de G)
+y **la distancia al TF03** (que queda a ≈ 75 mm al costado): paralaje de ≈ 1.2° a 3.5 m y 0.7° a 6 m. El TF03 sigue paralelo a −5° como en G.

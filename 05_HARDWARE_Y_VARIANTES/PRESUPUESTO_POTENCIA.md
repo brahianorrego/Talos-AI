@@ -56,3 +56,23 @@ motores, es menos del 2 %**: la autonomía casi no cambia por electricidad; sí 
 
 Para F habría que medir antes de decidir, y en ese caso: un proceso por cámara (para no depender del GIL de Python), la cámara del piso
 a 10 FPS (solo sirve para el punto ciego) y el overlay de dos IMX219 (`IMX219 dual`; hoy solo está aplicado el de CAM0).
+
+
+## Actualización 2026-10-20: variante H con pan y cabeceo activos (D-056 revocada)
+
+**Potencia.** Con los dos servos moviéndose de verdad (seguimiento activo: ≈ 0.2 A cada uno a 5 V, ≈ 1 W cada uno; est.), el consumo típico de H sobre G sube a **≈ +3.5 W**
+(CSI#2 0.8 + TF-Luna 0.35 + 2 servos 2.0 + pérdida del BEC 0.3) y el **pico a ≈ +9.5 W** (servos trabados). Sigue siendo **menos del 2 %** de lo que gastan los motores. El **BEC de 5–6 V y ≥ 3 A** de siempre aguanta:
+trabados, dos servos piden ≈ 1.4 A (est.).
+
+**Par de los servos (MG90D ≈ 2.2 kg·cm a 6 V, hoja de datos; de memoria).** Con la CSI#1 (3 g), el TF-Luna (8 g), la cuna (10 g) y el cable (5 g):
+
+| Eje | Carga | Par estático | Con 2 g de vibración | Margen |
+|---|---|---|---|---|
+| **Tilt** | momento de ≈ 52 g·cm alrededor del eje (cargas a 1–3 cm) | ≈ 0.05 kg·cm | ≈ 0.15 kg·cm | más de 14× |
+| **Pan** | inercia ≈ 2.3·10⁻⁵ kg·m² (plataforma 22 g, servo de tilt 13 g, cuna y carga 26 g a ≈ 2 cm) a 3 000 °/s² | ≈ 0.012 kg·cm | — | más de 100× |
+
+El par sobra. **Lo que sí preocupa es el eje del servo de pan:** carga ≈ 100 g **en vertical** y el momento lateral del tilt; el eje del MG90D no está hecho para cargas laterales y la vibración lo desgasta. Mitigación: el pan-tilt va atornillado a la placa por una base ancha (64 × 56 mm), el centro de gravedad cerca del eje, y revisar el juego del eje tras las primeras pruebas.
+
+**Velocidad.** MG90D ≈ 0.1 s por 60° sin carga (≈ 600 °/s). Con esta carga ligera se espera cerca de ese valor; `PAN_VEL_DPS = 600` y `GIMBAL_VEL_DPS = 600` en `variante_H.json` son los de `control.GimbalMixto.SERVO_VEL`, **sin medir con la carga**.
+
+**Jetson (H).** Dos CSI con YOLO: **≈ 20 FPS la principal y ≈ 10 la del piso (ESTIMADO, no medido)**; el giro del pan no añade carga de cómputo (solo una orden de servo).

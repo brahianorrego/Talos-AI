@@ -1,9 +1,9 @@
 {
   "VARIANTE": "H",
-  "NOMBRE": "META: pan-tilt de 2 servos con CSI + TF-Luna, TF03 fijo, segunda CSI al piso (CAM1)",
-  "ESTADO": "meta (diseñada, no construida)",
+  "NOMBRE": "PLUS (meta): pan-tilt de 2 servos (yaw + pitch, sin roll) con CSI#1 + TF-Luna, TF03 fijo, CSI#2 fija al piso (CAM1)",
+  "ESTADO": "plus (diseñada, no construida)",
   "TOCA_EL_MINIMO": true,
-  "MASA_SUMA_G": 111,
+  "MASA_SUMA_G": 107,
   "MASA_QUITA_G": null,
   "GIMBAL_TIPO": "servo",
   "GIMBAL_TIPO_EQUIVALENTE_V16": "servo",
@@ -19,10 +19,41 @@
   "GIMBAL_ESTABILIZA": "pixhawk_mnt_servo",
   "GIMBAL_TOPES_MECANICOS": true,
   "PAN_DISPONIBLE": true,
-  "PAN_ACTIVO_EN_ENTRENAMIENTO": false,
-  "PAN_MIN": -60.0,
-  "PAN_MAX": 60.0,
+  "PAN_ACTIVO_EN_ENTRENAMIENTO": true,
+  "PAN_MIN": -90.0,
+  "PAN_MAX": 90.0,
   "PAN_VEL_DPS": 600.0,
+  "PAN_TOPES_MECANICOS": true,
+  "PAN_ZONA_MUERTA_DEG": 1.0,
+  "PAN_RETARDO_S": [
+    0.05,
+    0.1
+  ],
+  "PAN_REPOSO_DEG": 0.0,
+  "TILT_REPOSO_DEG": -5.0,
+  "MONTAJE_ESTADO": "PROVISIONAL: sin medir en el dron; sale de las fotos 19-23 y de una propuesta del Visor. Confirmar con la lista de medidas.",
+  "MONTAJE_ORIGEN": "x adelante, y izquierda, z arriba; origen = centro de la placa del medio; metros",
+  "MONTAJE_EJE_PAN_M": [
+    0.075,
+    0.0,
+    -0.0365
+  ],
+  "MONTAJE_EJE_TILT_M": [
+    0.075,
+    0.0,
+    -0.11
+  ],
+  "MONTAJE_CSI2_PISO_M": [
+    -0.01,
+    0.06,
+    -0.034
+  ],
+  "MONTAJE_TF03_M": [
+    0.118,
+    -0.075,
+    -0.011
+  ],
+  "MONTAJE_BATERIA_DESPLAZ_X_M": -0.01,
   "CAM_PRINCIPAL_TIPO": "csi",
   "CAM_PRINCIPAL_PITCH_FIJO_DEG": null,
   "CAM_PRINCIPAL_MONTAJE": "pantilt",

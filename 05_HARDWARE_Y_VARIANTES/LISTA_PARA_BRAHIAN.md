@@ -22,6 +22,19 @@ Hace falta un **calibrador digital** (≈ 10–15 USD, si no tienes), una **bás
 | 8 | **Paneles de la universidad:** color y medidas reales | Alcance del TF-Luna y simulación |
 | 9 | **¿Quedó medido el campo de visión real de la cámara CSI?** (62.2° × 48.8° es el del fabricante, sin medir) | La simulación aún usa los números de la cámara USB |
 
+## Lo mínimo para imprimir y armar el pan-tilt (giro + cabeceo) de la H
+
+Dos servos mueven el **giro (izquierda-derecha)** y el **cabeceo (arriba-abajo)**; no hay alabeo. Para **imprimir** solo necesitas el filamento (≈ 60 g de PETG) y decidir **dónde va**: arriba delante de la caja de la Jetson (opción 1, recomendada)
+o colgado bajo el chasis (opción 2), porque **la plataforma se imprime distinta** (`pan_tilt_plataforma_ARRIBA.stl` o `_COLGADO.stl`); la base y la cuna son iguales. Para **armar** hace falta:
+
+1. **2 servos MG90D** (más 1 de repuesto) — ya tienes uno.
+2. **Tornillos M2 autorroscantes de 6–8 mm** (≈ 20) — servos, CSI y TF-Luna — y **M3 de 8–10 mm con tuercas** (4–6) — la base al chasis.
+3. **Cable plano de la CSI#1 largo:** **20 cm** (opción 1) o **30 cm** (opción 2), de 22 a 15 pines para Jetson Orin Nano, y que **sobre** para girar (déjale un lazo flojo de ≥ 10 cm, ver `ESTADO_IMPRESION.md`).
+4. **BEC de 5–6 V y 3 A o más** (que acepte batería 4S) para los servos, y un **condensador de 1000 µF**.
+5. **Una amarra pequeña** para el cable y un **calibrador** para comprobar el servo en el banco.
+
+El resto de la lista (TF-Luna, segunda CSI, adaptador USB-serie) es para el plus completo.
+
 ## Parte 2. Comprar para la variante H
 
 | # | Qué | Cantidad | Precio aprox. | Ojo |

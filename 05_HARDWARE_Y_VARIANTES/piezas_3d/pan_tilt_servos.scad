@@ -31,11 +31,21 @@ sv_tol = 0.3;            // holgura del hueco (impresora)
 cuerno_h = 3.5;          // alto del cuerno sobre la cara de arriba del cuerpo — MEDIR
 cuerno_r = 7.0;          // radio de los 4 agujeros del cuerno en cruz — MEDIR
 
-// ---- tope mecánico (regla dura 1: pitch entre -45° y +15°) ----
+// ---- tope mecánico del PAN (giro izquierda-derecha, sin regla dura propia; D-056 revocada: el pan se mueve) ----
+// Un pin bajo la plataforma topa contra dos postes de la base. Ángulos medidos desde la mirada hacia adelante, + = izquierda (visto desde arriba
+// del módulo). El recorrido real del MG90D (1000-2000 µs ≈ 90-120°; con 500-2500 µs, hasta ~180°) se confirma en banco: si no llega a ±90°, bajar pan_max.
+pan_min = -90;
+pan_max = 90;
+pan_margen_deg = 1.0;          // los topes quedan 1° DENTRO del recorrido
+R_pan = 25;                    // radio del pin y de los postes respecto al eje del pan
+pan_pin_d = 4; pan_post_d = 5;
+angulo_pan = 0;                // para la vista armada: giro del pan
+pan_delta = 2 * asin((pan_pin_d/2 + pan_post_d/2) / (2 * R_pan));   // ángulo que separa el centro del pin del centro del poste al tocarse
+// ---- tope mecánico del TILT (regla dura 1: pitch entre -45° y +15°) ----
 // El módulo va COLGADO bajo el chasis (de cabeza, como un gimbal): la placa de la base se atornilla a la cara de abajo del
 // chasis y la cuna cuelga. Los ángulos de abajo son del MUNDO (cabeceo + = la cámara mira hacia arriba). Colgado, "mirar
 // hacia abajo" es el lado libre del giro (la cuna se aleja de la plataforma), por eso aquí cabe mirar hasta el nadir (−90°).
-colgado = true;
+colgado = false;          // false = opción 1 (arriba, delante de la caja de la Jetson, recomendada); true = opción 2 (colgado bajo el chasis). Cambia el sentido de los topes del tilt: imprime la plataforma que corresponda
 rango_ancho = false;     // false = regla dura 1 (−45°..+15°). true = −90°..+45°: SOLO capacidad mecánica; NO usar mientras la regla dura siga vigente
 tilt_min = rango_ancho ? -90 : -45;
 tilt_max = rango_ancho ? 45 : 15;
@@ -124,11 +134,15 @@ module base_srv() {
         union() {
             placa_r(-base_x/2, base_x/2, -base_y/2, base_y/2, z_placa_sup - placa_t, placa_t, 6);
             placa_r(-sv_eje - 6, sv_L - sv_eje + 6, -sv_W/2 - 3, sv_W/2 + 3, z_placa_sup, -sv_oreja_z - z_placa_sup, 3, 1.0);  // ancho para las orejas
+            // postes del tope del pan: del plano de la placa hasta 1.5 mm sobre la cara de arriba del cuerpo del servo
+            for (a = [pan_max - pan_margen_deg + pan_delta, pan_min + pan_margen_deg - pan_delta])
+                translate([R_pan * cos(a), R_pan * sin(a), z_placa_sup - 0.5]) cylinder(d = pan_post_d, h = 1.5 - z_placa_sup + 0.5);
         }
         servo_hueco(z_placa_sup + 1, -sv_oreja_z + 1, -sv_oreja_z - 9, -sv_oreja_z + 0.01);
         for (sx = [-1, 1]) for (sy = [-1, 1])
             hull() for (dx = [-4, 4])
                 translate([sx*(base_x/2 - 9) + dx, sy*(base_y/2 - 6), z_placa_sup - placa_t - 1]) cylinder(d = 3.4, h = placa_t + 2);
+        // (los postes del tope del pan se suman en la unión de abajo)
         // ventanas "estadio" de aligeramiento a los lados del bloque (diseño)
         for (sy = [-1, 1]) hull() for (dx = [-8, 8]) translate([5.5 + dx, sy * 22, z_placa_sup - placa_t - 1]) cylinder(d = 5, h = placa_t + 2);
         // paso del cable del servo
@@ -142,6 +156,8 @@ module plataforma_srv() {
             // mejilla A (servo de tilt, espesor = sv_oreja_z) y mejilla B (ranura del tope), con perfil alado y ventanas
             mejilla(yA - sv_oreja_z, sv_oreja_z);
             mejilla(yB, mejilla_B);
+            // pin del tope del pan, colgando de la cara de abajo de la plataforma
+            translate([R_pan, 0, -1]) cylinder(d = pan_pin_d, h = zp0 + 1 + 0.5);
         }
         // 4 agujeros del cuerno del servo de PAN
         for (a = [0, 90, 180, 270]) translate([cuerno_r*cos(a), cuerno_r*sin(a), zp0 - 1]) cylinder(d = 2.2, h = plataforma_t + 2);
@@ -218,8 +234,10 @@ if (parte == "vista") {
     rotate([colgado ? 180 : 0, 0, 0]) {
         base_srv();
         servo_fantasma();
-        plataforma_srv();
-        en_tilt() servo_fantasma();
-        color("orange") translate([0, 0, z_eje]) rotate([0, colgado ? angulo_vista : -angulo_vista, 0]) cuna_tilt();
+        rotate([0, 0, colgado ? -angulo_pan : angulo_pan]) {
+            plataforma_srv();
+            en_tilt() servo_fantasma();
+            color("orange") translate([0, 0, z_eje]) rotate([0, colgado ? angulo_vista : -angulo_vista, 0]) cuna_tilt();
+        }
     }
 }

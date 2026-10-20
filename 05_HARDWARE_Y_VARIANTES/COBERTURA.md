@@ -9,6 +9,18 @@ del IMX219 (62.2° × 48.8°) es **nominal, sin medir**; las alturas de cabeza (
 **Hoy el dron es la variante G** (CSI fija a −5° + TF03 fijo, sin gimbal ni USB) **y la meta es la H** (pan-tilt con CSI + TF-Luna, TF03 fijo, segunda CSI al
 piso). Las variantes A–F **quedaron descartadas** (usaban el gimbal o la USB) y se dejan solo como referencia.
 
+**Actualización 2026-10-20 (pan libre):** la variante H mueve el **giro (pan) ±89°** y el cabeceo; el alabeo no existe. Cobertura horizontal y tiempo de apuntar:
+
+| | **G (mínimo, fija)** | **H (plus, pan ±89°)** |
+|---|---|---|
+| Campo horizontal de la cámara (CSI) | 62.2° (nominal) | 62.2° |
+| **Cobertura horizontal total** respecto a la nariz | ±31.1° = **62.2°** | ±(89 + 31.1)° = **±120.1° ≈ 240°** (queda ciega la parte de atrás, ≈ 120°) |
+| Tiempo en apuntar a un objetivo a 90° de la nariz, **girando el dron** (`RATE_Y_MAX` = 120 °/s, `ATC_ACCEL_Y_MAX` = 180 °/s², de `control.py`) | ≈ 1.4 s (40° acelerando + 10° a velocidad + 40° frenando) | ≈ 1.4 s si solo gira el dron |
+| Tiempo con **el pan** (servo ≈ 600 °/s, retardo 50–100 ms; est.) | — | **≈ 0.2–0.25 s**: unas 6 veces más rápido |
+
+Lo que gana H al girar: puede **seguir a la persona sin girar el cuerpo del dron** (el dron puede seguir volando de frente o por su ruta) y **mirar de lado a los lados del panel** mientras avanza; el TF-Luna va con la cámara.
+**Lo que no sabemos aún:** si las hélices, las antenas, las patas o la batería entran en el cuadro a pan grande (depende del montaje; ver `ESTADO_IMPRESION.md`), y el retardo real del servo. Con **pan 0° y tilt −5°** la cámara repite la orientación de G (el mínimo).
+
 1. **G (hoy): anillo ciego.** Con la CSI fija a −5° (62.2° × 48.8° nominal), la cabeza de una persona de 1.72 m se ve **desde ~3.0 m** hacia afuera y el
    suelo **desde ~5.9 m**: una persona que se acerca a menos de 3 m sale del cuadro, y nada ve lo que hay debajo del dron.
 2. **H (meta): sin anillo ciego.** La CSI en el pan-tilt baja hasta −45°: con el tilt libre ve la cabeza desde ~0.6 m hasta más de 15 m, y la segunda CSI al piso

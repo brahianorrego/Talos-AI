@@ -36,6 +36,10 @@ def revisar(v):
         e.append("PAN activo sin estar disponible")
     if v["PAN_DISPONIBLE"] and not (-90.0 <= v["PAN_MIN"] < v["PAN_MAX"] <= 90.0):
         e.append("PAN fuera de ±90°")
+    if v["PAN_DISPONIBLE"] and not v["PAN_TOPES_MECANICOS"]:
+        e.append("el pan debe llevar topes mecánicos")
+    if v["TILT_REPOSO_DEG"] is not None and not (v["GIMBAL_MIN"] <= v["TILT_REPOSO_DEG"] <= v["GIMBAL_MAX"]):
+        e.append("TILT_REPOSO_DEG fuera de −45°..+15°")
     if v["CAM_PISO_ACTIVA"] and v["CAM_PISO_PITCH"] != -90.0:
         e.append("la cámara al piso va recta a −90°")
     if v["CAM_PISO_ACTIVA"] and v["CAM_PISO_PUERTO"] == v["CAM_FRONTAL_ANCHA_PUERTO"]:
