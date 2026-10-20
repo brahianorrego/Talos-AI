@@ -391,6 +391,55 @@ creado vía WMI. Registro `03_SIMULACION_RL\modelos_v17_6.log`, modelos en `mode
 Si se corta, cambiar `--desde modelos_v17_2\ultimo.zip` por `--continuar`. Medirla con
 `herramientas\medir_ia_aporta.py v17 --hw ACTUAL --pol modelos_v17_6\ultimo.zip,modelos_v17_6\ultimo.zip-est --n 512 --salida informes\v17\actual_v176.json`.
 
+**Aclaración (Coordinador, por Brahian):** la cámara fija (`--hw ACTUAL`, también `--hw G`) es el dron del **MÍNIMO**. El
+**PLUS** es la variante **H** (D-074/D-075). La V17.6 queda como control del mínimo. Medida con 512 partidas
+(`informes/v17/g_v176.json`): **idéntica a B0** (M1 3.7 %, racha media 13.6 s), es decir, colapsó a QUEDARSE con la
+cámara fija.
+
+## D-075 · Variante H, el plus: pan-tilt de 2 servos (20-oct)
+
+`--hw H` (`entorno.aplicar_hw("H")`), con los rangos de `05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json`:
+- **CSI#1 + TF-Luna** juntos en el pan-tilt (62.2° × 48.8°): la cámara y el TF-Luna miran a `rumbo + pan`.
+- **Tilt:** servo de 600°/s, retardo de 50-100 ms y zona muerta de 1°, entre −45° y +15° (la barrera de la regla dura 1
+  se conserva).
+- **Pan:** ±90° (**provisional**, Hardware lo confirma en banco), 600°/s, zona muerta de 1°, con topes mecánicos.
+- **TF03** fijo al chasis a −5° (frenado de seguridad, mapa 360° girando el dron). **CSI#2** fija al piso, activa.
+- **El pan lo mueve una regla:** con alguien en foco (el ladrón fijado o un candidato) lo centra en la imagen, y la nariz del
+  dron lo sigue más despacio con la guiñada de siempre. Buscando, apunta al punto que se revisa (la predicción, el panel o el
+  muro), así que **mira detrás de la V sin volar hasta ahí**. En el 360° vuelve a 0.
+- La red ve el ángulo del pan (en la casilla que la V17 no usaba). La opción de que la red decida el pan al buscar
+  necesita botones nuevos: queda pendiente.
+- Prueba: `test_v17.TestVarianteH` (el pan respeta ±PAN_MAX, el tilt la barrera y el pan sí se mueve).
+
+**Medición en G (mínimo) y H (plus)**, cancha real, 512 partidas, semilla 123 (`informes/v17/actual_*.json`,
+`g_v176.json`, `h_*.json`):
+
+| | M1 (30 s) en G | M1 en H | Racha ≥ 15 s en H | Racha media en H (s) | Vista en H (s) | M2 en H | Rendición en H | Misión perdida en H |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| B0 QUEDARSE | 3.7 % | **62.3 %** | 95.7 % | 33.4 | 126.4 | 91.6 % | 20.9 % | 3.5 % |
+| B3 siempre SUBIR | 0.8 % | **78.3 %** | 96.9 % | 37.8 | 119.2 | 92.0 % | 38.7 % | 3.5 % |
+| **B5 ruta de Brahian** (+ SUBIR) | 1.8 % | **92.0 %** | 98.2 % | 41.7 | 126.4 | 99.3 % | 59.8 % | **0 %** |
+| V17.2 (50 M, sin reentrenar) | 2.5 % | **72.7 %** | 97.1 % | 36.5 | 123.0 | 91.6 % | 31.4 % | 2.9 % |
+| V17.6 (red entrenada en G) | 3.7 % | — | — | — | — | — | — | — |
+
+Seguridad en H: alcanzado 0-0.2 %, choque con panel 0-0.2 %, geocerca y gimbal fuera de rango en 0.
+
+- **El pan-tilt es la diferencia grande:** B0 pasa de 3.7 % a 62.3 % de M1. Es el argumento para el documento de por qué el
+  plus necesita el pan-tilt.
+- **Con el pan, la ruta de Brahian sí gana:** B5 saca 92.0 %, 13.7 puntos sobre B3, y no pierde ninguna misión. Cumple el
+  primer criterio de D-071 (B5 ≥ B3 + 5). Sin pan no ganaba, porque había que volar hasta detrás de la V para mirar.
+- **Métricas:** en H la M1 de 30 s separa bien (62 a 92 %), y la racha ≥ 15 s se satura (96-98 %). En G pasa al revés: la de
+  30 s queda en ~0 y la de 15 s separa (B0 31.6 %). Propuesta: M1 = 30 s para el plus (H) y M1' = 15 s solo para la
+  cámara fija (G).
+
+**V17.7 · entrenamiento en H con la ruta de Brahian como búsqueda** (desde la V17.2 de 50 M, 10 M, entropía 0.01,
+`--set BUSQUEDA_RUTA_V17=1`). La ruta es determinista, así que la regla 3 no cambia; con el pan es la mejor regla medida. La
+red decide igual que antes (con el ladrón a la vista); la referencia que tiene que superar es **B5 (92.0 %)**.
+**Inicio 2026-10-20 06:43**, vía WMI, registro `03_SIMULACION_RL\modelos_v17_7.log`. Una primera V17.7 con la búsqueda vieja
+se detuvo a 1.3 M para relanzarla así. Comando (PowerShell, desde `03_SIMULACION_RL`):
+`Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd.exe /c ".venv\Scripts\python.exe -u entrenar_master.py --hw H --set BUSQUEDA_RUTA_V17=1 --desde modelos_v17_2\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_7 --dir-master modelos_v17_7 --dir-modelos modelos_v17_7 > modelos_v17_7.log 2>&1"'; CurrentDirectory=(Get-Location).Path}`
+Medirla: `herramientas\medir_ia_aporta.py v17 --hw H --set BUSQUEDA_RUTA_V17=1 --pol modelos_v17_7\ultimo.zip,modelos_v17_7\ultimo.zip-est --n 512 --salida informes\v17\h_v177.json`
+
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
 Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,
