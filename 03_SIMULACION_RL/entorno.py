@@ -755,6 +755,12 @@ CAM_FIJA_PITCH = -5.0
 ANG_CIEGO = 45.0                 # ° bajo el horizonte del borde inferior de la cámara (gimbal en su tope); ACTUAL: 5
 LUNA_ACTIVA = True
 CAM_PISO_ACTIVA = True
+# D-075 · VARIANTE H, la del PLUS (05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json): pan-tilt de 2 servos (pan = giro,
+# tilt = cabeceo, sin alabeo) con la CSI#1 y el TF-Luna; TF03 fijo al chasis a -5°; CSI#2 fija al piso. El pan lo mueve una
+# regla: con alguien en foco lo centra (la nariz del dron lo sigue más despacio); buscando, apunta al punto que se revisa
+PAN_ACTIVO = False
+PAN_MAX = 90.0                   # ° (PROVISIONAL: Hardware confirma el recorrido del servo en banco)
+PAN_VEL, PAN_BANDA = 600.0, 1.0  # °/s y zona muerta del servo
 _HW_BASE = {}
 
 
@@ -762,11 +768,16 @@ def aplicar_hw(nombre):
     """Configura el hardware simulado: "BASE" (gimbal BaseCam o servo, como la V16) o "ACTUAL" (D-072, cámara fija)."""
     g = globals()
     claves = ("HFOV", "VFOV", "BANDA_MUERTA", "BANDA_RECENTRA", "GIMBAL_BANDA", "GIMBAL_RECENTRA", "GIMBAL_TIPO",
-              "TF03_PITCH_V17", "ANG_CIEGO", "LUNA_ACTIVA", "CAM_PISO_ACTIVA")
+              "TF03_PITCH_V17", "ANG_CIEGO", "LUNA_ACTIVA", "CAM_PISO_ACTIVA", "PAN_ACTIVO")
     if not _HW_BASE:
         _HW_BASE.update({k: g[k] for k in claves})
     g.update(_HW_BASE)
-    if nombre == "ACTUAL":
+    if nombre == "H":                      # D-075: el plus (pan-tilt de servos, CSI 62.2° x 48.8°, TF-Luna, CSI al piso)
+        g.update(HFOV=62.2, VFOV=48.8, GIMBAL_TIPO="servo", TF03_PITCH_V17=-5.0, ANG_CIEGO=45.0, LUNA_ACTIVA=True,
+                 CAM_PISO_ACTIVA=True, PAN_ACTIVO=True)
+        g.update(BANDA_MUERTA=0.10 * g["HFOV"], BANDA_RECENTRA=0.04 * g["HFOV"], GIMBAL_BANDA=0.10 * g["VFOV"],
+                 GIMBAL_RECENTRA=0.04 * g["VFOV"])
+    elif nombre in ("ACTUAL", "G"):        # D-072: G, el dron del MÍNIMO (cámara fija)
         g.update(HFOV=62.2, VFOV=48.8, GIMBAL_TIPO="fijo", TF03_PITCH_V17=CAM_FIJA_PITCH, ANG_CIEGO=-CAM_FIJA_PITCH,
                  LUNA_ACTIVA=False, CAM_PISO_ACTIVA=False)
         g.update(BANDA_MUERTA=0.10 * g["HFOV"], BANDA_RECENTRA=0.04 * g["HFOV"], GIMBAL_BANDA=0.10 * g["VFOV"],
@@ -941,6 +952,7 @@ class EntornoDronPersona(object):
         self.t_clic = np.full(n, 99.0)                   # V16: s desde el último clic del operador (tracker amarrado)
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
         self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()
+        self.pan = z()                                   # D-075: ángulo del pan (°, + = a la izquierda de la nariz)
         self.phi_racha = z()                             # V17.1: potencial de la racha en curso
         self.b4_meta = np.full(n, Z_SEGURA)              # D-067 · B4: altura meta de la regla   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
@@ -1321,6 +1333,7 @@ class EntornoDronPersona(object):
         self.n_ruleta[m] = self.n_escudo[m] = 0.0
         self.phi_racha[m] = 0.0
         self.b4_meta[m] = Z_SEGURA
+        self.pan[m] = 0.0
         self.z_v17[m] = Z_SEGURA
         # V16 · A3: tipo de gimbal, alcance del TF-Luna y ruido de navegación de la partida (solo en la V16)
         iv = np.where(m)[0][lv >= NIVEL_V16]
@@ -1713,13 +1726,14 @@ class EntornoDronPersona(object):
         rx, ry = self.px - self.dx[:, None], self.py - self.dy[:, None]
         dh = np.hypot(rx, ry)
         bearing = np.arctan2(ry, rx)
-        ang = np.degrees(envolver(self.psi[:, None] - bearing))
+        psi_c = self.psi + np.radians(self.pan)          # D-075: hacia dónde mira la cámara (rumbo + pan)
+        ang = np.degrees(envolver(psi_c[:, None] - bearing))
         dz = self.dz[:, None]
         a_c = np.degrees(np.arctan2(dz - 0.9, dh))       # ángulo bajo el horizonte del centro de la persona
         # pirámide de visión de la cámara (rumbo del dron + pitch del gimbal): se ve a la persona si su torso o su
         # cabeza caen dentro. Vale también mirando en nadir, donde el rumbo ya no dice nada.
         th = np.radians(self.cam_pitch)[:, None]
-        cps, sps, ct, st = np.cos(self.psi)[:, None], np.sin(self.psi)[:, None], np.cos(th), np.sin(th)
+        cps, sps, ct, st = np.cos(psi_c)[:, None], np.sin(psi_c)[:, None], np.cos(th), np.sin(th)
 
         def en_camara(h):
             vz = h - dz
@@ -1803,7 +1817,7 @@ class EntornoDronPersona(object):
         t_l, tipo_l, jp_l, hx_l, hy_l, hz_l = self._lidar_camara(pitch=p_tf03)
         t_las, jp_las = t_l, jp_l
         if v16.any():
-            t_lu, tipo_lu, jp_lu, hx_lu, hy_lu, hz_lu = self._lidar_camara(pitch=self.cam_pitch, alcance=self.luna_max)
+            t_lu, tipo_lu, jp_lu, hx_lu, hy_lu, hz_lu = self._lidar_camara(psi=psi_c, pitch=self.cam_pitch, alcance=self.luna_max)
             t_las, jp_las = np.where(v16 & LUNA_ACTIVA, t_lu, t_l), np.where(v16 & LUNA_ACTIVA, jp_lu, jp_l)
             self.luna_hit = np.stack([hx_lu, hy_lu, hz_lu], -1)
         laser = visible & (jp_las[:, None] == np.arange(N_PERS)[None, :])
@@ -1861,7 +1875,7 @@ class EntornoDronPersona(object):
         self.sim_med = np.where(v0, 0.8 * self.sim_med + 0.2 * s_m, self.sim_med)
         self.t_sin_ver = np.where(v0 | self.piso_obj | ~fij, 0.0, self.t_sin_ver + DT)
         # memoria del objetivo: dónde lo vio confirmado por última vez
-        self.ult_rumbo = np.where(v0, envolver(self.psi - np.radians(ang_m[:, 0])), self.ult_rumbo)
+        self.ult_rumbo = np.where(v0, envolver(psi_c - np.radians(ang_m[:, 0])), self.ult_rumbo)
         self.ult_dist = np.where(v0, dist[:, 0], self.ult_dist)
         dh_est = np.sqrt(np.maximum(dist[:, 0] ** 2 - (self.dz - 0.9) ** 2, 0.25))
         # V15: mirando hacia abajo, la distancia por geometría (altura del dron y ángulo bajo el horizonte, suelo plano)
@@ -1869,7 +1883,7 @@ class EntornoDronPersona(object):
         el0 = elev_m[:, 0]
         geo = el0 > 12.0
         dh_est = np.where(geo, (self.dz + self.e_baro - 0.9) / np.tan(np.radians(np.clip(el0, 1.0, 89.0))), dh_est)   # V16: con el barómetro
-        rumbo_w = self.psi - np.radians(ang_m[:, 0])
+        rumbo_w = psi_c - np.radians(ang_m[:, 0])
         ux_n = np.clip(self.dx + dh_est * np.cos(rumbo_w), -self.A + 1, self.A - 1)
         uy_n = np.clip(self.dy + dh_est * np.sin(rumbo_w), -self.A + 1, self.A - 1)
         # V15 · KALMAN: posición, velocidad y aceleración del objetivo con su medición (bbox + ángulos; el LiDAR si lo toca)
@@ -1929,7 +1943,7 @@ class EntornoDronPersona(object):
             sgc = np.sin(np.radians(self.cam_pitch))
             t_sc = np.where(sgc < -1e-3, z_j / np.maximum(-sgc, 1e-3), np.inf)
             ob_lu = v16 & (tipo_lu == 2) & (t_lu < t_sc - 0.4) & (jp_lu < 0)
-            self._guardar_impactos(ob_lu, t_lu * np.cos(np.radians(self.cam_pitch)), self.psi)
+            self._guardar_impactos(ob_lu, t_lu * np.cos(np.radians(self.cam_pitch)), psi_c)
         self.lid_psi_prev = self.psi.copy()
         v = v0.astype(float)
         cps_, sps_ = np.cos(self.psi), np.sin(self.psi)
@@ -1979,7 +1993,7 @@ class EntornoDronPersona(object):
             (self.acc_x * cps_ + self.acc_y * sps_) / ACC_MAX_DRON, (self.acc_x * sps_ - self.acc_y * cps_) / ACC_MAX_DRON,
             self.dvz / 2.0, self.yaw_dps / 60.0,
             self.v_ia_f / VEL_IA_AVANCE, self.v_ia_l / VEL_IA_LATERAL, np.clip((self.z_ia - self.dz) / 2.0, -1, 1),
-            np.clip((self.g_ia - self.gimbal) / 30.0, -1, 1),
+            np.where(PAN_ACTIVO, self.pan / 90.0, np.clip((self.g_ia - self.gimbal) / 30.0, -1, 1)),   # D-075: el pan
             *self._grilla_mapa().T,
             # V16 · A3: la cámara al piso ve a la persona seguida y dónde (marco del dron: adelante, izquierda)
             self.piso_obj.astype(float),
@@ -3376,7 +3390,7 @@ class EntornoDronPersona(object):
         ang_c = np.take_along_axis(ang_s, ci[:, None], 1)[:, 0]
         c_vis = np.take_along_axis(vis, ci[:, None], 1)[:, 0] & ver
         rcf = self.modo == RECONFIRMAR
-        ang_t = np.where(fij | rcf, o[:, 4] * HFOV / 2, ang_c)
+        ang_t = np.where(fij | rcf, o[:, 4] * HFOV / 2, ang_c) - self.pan     # D-075: respecto de la nariz (sin pan: igual)
         hay_t = np.where(fij | rcf, (o[:, 0] > 0.5) & (fij | rcf), c_vis)
         self.yaw_corrige = hay_t & np.where(np.abs(ang_t) > BANDA_MUERTA, True,
                                             np.where(np.abs(ang_t) < BANDA_RECENTRA, False, self.yaw_corrige))
@@ -3455,6 +3469,19 @@ class EntornoDronPersona(object):
         j_cerca = np.argmin(np.where(vis, dist_s, 99.0), 1)
         foco = np.where((fij | (self.modo == RECONFIRMAR)) & self.lock, 0, np.where(c_vis, ci, np.where(self.amenaza & vis.any(1), j_cerca, -1)))
         tiene = foco >= 0
+        if PAN_ACTIVO:
+            # D-075 · PAN (regla): con foco, lo centra en la imagen; buscando, apunta al punto que se revisa; si no, al frente.
+            # Servo de PAN_VEL °/s con zona muerta y topes mecánicos de ±PAN_MAX
+            a_f = np.take_along_axis(ang_s, np.clip(foco, 0, N_PERS - 1)[:, None], 1)[:, 0]
+            qx_p, qy_p = self._punto_perdida()
+            mx_ = np.where(pred, qx_p, self.mira_x)
+            my_ = np.where(pred, qy_p, self.mira_y)
+            busca_p = pred | inv | cnt | (aso & ~self.aso_gira)
+            rel_p = np.degrees(envolver(np.arctan2(my_ - self.dy, mx_ - self.dx) - self.psi))
+            pan_meta = np.where(tiene, self.pan - a_f, np.where(busca_p, rel_p, 0.0))
+            err_p = np.clip(pan_meta, -PAN_MAX, PAN_MAX) - self.pan
+            self.pan = np.clip(self.pan + np.where(np.abs(err_p) > PAN_BANDA, np.clip(err_p, -PAN_VEL * DT, PAN_VEL * DT), 0.0),
+                               -PAN_MAX, PAN_MAX)
         e_f = np.take_along_axis(elev_s, np.clip(foco, 0, N_PERS - 1)[:, None], 1)[:, 0]
         off_v = e_f + self.cam_pitch                # > 0: la persona está por debajo del centro de la imagen
         self.gmb_corrige = tiene & np.where(np.abs(off_v) > GIMBAL_BANDA, True,

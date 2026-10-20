@@ -162,6 +162,26 @@ class TestHardwareActual(unittest.TestCase):
         self.assertEqual((E.HFOV, E.GIMBAL_TIPO, E.ANG_CIEGO), (38.9, "mixto", 45.0))
 
 
+class TestVarianteH(unittest.TestCase):
+    """D-075: el plus con pan-tilt de servos. El pan respeta sus topes (±PAN_MAX) y el tilt la barrera -45..+15 (regla 1)."""
+
+    def test_pan_tilt(self):
+        E.aplicar_hw("H")
+        try:
+            self.assertTrue(E.PAN_ACTIVO)
+            env = E.EntornoDronPersona(16, semilla=2, nivel=E.NIVEL_V17)
+            pan_max = 0.0
+            for _ in range(600):
+                env.step(np.zeros(16, int), AP(16), auto_reset=True)
+                self.assertTrue((np.abs(env.pan) <= E.PAN_MAX + EPS).all())
+                self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all() and (env.cam_pitch <= E.GIMBAL_MAX + EPS).all())
+                pan_max = max(pan_max, float(np.abs(env.pan).max()))
+            self.assertGreater(pan_max, 10.0)                                # el pan sí se mueve
+        finally:
+            E.aplicar_hw("BASE")
+        self.assertFalse(E.PAN_ACTIVO)
+
+
 class TestFotoVisor(unittest.TestCase):
 
     def test_cmd_y_arb_en_cada_cuadro(self):
