@@ -167,6 +167,12 @@ def main():
     for k, (nombre, preset, tipo, ajustes, color) in enumerate(ESPECIES):
         objs, tris = generar(nombre, preset, tipo, ajustes, color, corteza)
         exportar(nombre, objs)
+        os.makedirs(os.path.join(SALIDA, "tex"), exist_ok=True)                          # las texturas sueltas, para Unreal
+        for im, nom in ((bpy.data.images.get("hoja_" + nombre), f"hoja_{nombre}.png"), (corteza, "corteza.png")):
+            if im is not None:
+                im.filepath_raw = os.path.join(SALIDA, "tex", nom)
+                im.file_format = "PNG"
+                im.save()
         info.append((nombre, tris))
         print("ARBOL", nombre, tris, "triangulos")
     if VISTA:                                                         # vista previa: todas las especies en fila

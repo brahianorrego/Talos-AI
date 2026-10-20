@@ -148,9 +148,9 @@ def main(ruta=None, desde=0.0, hasta=None):
 
     # árboles y helipuerto de la misión completa (entorno/mision_completa.py)
     for i, ar in enumerate(datos.get("arboles", [])):
-        malla = unreal.load_asset("/PCGBiomeSample/Meshes/PCG_Tree_02")
+        malla = unreal.load_asset(D.CARPETA + "/Arboles/arce") or unreal.load_asset("/PCGBiomeSample/Meshes/PCG_Tree_02")
         if malla:
-            esc = ar["alto"] / 12.5
+            esc = ar["alto"] / (1.0 if "/Arboles/" in malla.get_path_name() else 12.5)
             t = D.actores.spawn_actor_from_class(unreal.StaticMeshActor, D.ue(ar["p"][0], ar["p"][1], 0), unreal.Rotator(0, 0, 40))
             t.static_mesh_component.set_static_mesh(malla)
             t.set_actor_scale3d(unreal.Vector(esc, esc, esc))

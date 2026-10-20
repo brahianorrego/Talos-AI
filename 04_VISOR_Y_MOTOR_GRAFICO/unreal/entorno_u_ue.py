@@ -191,6 +191,29 @@ def edificios(E):
 
 
 def arboles(E):
+    """Los árboles de Sapling Tree Gen (importar_arboles.py: 6 especies con hojas y corteza, de 1 m de alto); si no están importados, los del complemento PCG."""
+    r = random.Random(11)
+    esp = {"frondoso": ["arce", "abedul", "alamo", "callistemon"], "cipres": ["pino", "abeto"]}
+    cache = {}
+    n = 0
+    for a in E["arboles"]:
+        nombre = r.choice(esp[a["tipo"]])
+        if nombre not in cache:
+            cache[nombre] = unreal.load_asset(D.CARPETA + "/Arboles/" + nombre)
+        malla = cache[nombre]
+        if malla is None:
+            return arboles_pcg(E)
+        ancho = a["alto"] * min(1.1, max(0.5, a["copa"] * 2 / (a["alto"] * 0.85)))
+        b = D.actores.spawn_actor_from_class(unreal.StaticMeshActor, D.ue(a["p"][0], a["p"][1], 0), unreal.Rotator(0, 0, r.uniform(0, 360)))
+        b.static_mesh_component.set_static_mesh(malla)
+        b.set_actor_scale3d(unreal.Vector(ancho, ancho, a["alto"]))                      # la malla mide 1 m de alto (100 cm)
+        b.set_actor_label(f"Arbol_{n}")
+        b.set_folder_path("Entorno/Arboles")
+        n += 1
+    return n
+
+
+def arboles_pcg(E):
     r = random.Random(11)
     mallas = {"frondoso": [("PCG_Tree_01", 9.6), ("PCG_Tree_02", 12.5)], "cipres": [("PCG_Pine_01", 16.0)]}
     cache = {}
