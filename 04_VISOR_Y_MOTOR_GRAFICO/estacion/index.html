@@ -416,10 +416,12 @@ const candidato = c => (c.pers || []).find(p => p.cand);
 // inclinada 5° hacia abajo. Con ?camara=gimbal se ve la cámara de antes (USB en gimbal, HFOV 38.9°).
 // D-073 (20-oct): DOS drones. "minimo" = variante G (CSI fija, sin pan-tilt) y "plus" = variante H (CSI y TF-Luna sobre un pan-tilt de 2 servos, sin roll,
 // más una 2.ª CSI al piso). Se elige con el botón "Dron" de arriba, o con ?dron=minimo|plus|gimbal (gimbal = el de antes, historia).
+// Por omisión se ve el dron del PLUS (la misión completa y la zona de IA son del plus): en el tránsito su pan-tilt queda parqueado en pan 0° y tilt −5°
+// (la cámara fija del mínimo) y en la zona de IA se mueve con el pan y el tilt de la partida. El botón "Dron" muestra el del MÍNIMO (CSI fija, variante G).
 let MODO_DRON = (() => {
   const q = new URLSearchParams(location.search).get("dron");
   if (["minimo", "plus", "gimbal"].includes(q)) return q;
-  try { return localStorage.getItem("estacion-dron") || "minimo"; } catch (e) { return "minimo"; }
+  try { return localStorage.getItem("estacion-dron") || "plus"; } catch (e) { return "plus"; }
 })();
 const CAM_VIEJA = MODO_DRON === "gimbal" || new URLSearchParams(location.search).get("camara") === "gimbal", PITCH_FIJO = -5;
 const camFija = () => !CAM_VIEJA && MODO_DRON === "minimo", camPantilt = () => !CAM_VIEJA && MODO_DRON === "plus";
@@ -1574,7 +1576,7 @@ function dibujarSLAM(c, k) {
   $("sl-npts").textContent = `${kp}${c.npts !== undefined ? " · " + c.npts + " en memoria" : ""}`;
   $("sl-det").textContent = String((c.det || []).length);
   if (camFija()) { $("sl-gmb-et").textContent = "Cámara"; $("sl-gmb").textContent = `CSI fija ${PITCH_FIJO}°`; }
-  else if (camPantilt()) { $("sl-gmb-et").textContent = "Pan-tilt"; $("sl-gmb").textContent = `PAN ${panDeg >= 0 ? "+" : ""}${panDeg.toFixed(0)}° · TILT ${(c.gmb ?? 0).toFixed(0)}°`; $("sl-gmb").style.color = c.gmb !== undefined && c.gmb <= -44.9 ? COL.precaucion : ""; }
+  else if (camPantilt()) { $("sl-gmb-et").textContent = "Pan-tilt"; $("sl-gmb").textContent = `PAN ${panDeg >= 0 ? "+" : ""}${panDeg.toFixed(0)}° · TILT ${(c.fase === 1 ? PITCH_FIJO : (c.gmb ?? 0)).toFixed(0)}°`; $("sl-gmb").style.color = c.gmb !== undefined && c.gmb <= -44.9 ? COL.precaucion : ""; }
   else {
     $("sl-gmb").textContent = c.gmb !== undefined ? c.gmb.toFixed(1) + "°" : "–";
     $("sl-gmb").style.color = c.gmb !== undefined && c.gmb <= -44.9 ? COL.precaucion : "";
@@ -1726,7 +1728,7 @@ function dibujarHUD(s) {
   texto("LiDAR " + (s.lidarTxt ?? (s.lidar < 19.9 ? s.lidar.toFixed(2) + " m" : "> 20 m")), 8, H - 8, "left", C1, 500, 9);
   texto(camPantilt() ? `PAN ${s.pan >= 0 ? "+" : ""}${s.pan.toFixed(0)}° · TILT ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : camFija() ? `CSI FIJA ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : `GMB ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 38.9°`, W - 8, H - 8, "right", C1, 500, 9);
   if (camFija() || camPantilt()) {                             // cartel: cámara fija sin gimbal, o la CSI en el pan-tilt de 2 servos
-    const cartel = camFija() ? "CÁMARA FIJA · SIN GIMBAL" : "CSI EN PAN-TILT · 2 SERVOS · SIN ROLL";
+    const cartel = camFija() ? "CÁMARA FIJA · SIN GIMBAL" : s.transito ? "CSI EN PAN-TILT · PARQUEADO 0° / −5° (TRÁNSITO)" : "CSI EN PAN-TILT · 2 SERVOS · SIN ROLL";
     g.font = "600 9px 'Roboto Mono', monospace"; const tw = g.measureText(cartel).width + 14;
     g.fillStyle = "rgba(6,12,18,.82)"; g.fillRect(W / 2 - tw / 2, 4, tw, 16); g.strokeStyle = "rgba(245,197,66,.8)"; g.strokeRect(W / 2 - tw / 2, 4, tw, 16);
     texto(cartel, W / 2, 15.5, "center", "#f5c542", 600, 9);
@@ -1985,8 +1987,8 @@ function animar(ahora) {
     if (a.fase === 1) { const [adel, der] = a.piloto || [0, 0]; dibujarRadio([giro, a.d[2] < 2.2 ? 0.9 : subida], [der, adel], 1, !!a.bloq); }
     else dibujarRadio([giro, subida / 0.7], [vDer / 1.5, vAdel / 1.5], 2, false);
     // cámara del dron (FPV) y su HUD
-    const pitch = camFija() ? (PITCH_FIJO - chasis.rotation.z * 180 / Math.PI) * Math.PI / 180 : gimbalPitch.rotation.z;     // fija: el cabeceo del cuerpo la mueve
-    panDeg = camPantilt() ? (a.pan !== undefined ? lerp(a.pan, b.pan ?? a.pan, f) : 0) : 0;
+    const pitch = camFija() || (camPantilt() && a.fase === 1) ? (PITCH_FIJO - chasis.rotation.z * 180 / Math.PI) * Math.PI / 180 : gimbalPitch.rotation.z;     // fija: el cabeceo del cuerpo la mueve
+    panDeg = camPantilt() && a.fase !== 1 ? (a.pan !== undefined ? lerp(a.pan, b.pan ?? a.pan, f) : 0) : 0;      // en el tránsito, parqueado en 0°
     const psiCam = psi + panDeg * Math.PI / 180;                                                                            // el pan gira la cámara respecto al cuerpo
     if (camFija()) camDron.position.copy(mundo(dx + 0.06 * Math.cos(psi), dy + 0.06 * Math.sin(psi), dz + 0.13));          // arriba de la caja de acrílico
     else if (camPantilt()) camDron.position.copy(mundo(dx + 0.108 * Math.cos(psi), dy + 0.108 * Math.sin(psi), dz - 0.095)); // en la cuna del pan-tilt, bajo el chasis
@@ -2009,7 +2011,7 @@ function animar(ahora) {
         if (k === kc && !confirmados.has(kc)) { confirmados.add(kc); clicVisual = { x: tx, y: ty, t0: performance.now() }; }
       }
     }
-    dibujarHUD({ esperando: esperaClic !== null, cursor: cursorSim, gimbal: pitch * 180 / Math.PI, pan: panDeg, hdg: ((90 - psi * 180 / Math.PI) % 360 + 360) % 360, roll: chasis.rotation.x * 180 / Math.PI,
+    dibujarHUD({ esperando: esperaClic !== null, cursor: cursorSim, gimbal: pitch * 180 / Math.PI, pan: panDeg, transito: a.fase === 1, hdg: ((90 - psi * 180 / Math.PI) % 360 + 360) % 360, roll: chasis.rotation.x * 180 / Math.PI,
                  pitch: -chasis.rotation.z * 180 / Math.PI, alt: dz, gs: Math.hypot(dv[0], dv[1]), lidar: a.lid || 20, lidarTxt: lidarTxt(a), t: k * dt, trk, cajas });
     actualizarLetrero(a);
     $("cursor").style.left = (100 * k / (C.length - 1)) + "%";

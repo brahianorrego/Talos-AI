@@ -213,7 +213,7 @@ def dron(etiqueta="Dron", z_centro=3.3):
     raiz.set_folder_path("Dron")
     mats = {}
     piezas = []
-    var = os.environ.get("DRONIA_DRON", "minimo")                                   # minimo (G) | plus (H) | gimbal (el de antes)
+    var = os.environ.get("DRONIA_DRON", "plus")                                     # minimo (G) | plus (H) | gimbal (el de antes)
     grupos = {}
     if var == "plus":                                                               # pan y tilt: dos puntos sin forma que Sequencer puede girar (Dron_rep_pan y _tilt)
         for g in ("pan", "tilt"):

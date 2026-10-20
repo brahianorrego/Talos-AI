@@ -47,7 +47,7 @@ FALTAN = [
     "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
     "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
     "Cables: no se modelan",
-    "Variante plus (H): hoy se modela con el scad del pan-tilt como forma (sin fotos): posición del pan-tilt bajo el chasis, de la 2.ª CSI al piso y de la batería corrida 4 cm hacia atrás (a ojo); Brahian mandará fotos",
+    "Variante plus (H): POSICIÓN PROVISIONAL del pan-tilt bajo el chasis y de la 2.ª CSI al piso, y la batería corrida 4 cm hacia atrás (a ojo, con la forma de pan_tilt_servos.scad); las fija Hardware en 05_/config_sim/variante_H.json y Brahian mandará fotos",
     "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)",
 ]
 
@@ -115,10 +115,10 @@ def piezas(variante="minimo"):
               _p("camara_usb_placa", "caja", (0.193, 0.0, -0.1995), (0.026, 0.028, 0.002), "verde"),
               _p("camara_usb_lente", "cilindro", (0.206, 0.0, -0.1965), (0.016, 0.022), "negro", eje="x")]
     elif variante == "minimo":
-        # --- 20-oct (fotos 19 a 23): sin gimbal ni cámara USB. TF03 fijo en una base impresa, adelante y abajo, a la altura de las placas
-        P += [_p("base_impresa", "caja", (0.112, 0.0, -0.032), (0.062, 0.088, 0.004), "negro"),
-              _p("tf03", "caja", (0.118, 0.0, -0.011), (0.047, 0.074, 0.0365), "negro"),
-              _p("tf03_ventana", "caja", (0.1418, 0.0, -0.011), (0.0012, 0.058, 0.022), "gris")]
+        # --- 20-oct (fotos 19 a 23): sin gimbal ni cámara USB. TF03 fijo en una base impresa, al frente del lado DERECHO (y < 0), a la altura de las placas
+        P += [_p("base_impresa", "caja", (0.112, -0.075, -0.032), (0.062, 0.088, 0.004), "negro"),
+              _p("tf03", "caja", (0.118, -0.075, -0.011), (0.047, 0.074, 0.0365), "negro"),
+              _p("tf03_ventana", "caja", (0.1418, -0.075, -0.011), (0.0012, 0.058, 0.022), "gris")]
         # --- cámara CSI IMX219 arriba de la caja de acrílico, al frente, mirando adelante; su cable flex dorado sube, da un lazo y entra a la Jetson
         P += [_p("csi_placa", "caja", (0.060, 0.0, 0.1385), (0.003, 0.024, 0.025), "verde"),
               _p("csi_lente", "cilindro", (0.0635, 0.0, 0.1385), (0.009, 0.004), "negro", eje="x"),
@@ -131,8 +131,8 @@ def piezas(variante="minimo"):
               _p("estructura_poste", "cilindro", (0.060, 0.030, -0.056), (0.005, 0.045), "dorado", eje="z"),
               _p("estructura_poste", "cilindro", (0.060, -0.030, -0.056), (0.005, 0.045), "dorado", eje="z")]
     elif variante == "plus":
-        P += [_p("tf03", "caja", (0.118, 0.0, -0.011), (0.047, 0.074, 0.0365), "negro"),          # TF03 fijo al chasis (−5°), como en G
-              _p("tf03_ventana", "caja", (0.1418, 0.0, -0.011), (0.0012, 0.058, 0.022), "gris")]
+        P += [_p("tf03", "caja", (0.118, -0.075, -0.011), (0.047, 0.074, 0.0365), "negro"),          # TF03 fijo al chasis (−5°), donde está hoy: lado derecho
+              _p("tf03_ventana", "caja", (0.1418, -0.075, -0.011), (0.0012, 0.058, 0.022), "gris")]
     if variante == "plus":
         P = [dict(p, centro=(-0.040, p["centro"][1], p["centro"][2])) if p["nombre"] in ("bateria", "velcro_azul") else p for p in P]   # batería atrás por el CG
         P += _pantilt()
@@ -152,7 +152,7 @@ def _pantilt():
         # fijo al chasis
         _p("pantilt_base", "caja", (px, 0.0, -0.0345), (0.064, 0.056, 0.003), "negro"),
         _p("servo_pan", "caja", (px + 0.0055, 0.0, -0.0473), (0.0228, 0.0122, 0.0225), "servo"),
-        _p("tf03_base", "caja", (0.118, 0.0, -0.0315), (0.052, 0.080, 0.003), "negro"),
+        _p("tf03_base", "caja", (0.112, -0.075, -0.032), (0.052, 0.080, 0.003), "negro"),
         # gira con el PAN (yaw): plataforma, mejillas y servo del tilt
         _p("pan_plataforma", "caja", (px, 0.0, -0.0675), (0.052, 0.056, 0.003), "negro", grupo="pan"),
         _p("pan_mejilla_a", "caja", (px, -0.0285, -0.0875), (0.052, 0.004, 0.040), "negro", grupo="pan"),

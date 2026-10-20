@@ -4,7 +4,7 @@
 // porque el reproductor vuelve a mostrar leds y estrobo en cada cuadro), pero siguen girando las hélices.
 // Tres modelos (D-072/D-073): "minimo" (variante G: CSI y TF03 fijos), "plus" (variante H: pan-tilt de 2 servos con la CSI y el TF-Luna encima, que se
 // MUEVEN con el pan y el tilt de la partida: window.PANTILT) y "gimbal" (el de antes: BaseCam con el TF03 y la USB, historia). Se elige con
-// MODO_DRON (botón "Dron" de camaras.js o ?dron=minimo|plus|gimbal) y window.DRON_CAMBIAR(v) lo reconstruye sin recargar.
+// MODO_DRON (botón "Dron" de camaras.js o ?dron=minimo|plus|gimbal; por omisión plus) y window.DRON_CAMBIAR(v) lo reconstruye sin recargar.
 // Marco del JSON: x adelante, y izquierda, z arriba  ->  three.js: X = x, Y = z, Z = -y (como mundo()).
 // Con ?dron=viejo se ve el dron decorativo de antes.
 "use strict";

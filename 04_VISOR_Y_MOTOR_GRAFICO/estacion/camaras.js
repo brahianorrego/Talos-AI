@@ -222,10 +222,11 @@
   window.CAMARAS_APLICAR = aplicar;
   // botón "Dron": mínimo (G) o plus (H)
   const bDron = document.createElement("button");
-  bDron.id = "b-dron"; bDron.className = "btn"; bDron.title = "Qué dron mostrar: el del mínimo (CSI fija, variante G) o el del plus (pan-tilt de 2 servos y CSI al piso, variante H)";
+  bDron.id = "b-dron"; bDron.className = "btn"; bDron.title = "Qué dron mostrar: el del PLUS (pan-tilt de 2 servos y CSI al piso, variante H; en el tránsito su pan-tilt queda parqueado en 0°/−5°) o el del MÍNIMO (CSI fija, variante G)";
   const refR = $("b-ruta") || $("b-vuelo");
   if (refR && refR.parentNode) refR.parentNode.insertBefore(bDron, refR.nextSibling);
-  window.BOTON_DRON = () => { bDron.textContent = "Dron: " + ({ minimo: "Mínimo", plus: "Plus", gimbal: "Antes" }[MODO_DRON] || MODO_DRON); };
+  const NOM = { minimo: "Mínimo", plus: "Plus", gimbal: "Antes" };
+  window.BOTON_DRON = () => { bDron.textContent = "Dron: " + (NOM[MODO_DRON] || MODO_DRON); };
   bDron.onclick = () => { if (window.DRON_CAMBIAR) DRON_CAMBIAR(MODO_DRON === "plus" ? "minimo" : "plus"); };
   BOTON_DRON();
   addEventListener("keydown", ev => {

@@ -1127,7 +1127,7 @@
    "forma": "caja",
    "centro": [
     0.112,
-    0.0,
+    -0.075,
     -0.032
    ],
    "tam": [
@@ -1142,7 +1142,7 @@
    "forma": "caja",
    "centro": [
     0.118,
-    0.0,
+    -0.075,
     -0.011
    ],
    "tam": [
@@ -1157,7 +1157,7 @@
    "forma": "caja",
    "centro": [
     0.1418,
-    0.0,
+    -0.075,
     -0.011
    ],
    "tam": [
@@ -2356,7 +2356,7 @@
    "forma": "caja",
    "centro": [
     0.118,
-    0.0,
+    -0.075,
     -0.011
    ],
    "tam": [
@@ -2371,7 +2371,7 @@
    "forma": "caja",
    "centro": [
     0.1418,
-    0.0,
+    -0.075,
     -0.011
    ],
    "tam": [
@@ -2415,9 +2415,9 @@
    "nombre": "tf03_base",
    "forma": "caja",
    "centro": [
-    0.118,
-    0.0,
-    -0.0315
+    0.112,
+    -0.075,
+    -0.032
    ],
    "tam": [
     0.052,
@@ -3883,7 +3883,7 @@
   "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
   "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
   "Cables: no se modelan",
-  "Variante plus (H): hoy se modela con el scad del pan-tilt como forma (sin fotos): posición del pan-tilt bajo el chasis, de la 2.ª CSI al piso y de la batería corrida 4 cm hacia atrás (a ojo); Brahian mandará fotos",
+  "Variante plus (H): POSICIÓN PROVISIONAL del pan-tilt bajo el chasis y de la 2.ª CSI al piso, y la batería corrida 4 cm hacia atrás (a ojo, con la forma de pan_tilt_servos.scad); las fija Hardware en 05_/config_sim/variante_H.json y Brahian mandará fotos",
   "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)"
  ]
 }

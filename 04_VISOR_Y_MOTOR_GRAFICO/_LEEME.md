@@ -285,12 +285,14 @@ privada): todo en un entorno, con la cancha de fútbol, la cancha cerrada y los 
 
 ## D-072 / D-073 · Dos drones: el mínimo (CSI fija) y el plus (pan-tilt) (2026-10-20)
 
-- **Modelo 3D** (`modelo_dron/dron_real.py`): `minimo` (variante G: CSI y TF03 fijos, flex dorado, estructura volteada; fotos 19 a 23), `plus` (variante H:
-  pan-tilt de 2 servos con CSI y TF-Luna encima, 2.ª CSI fija al piso, TF03 fijo) y `gimbal` (el de antes). `DRONIA_DRON=minimo|plus|gimbal` o `?dron=`.
-- **Estación, botón "Dron: Mínimo / Plus"** (arriba, junto a "Ruta"; se recuerda): en **Mínimo**, la "Vista del dron" tiene la **CSI fija** (HFOV 62.2° nominal,
-  inclinada 5°, arriba de la caja de la Jetson) con el cartel "CÁMARA FIJA · SIN GIMBAL" y nada más; en **Plus**, la **CSI montada en el pan-tilt** (con el indicador
-  "PAN ±x° · TILT ±y°" y el cartel "CSI EN PAN-TILT · 2 SERVOS · SIN ROLL") y la **CSI al piso** (−90°) como segunda; el modelo 3D mueve sus dos servos con la
-  partida (`c.gmb` = tilt; `c.pan`, la V17 lo deja en 0). Teclas P (principal), G (piso, solo plus) y L (LiDAR 360°). En Unreal, `importar_repeticion.py` hace lo mismo
-  con `DRONIA_DRON=plus` (los actores `Dron_rep_pan` y `Dron_rep_tilt` llevan sus rotaciones). `?camara=gimbal` devuelve la cámara USB de antes.
-  **Ojo:** la simulación V17 todavía modela una cámara con gimbal y HFOV 38.9°; las cajas de YOLO de la principal siguen su campo de visión angosto, y el pan
-  aún no existe en las repeticiones. Hasta que Simulación cambie el sensor, la estación muestra cómo será, no lo que simuló.
+- **Modelo 3D** (`modelo_dron/dron_real.py`): `minimo` (variante G: el dron de hoy, fotos 19 a 23: CSI fija arriba de la caja con su flex dorado en lazo, **TF03 fijo en el
+  lado derecho** a la altura de las placas, estructura impresa volteada bajo el chasis sobre el frente de la batería), `plus` (variante H: **pan-tilt de 2 servos** con
+  solo la CSI#1 y el TF-Luna encima, **CSI#2 fija al piso**, TF03 fijo donde está) y `gimbal` (el de antes, historia). `DRONIA_DRON=minimo|plus|gimbal` (Unreal: por omisión
+  plus; Blender: minimo) o `?dron=` en la estación. **La posición del pan-tilt y de la CSI del piso es PROVISIONAL** (está en `FALTAN`): la fija Hardware
+  (`05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json`).
+- **Estación**: por omisión se ve el dron del **plus**; el botón "Dron: Plus / Mínimo" (arriba, junto a "Ruta") muestra el del mínimo. En el **tránsito** de la misión
+  completa el pan-tilt está **parqueado en pan 0° / tilt −5°** (la cámara fija del mínimo; cartel "PARQUEADO 0° / −5° (TRÁNSITO)"); en la **zona de IA** la "Vista del dron" muestra
+  la CSI#1 con "PAN ±x° · TILT ±y°" y la **CSI del piso**, y el modelo 3D mueve sus dos servos con la partida (`c.gmb` = tilt; `c.pan`, hoy 0: lo traerá `foto()` cuando Simulación
+  implemente la H). En **Mínimo**: solo la CSI fija (HFOV 62.2° nominal, −5°) con el cartel "CÁMARA FIJA · SIN GIMBAL". Teclas P (principal), G (piso, solo plus) y L (LiDAR 360°).
+  En Unreal, `importar_repeticion.py` mueve los actores `Dron_rep_pan` y `Dron_rep_tilt`. `?camara=gimbal` devuelve la cámara USB de antes.
+  **Ojo:** la V17 todavía modela una cámara con gimbal y HFOV 38.9°; las cajas de YOLO de la principal siguen su campo angosto hasta que Simulación cambie el sensor.

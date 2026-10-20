@@ -82,6 +82,11 @@ class TestModeloDron(unittest.TestCase):
         self.assertLess(P["bateria"]["centro"][0], 0.0)                  # batería corrida hacia atrás por el centro de gravedad
         self.assertLess(dron_real.PIVOTE_TILT[2], dron_real.PIVOTE_PAN[2])
 
+    def test_el_tf03_va_en_el_lado_derecho_en_los_dos_drones(self):
+        for v in ("minimo", "plus"):
+            P = {p["nombre"]: p for p in dron_real.piezas(v)}
+            self.assertLess(P["tf03"]["centro"][1], -0.05, v)             # y < 0 = derecha (y es a la izquierda)
+
     def test_con_gimbal_el_tf03_cuelga_de_la_nariz(self):
         P = {p["nombre"]: p for p in dron_real.piezas("gimbal")}
         self.assertGreater(P["tf03"]["centro"][0], 0.1)

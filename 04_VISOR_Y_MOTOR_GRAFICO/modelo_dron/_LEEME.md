@@ -1,9 +1,9 @@
 # Modelo 3D del dron real (hecho con primitivas)
 
 > **D-072 / D-073 (20-oct): hay tres modelos seleccionables** en el mismo `dron_real.json`: **`minimo`** (variante G, el dron de hoy: sin gimbal ni cámara USB,
-> CSI IMX219 fija arriba de la caja de acrílico con su flex dorado en lazo, TF03 fijo al frente sobre una base impresa y la estructura impresa
+> CSI IMX219 fija arriba de la caja de acrílico con su flex dorado en lazo, TF03 fijo al frente del lado derecho sobre una base impresa y la estructura impresa
 > volteada bajo el chasis; fotos 19 a 23), **`plus`** (variante H, la meta del plus: **pan-tilt de 2 servos** colgado bajo el chasis con la CSI y el
-> TF-Luna encima, una **2.ª CSI fija mirando al piso**, TF03 fijo y la batería corrida 4 cm hacia atrás; hecho con la forma de
+> TF-Luna encima (solo ellos dos), una **2.ª CSI fija mirando al piso**, TF03 fijo donde está (lado derecho) y la batería corrida 4 cm hacia atrás; **posición provisional, la fija Hardware**; hecho con la forma de
 > `05_HARDWARE_Y_VARIANTES/piezas_3d/pan_tilt_servos.scad`, sin fotos todavía) y `gimbal` (el de antes, BaseCam + USB, solo historia). Se eligen con
 > `DRONIA_DRON=minimo|plus|gimbal` (Unreal y Blender) o `?dron=` (estación y visor V16). En `plus` las piezas llevan `grupo` ("pan" o "tilt") y el JSON
 > trae `pivotes_plus`: la estación y Unreal los **mueven con el pan y el tilt de la partida** (`c.gmb` = tilt; `c.pan`, hoy 0). Lo que falta medir está en `FALTAN`.
