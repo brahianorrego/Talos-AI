@@ -209,8 +209,8 @@
     if (bu) bu.textContent = hayPiso() ? "CSI en pan-tilt" : "CSI fija";
     const vis = CAMS.filter(c => ef(c.id));
     const centro = $("centro");
-    if (centro) {                                      // rejilla: 1 cámara sola, 2 en columnas, 3 = la principal grande y las otras dos apiladas
-      const n = vis.length;
+    if (centro) {                                      // rejilla (solo en "Vista del dron"): 1 cámara sola, 2 en columnas
+      const n = document.body.dataset.modo === "dron" ? vis.length : 1;
       centro.style.display = n > 1 ? "grid" : "flex";
       centro.style.gridTemplateColumns = n === 2 ? "minmax(0, 1.7fr) minmax(0, 1fr)" : "";
       centro.style.gridTemplateRows = "minmax(0, 1fr)";
@@ -225,15 +225,7 @@
     aplicar();
   });
   window.CAMARAS_APLICAR = aplicar;
-  // botón "Dron": mínimo (G) o plus (H)
-  const bDron = document.createElement("button");
-  bDron.id = "b-dron"; bDron.className = "btn"; bDron.title = "Qué dron mostrar: el del PLUS (pan-tilt de 2 servos y CSI al piso, variante H; en el tránsito su pan-tilt queda parqueado en 0°/−5°) o el del MÍNIMO (CSI fija, variante G)";
-  const refR = $("b-ruta") || document.querySelector("[data-cam=\"arriba\"]");
-  if (refR && refR.parentNode) refR.parentNode.insertBefore(bDron, refR.nextSibling);
-  const NOM = { minimo: "Mínimo", plus: "Plus", gimbal: "Antes" };
-  window.BOTON_DRON = () => { bDron.textContent = "Dron: " + (NOM[MODO_DRON] || MODO_DRON); };
-  bDron.onclick = () => { if (window.DRON_CAMBIAR) DRON_CAMBIAR(MODO_DRON === "plus" ? "minimo" : "plus"); };
-  BOTON_DRON();
+  window.BOTON_DRON = () => {};                       // el dron del visor es el plus; el mínimo ya está hecho (no hay botón)
   addEventListener("keydown", ev => {
     if (/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || ev.ctrlKey || ev.altKey) return;
     const m = { KeyP: "usb", KeyG: "csi0", KeyL: "lid" }[ev.code];
@@ -303,7 +295,7 @@
   }
   const bRuta = document.createElement("button");
   bRuta.id = "b-ruta"; bRuta.className = "btn"; bRuta.title = "Mostrar u ocultar la ruta de búsqueda de Brahian (tecla R)";
-  const ref = document.querySelector("[data-cam=\"arriba\"]");
+  const ref = document.querySelector("[data-cam=\"orbita\"]");
   if (ref && ref.parentNode) ref.parentNode.insertBefore(bRuta, ref.nextSibling);
   const textoRuta = () => { bRuta.textContent = (grupoRuta.visible ? "✓ " : "") + "Ruta (R)"; bRuta.classList.toggle("activo", grupoRuta.visible); };
   const alternarRuta = () => { grupoRuta.visible = !grupoRuta.visible; activas.ruta = grupoRuta.visible; textoRuta(); try { localStorage.setItem(CLAVE, JSON.stringify(activas)); } catch (e) {} };

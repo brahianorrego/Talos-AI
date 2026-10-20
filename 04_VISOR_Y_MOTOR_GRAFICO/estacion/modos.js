@@ -14,11 +14,12 @@
   const MODOS = {
     dron:  { principal: "dron", centro: ["fpv", "cam-csi0"], sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"], "sobre-bl": ["p-lid360"] }, abajo: ["reproductor"] },
     "3d":  { principal: "3d", izq: ["fpv", "rc", "p-slam"], der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"], ocultable: true },
-    mapa:  { principal: "mapa", centro: "p-slam", der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"] },
+    mapa:  { principal: "mapa", centro: "p-slam", abajo: ["reproductor"] },
     ing:   { principal: "3d", izq: ["p-fsm", "p-dec", "p-obj"], der: ["p-cus", "p-tel", "p-arb", "monitor"], abajo: ["estado-linea", "log", "reproductor"] },
-    vuelo: { principal: "dron", centro: "fpv", der: ["p-enlace", "p-tel", "rc", "p-arb", "p-slam"], abajo: ["estado-linea", "log"], derAncha: true },
+    vuelo: { principal: "dron", centro: "fpv", der: ["p-lid360", "cam-csi0", "p-enlace", "p-tel", "rc", "p-arb"], abajo: ["estado-linea", "log"], derAncha: true },
+    ens:   { principal: "dron", centro: "p-ens", der: ["fpv", "cam-csi0", "p-lid360"], abajo: ["reproductor"], derAncha: true },
   };
-  const PANELES = ["fpv", "cam-csi0", "p-lid360", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
+  const PANELES = ["p-ens", "fpv", "cam-csi0", "p-lid360", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
   const $ = id => document.getElementById(id);
   const caja = (id, clase) => { const d = document.createElement("div"); d.id = id; d.className = "caja " + clase; document.body.appendChild(d); return d; };
   let modo = "dron";
@@ -33,13 +34,15 @@
     $("b-ocultar").onclick = () => { document.body.classList.toggle("sin-paneles"); textoOcultar(); acomodar(); };
     addEventListener("keydown", ev => {
       if (/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName)) return;
-      const m = { Digit1: "dron", Digit2: "3d", Digit3: "mapa", Digit4: "ing", Digit5: "vuelo" }[ev.code];
-      if (m) poner(m);
+      const m = { Digit1: "dron", Digit2: "3d", Digit3: "mapa", Digit4: "ing", Digit5: "vuelo", KeyE: "ens" }[ev.code];
+      if (m && !(m === "ens" && modo === "ens" && window.ENSENAR_MANUAL)) poner(m === "ens" && modo === "ens" ? "3d" : m);
     });
     addEventListener("resize", acomodar);
     new ResizeObserver(acomodar).observe($("abajo"));
     let m = "dron";
     try { m = localStorage.getItem(CLAVE) || "dron"; } catch (e) {}
+    const q = new URLSearchParams(location.search).get("modo");
+    if (MODOS[q]) m = q;
     poner(MODOS[m] ? m : "dron");
     setInterval(acomodarSobre, 500);        // los recuadros sobre la cámara siguen a la imagen si cambia su tamaño
   }

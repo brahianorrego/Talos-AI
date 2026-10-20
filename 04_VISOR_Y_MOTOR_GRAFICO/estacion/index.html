@@ -211,9 +211,9 @@
   <div class="ind"><span>Árbitro</span><b id="i-arb">–</b></div>
   <div class="ind opc"><span>Entrenamiento</span><b id="i-ent">–</b></div>
   <div class="der">
-    <div class="autoria">Desarrollado por <b>Brahian Andrés Orrego Osorio</b></div>
+    
     <div class="seg modos" id="modos" title="Elija qué quiere ver">
-      <button data-modo="dron" title="Las cámaras del dron (CSI principal fija y CSI piso) con YOLO, la telemetría, el mapa y el mapa de los dos LiDAR de 1 haz (tecla 1)">Vista del dron</button><button data-modo="3d" title="El mundo 3D de la simulación (tecla 2)">Simulación 3D</button><button data-modo="mapa" title="El mapa que arma el LiDAR (tecla 3)">Mapa</button><button data-modo="ing" title="Todo el análisis: estados, árbitro, decisiones, entrenamiento (tecla 4)">Ingeniería</button><button data-modo="vuelo" title="La pantalla del operador en el vuelo real (tecla 5)">Vuelo real</button>
+      <button data-modo="dron" title="Las cámaras del dron (CSI principal fija y CSI piso) con YOLO, la telemetría, el mapa y el mapa de los dos LiDAR de 1 haz (tecla 1)">Vista del dron</button><button data-modo="3d" title="El mundo 3D de la simulación (tecla 2)">Simulación 3D</button><button data-modo="mapa" title="El mapa del dron visto desde arriba (tecla 3)">Mapa</button><button data-modo="vuelo" title="La pantalla del operador en el vuelo real: cámara principal grande, mapa de los dos LiDAR y cámara 2 (tecla 5)">Vuelo real</button><button data-modo="ens" title="Modo Enseñar: usted dirige al dron en el mapa y se graba la demostración (tecla E)">Enseñar</button>
     </div>
 
     <select id="selector" title="Repetición a mostrar"></select>
@@ -330,7 +330,7 @@
     <span id="reloj">0.0 s</span>
     <button class="btn activo" id="b-operador" title="MANUAL: la repetición se detiene en la alerta hasta que usted haga clic sobre el sospechoso (en la cámara FPV o en la lista del tracker). AUTO: el clic lo hace el operador simulado.">Operador · MANUAL</button>
     <div class="seg" id="camaras">
-      <button data-cam="cine" class="activo">Cine</button><button data-cam="seguir">Seguir</button><button data-cam="orbita">Libre</button><button data-cam="arriba">Cenital</button>
+      <button data-cam="seguir" class="activo">Seguir</button><button data-cam="orbita">Libre</button>
     </div>
   </div>
 </div>
@@ -1156,7 +1156,7 @@ async function actualizarMetricas() {
 }
 // ======================================================================= repeticiones
 const sel = $("selector");
-let partida = null, eventos = [], tPartida = 0, pausa = false, vel = 1, modoCam = "cine", recargando = false, angCine = 0, kAnterior = -1;
+let partida = null, eventos = [], tPartida = 0, pausa = false, vel = 1, modoCam = "seguir", recargando = false, angCine = 0, kAnterior = -1;
 async function cargarJSON(ruta) {
   const r = await fetch(ruta + "?t=" + Date.now(), { cache: "no-store" });
   if (!r.ok) throw new Error(ruta);
@@ -1262,18 +1262,14 @@ function iniciarPartida(pt) {
   } catch (e) { console.warn(e); }
 }
 async function llenarSelector() {
-  // V17: en vivo (en_vivo.py) y, de cada corrida V17 del entrenamiento, su última partida y sus hitos (sin niveles viejos)
-  const actual = sel.value, corridas = await corridaV17(), grupos = [];
-  grupos.push(`<optgroup label="Simulación"><option value="vivo">En vivo · misión V17 (en_vivo.py, puerto 8767)</option></optgroup>`);
-  try { if ((await fetch("mision_completa.json", { method: "HEAD" })).ok) grupos.unshift(`<optgroup label="Misión completa"><option value="mision_completa.json">Despegue · tránsito con el mínimo · activación CH7 · zona de IA</option></optgroup>`); } catch (e) {}
-  for (const c of corridas) {
-    let hitos = [];
-    try { hitos = await cargarJSON(c.carpeta + "/hitos/lista.json"); } catch (e) {}
-    grupos.push(`<optgroup label="Entrenamiento V17 · ${c.carpeta}${c.vivo ? " · entrenando" : ""}">`
-      + `<option value="${c.carpeta}/replay_v17.json">Última partida · it ${c.it} · ${(c.pasos / 1e6).toFixed(1)} M pasos</option>`
-      + hitos.slice().reverse().slice(0, 20).map(h => `<option value="${c.carpeta}/hitos/${h.archivo}">Hito · it ${h.it} · ${(h.pasos / 1e6).toFixed(1)} M</option>`).join("")
-      + `</optgroup>`);
-  }
+  // Tres grupos: En vivo, Repeticiones del plus (las escogidas de la V17 con el dron plus) y Misión completa. Sin entrenamientos ni hitos viejos.
+  const actual = sel.value, grupos = [];
+  grupos.push(`<optgroup label="En vivo"><option value="vivo">Simulación en vivo (en_vivo.py)</option></optgroup>`);
+  const rep = [["rendicion", "El ladrón se rinde"], ["reencuentro_alto", "Reencuentro desde arriba"], ["salto", "El ladrón salta al dron"], ["civil_curioso", "El civil mira o graba"], ["cambio_de_v", "El ladrón cambia de V"]];
+  let ops = "";
+  for (const [k, t] of rep) { try { if ((await fetch(`repeticiones_v17_h/${k}.json`, { method: "HEAD" })).ok) ops += `<option value="repeticiones_v17_h/${k}.json">${t}</option>`; } catch (e) {} }
+  if (ops) grupos.push(`<optgroup label="Repeticiones del plus">${ops}</optgroup>`);
+  try { if ((await fetch("mision_completa.json", { method: "HEAD" })).ok) grupos.push(`<optgroup label="Misión completa"><option value="mision_completa.json">Despegue, tránsito, activación y zona de IA</option></optgroup>`); } catch (e) {}
   sel.innerHTML = grupos.join("");
   const valores = [...sel.querySelectorAll("option:not([disabled])")].map(o => o.value);
   if (actual && valores.includes(actual)) sel.value = actual;
@@ -2099,6 +2095,7 @@ function renderizarEnCaja(cam, el) {
 })();
 </script>
 <script src="camaras.js"></script>
+<script src="ensenar.js"></script>
 <script src="modos.js"></script>
 <script src="dron_real.js"></script>
 <script src="universidad.js"></script>

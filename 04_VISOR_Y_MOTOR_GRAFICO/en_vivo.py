@@ -2,18 +2,30 @@
 """
 Simulación EN VIVO para el visor (fase V5 del plan del visor): corre UNA partida del entorno de 03_SIMULACION_RL a tiempo
 real y manda cada foto() al navegador apenas ocurre (Server-Sent Events, solo biblioteca estándar). Al terminar una partida
-empieza otra. No modifica nada de 03_SIMULACION_RL: solo importa entorno.py.
+empieza otra. No modifica nada de 03_SIMULACION_RL: solo importa entorno.py (y, en el modo enseñar, escribe demos_brahian/).
 
 Quién decide el dron:
   - por defecto, la acción 0 en cada paso (el dron queda en manos de las reglas deterministas: búsqueda, árbitro, etc.);
   - con --politica modelos/dron_politica.json, la red exportada (respetando los botones permitidos de la V17).
 
+MODO ENSEÑAR (la estación manda por POST a 127.0.0.1:8767): Brahian dirige al dron y se graba la demostración.
+  /modo     {"modo": "auto" | "ensenar", "sub": "mapa" | "manual"}        quién lleva al dron
+  /waypoint {x, y, yaw, pan, tilt}   agrega un punto de paso (yaw y pan en °, + = izquierda; tilt en °, -45..+15)
+            {"borrar": "ultimo" | "todos"}    {"ir": true | false}    (ir = seguir los puntos; false = parar)
+  /manual   {vx, vy, wz, pan, tilt}  de -1 a 1: adelante, a la izquierda, giro y velocidad del pan y del tilt
+  /reset    empieza otra partida (si se estaba grabando, guarda la demostración)
+  /grabar   {"on": true | false}     al apagar guarda 03_SIMULACION_RL/demos_brahian/demo_<fecha>.json (fuera de Git)
+Mientras la Simulación no entregue su función de control, el dron del modo enseñar lo lleva un seguidor simple de puntos (más
+abajo): pone la pose en el entorno y el resto del mundo (ladrón, civil, sensores) sigue corriendo con entorno.py.
+
 Uso (desde la raíz del proyecto, con el .venv de la simulación):
   03_SIMULACION_RL\\.venv\\Scripts\\python.exe 04_VISOR_Y_MOTOR_GRAFICO\\en_vivo.py [--nivel 6] [--semilla 1] [--velocidad 1]
-Luego, en el visor (puerto 8766), elegir la repetición "Simulación en vivo".
+Luego, en el visor, elegir "Simulación en vivo" (o el botón Enseñar).
 """
 import argparse
+import datetime
 import json
+import math
 import os
 import sys
 import threading
@@ -44,6 +56,81 @@ if A.politica:
 estado = {"partida": 0, "cabecera": None, "cuadros": []}
 cambio = threading.Condition()
 
+# ---------------------------------------------------------------------------------------------------------------- modo enseñar
+V_MAX, A_MAX, W_MAX, PAN_V, PAN_MAX, TILT_MIN, TILT_MAX = 3.0, 2.5, 60.0, 90.0, 90.0, -45.0, 15.0   # tilt: regla dura del gimbal (D-014)
+LIM = E.ARENA - 1.0                                       # geocerca
+ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": ""}
+lock = threading.Lock()
+pose = {"x": 0.0, "y": 0.0, "z": 3.0, "psi": 0.0, "vx": 0.0, "vy": 0.0, "pan": 0.0, "tilt": -5.0}   # psi en radianes; pan y tilt en °
+DEMOS = os.path.join(SIM, "demos_brahian")
+
+
+def ang(a):
+    return (a + 180.0) % 360.0 - 180.0
+
+
+def mover(dt):
+    """Seguidor simple: va al punto de paso, ahí gira a su rumbo y mueve el pan-tilt; o ejecuta los mandos manuales (cuerpo del dron)."""
+    p = pose
+    vx_c = vy_c = wz = dpan = dtilt = 0.0
+    c = None
+    with lock:
+        man = ens["man"] if time.time() - ens["t_man"] < 0.4 else {}
+        if ens["sub"] == "manual":
+            f, l = float(man.get("vx", 0)) * V_MAX, float(man.get("vy", 0)) * V_MAX
+            vx_c, vy_c = f * math.cos(p["psi"]) - l * math.sin(p["psi"]), f * math.sin(p["psi"]) + l * math.cos(p["psi"])
+            wz = float(man.get("wz", 0)) * W_MAX
+            dpan, dtilt = float(man.get("pan", 0)) * PAN_V, float(man.get("tilt", 0)) * PAN_V
+        elif ens["ir"] and ens["i"] < len(ens["cola"]):
+            c = dict(ens["cola"][ens["i"]])
+    if c is not None:
+        ex, ey = c["x"] - p["x"], c["y"] - p["y"]
+        d = math.hypot(ex, ey)
+        e_yaw = ang(c["yaw"] - math.degrees(p["psi"]))
+        e_pan, e_tilt = c["pan"] - p["pan"], c["tilt"] - p["tilt"]
+        if d > 0.25:
+            v = min(V_MAX, math.sqrt(2 * A_MAX * d))       # frena para llegar suave
+            vx_c, vy_c = v * ex / d, v * ey / d
+            wz = float(np.clip(e_yaw * 1.0, -W_MAX, W_MAX))  # ya va girando hacia el rumbo del punto
+        else:
+            wz = float(np.clip(e_yaw * 2.0, -W_MAX, W_MAX))
+        dpan, dtilt = float(np.clip(e_pan * 3, -PAN_V, PAN_V)), float(np.clip(e_tilt * 3, -PAN_V, PAN_V))
+        if d <= 0.25 and abs(e_yaw) < 3.0 and abs(e_pan) < 2.0 and abs(e_tilt) < 2.0:      # llegó, giró y apuntó: sigue con el próximo
+            with lock:
+                ens["i"] += 1
+                if ens["i"] >= len(ens["cola"]):
+                    ens["ir"] = False
+    dv = A_MAX * dt                                          # aceleración limitada
+    p["vx"] += float(np.clip(vx_c - p["vx"], -dv, dv))
+    p["vy"] += float(np.clip(vy_c - p["vy"], -dv, dv))
+    p["x"] = float(np.clip(p["x"] + p["vx"] * dt, -LIM, LIM))
+    p["y"] = float(np.clip(p["y"] + p["vy"] * dt, -LIM, LIM))
+    p["psi"] = math.radians(ang(math.degrees(p["psi"]) + wz * dt))
+    p["pan"] = float(np.clip(p["pan"] + dpan * dt, -PAN_MAX, PAN_MAX))
+    p["tilt"] = float(np.clip(p["tilt"] + dtilt * dt, TILT_MIN, TILT_MAX))
+
+
+def poner_pose(env):
+    p = pose
+    env.dx[0], env.dy[0], env.dz[0], env.psi[0], env.dvx[0], env.dvy[0] = p["x"], p["y"], p["z"], p["psi"], p["vx"], p["vy"]
+    for nom, v in (("pan", p["pan"]), ("pan_meta", p["pan"]), ("cam_pitch", p["tilt"])):
+        if hasattr(env, nom):
+            getattr(env, nom)[0] = v
+
+
+def guardar_demo(cab):
+    with lock:
+        reg, ens["reg"], ens["graba"], ens["fin"] = ens["reg"], [], False, False
+    if len(reg) < 5:
+        return
+    os.makedirs(DEMOS, exist_ok=True)
+    ruta = os.path.join(DEMOS, "demo_%s.json" % datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump({"tipo": "demo_brahian", "dt": E.DT, "paneles": cab["paneles"], "version": cab["version"], "cuadros": reg}, f)
+    with lock:
+        ens["demo"] = os.path.basename(ruta)
+    print("Demostración guardada:", ruta, flush=True)
+
 
 def simular():
     semilla = A.semilla
@@ -52,13 +139,22 @@ def simular():
         cab = {"tipo": "partida", "paneles": env.paneles(0), "dt": E.DT, "version": "en vivo · nivel %d · semilla %d" % (A.nivel, semilla),
                "titulo": "Simulación en vivo · nivel %d · semilla %d · %s" % (A.nivel, semilla, "política" if politica else "reglas"),
                "autor": "Brahian Andrés Orrego Osorio", "adversaria": True}
+        pose.update(x=float(env.dx[0]), y=float(env.dy[0]), z=max(2.0, float(env.dz[0])), psi=float(env.psi[0]), vx=0.0, vy=0.0, pan=0.0, tilt=-5.0)
+        with lock:
+            ens["cola"], ens["i"], ens["ir"] = [], 0, False
         with cambio:
             estado["partida"] += 1
             estado["cabecera"], estado["cuadros"] = cab, [env.foto(0)]
             cambio.notify_all()
-        for _ in range(E.PASOS_EPISODIO + 5):
+        reiniciar = False
+        for paso in range(E.PASOS_EPISODIO + 5):
             t0 = time.perf_counter()
-            if politica is not None:
+            enseñando = ens["modo"] == "ensenar"
+            if enseñando:
+                mover(E.DT)
+                poner_pose(env)
+                ad = np.zeros(1, int)
+            elif politica is not None:
                 lg = politica.logits(env.obs_dron())
                 if hasattr(env, "action_masks"):
                     lg = np.where(env.action_masks(), lg, -1e9)
@@ -66,19 +162,82 @@ def simular():
             else:
                 ad = np.zeros(1, int)
             _, _, done, _ = env.step(ad, np.full(1, E.N_ACC_PERSONA - 1), auto_reset=False)
+            if enseñando:
+                poner_pose(env)                              # la pose es la que dirige Brahian, no la que quiso la regla
+            f = env.foto(0)
+            with lock:
+                if ens["graba"] and enseñando:
+                    ens["reg"].append({"d": f["d"], "pan": f["pan"], "gmb": f["gmb"], "i": ens["i"], "cola": [dict(q) for q in ens["cola"]] if paso % 10 == 0 else None,
+                                       "man": dict(ens["man"]) if ens["sub"] == "manual" else None, "pers": f["pers"], "vis": f["vis"], "lid": f["lid"], "dm": f["dm"]})
+                f["ens"] = {"modo": ens["modo"], "sub": ens["sub"], "cola": ens["cola"], "i": ens["i"], "ir": ens["ir"], "graba": ens["graba"], "n": len(ens["reg"]), "demo": ens["demo"]}
+                reiniciar, ens["reset"] = ens["reset"], False
+                guardar = ens["fin"]
+            if guardar:
+                guardar_demo(cab)
             with cambio:
-                estado["cuadros"].append(env.foto(0))
+                estado["cuadros"].append(f)
                 cambio.notify_all()
-            if done[0]:
+            if done[0] or reiniciar:
                 break
             time.sleep(max(0.0, E.DT / A.velocidad - (time.perf_counter() - t0)))
-        time.sleep(3)                                       # pausa entre partidas
+        if ens["reg"]:
+            guardar_demo(cab)
+        time.sleep(1 if reiniciar else 3)                    # pausa entre partidas
         semilla += 1
 
 
 class Manejador(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        for k, v in (("Access-Control-Allow-Origin", "*"), ("Access-Control-Allow-Methods", "POST, GET, OPTIONS"), ("Access-Control-Allow-Headers", "Content-Type")):
+            self.send_header(k, v)
+        self.end_headers()
+
+    def do_POST(self):
+        try:
+            m = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        except ValueError:
+            self.send_error(400)
+            return
+        ruta = self.path.split("?")[0]
+        with lock:
+            if ruta == "/modo":
+                ens["modo"] = "ensenar" if m.get("modo") == "ensenar" else "auto"
+                if m.get("sub") in ("mapa", "manual"):
+                    ens["sub"] = m["sub"]
+                if ens["modo"] != "ensenar":
+                    ens["ir"] = False
+            elif ruta == "/waypoint":
+                if m.get("borrar") == "todos":
+                    ens["cola"], ens["i"], ens["ir"] = [], 0, False
+                elif m.get("borrar") == "ultimo" and ens["cola"]:
+                    ens["cola"].pop()
+                    ens["i"] = min(ens["i"], len(ens["cola"]))
+                elif "ir" in m:
+                    ens["ir"] = bool(m["ir"]) and ens["i"] < len(ens["cola"])
+                elif "x" in m and "y" in m:
+                    ens["cola"].append({"x": float(np.clip(m["x"], -LIM, LIM)), "y": float(np.clip(m["y"], -LIM, LIM)), "yaw": float(m.get("yaw", 0.0)),
+                                        "pan": float(np.clip(m.get("pan", 0.0), -PAN_MAX, PAN_MAX)), "tilt": float(np.clip(m.get("tilt", -5.0), TILT_MIN, TILT_MAX))})
+            elif ruta == "/manual":
+                ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt")}, time.time()
+            elif ruta == "/reset":
+                ens["reset"] = True
+            elif ruta == "/grabar":
+                if m.get("on"):
+                    ens["graba"], ens["reg"], ens["demo"] = True, [], ""
+                else:
+                    ens["fin"] = True                        # el bucle guarda en el próximo paso
+            else:
+                self.send_error(404)
+                return
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b"{}")
 
     def do_GET(self):
         if not self.path.startswith("/vivo"):
@@ -87,7 +246,7 @@ class Manejador(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Access-Control-Allow-Origin", "*")     # el visor está en otro puerto (8766)
+        self.send_header("Access-Control-Allow-Origin", "*")     # el visor está en otro puerto
         self.end_headers()
         partida, enviados = None, 0
         try:
