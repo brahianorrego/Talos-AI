@@ -247,3 +247,9 @@ Para anularlo, la batería (≈ 700 g, est.) se corre **≈ 10 mm hacia atrás**
 
 Con el pan en 0° y el tilt en −5° (`TILT_REPOSO_DEG = -5`) la cámara apunta con **la misma orientación** que en G (≈ 5° hacia abajo). Lo que cambia es **dónde está el lente** (en el eje del pan-tilt, no en la base de G)
 y **la distancia al TF03** (que queda a ≈ 75 mm al costado): paralaje de ≈ 1.2° a 3.5 m y 0.7° a 6 m. El TF03 sigue paralelo a −5° como en G.
+
+## CSI#2 al piso: inclinación y posición (respuesta al Coordinador, 2026-10-20)
+
+Cálculo geométrico a 3.30 m, IMX219 62.2° × 48.8° nominal con el lado largo en vertical (hacia adelante-atrás): **recta abajo (−90°)** ve ±2.0 m hacia adelante/atrás y ±1.5 m de lado (a la altura de la cabeza, solo ±1.0 m);
+**−60°** ve desde 0.06 m detrás del dron hasta **6.0 m adelante** (a la altura de la cabeza, hasta 3.0 m), ancho ≈ 3.5 m; **−45°** ve de 0.8 m a 13.4 m (deja ciega la zona justo bajo el dron). Recomendación: **−60°**, lado largo en vertical, delante o a un costado de
+la batería para que no la tape (la posición exacta depende de medidas que no tengo). Pendiente: el soporte `soporte_camara.scad` modo `abajo` queda recto a −90°; para −60° se inclina la placa (cuña) en una próxima ronda.
