@@ -2173,7 +2173,7 @@
    "nombre": "bateria",
    "forma": "caja",
    "centro": [
-    -0.04,
+    -0.01,
     0.0,
     -0.103
    ],
@@ -2188,7 +2188,7 @@
    "nombre": "velcro_azul",
    "forma": "caja",
    "centro": [
-    -0.04,
+    -0.01,
     0.0,
     -0.103
    ],
@@ -2480,7 +2480,7 @@
    "centro": [
     0.0695,
     -0.0315,
-    -0.1085
+    -0.11
    ],
    "tam": [
     0.0228,
@@ -2496,7 +2496,7 @@
    "centro": [
     0.09,
     0.0,
-    -0.1085
+    -0.11
    ],
    "tam": [
     0.03,
@@ -2512,7 +2512,7 @@
    "centro": [
     0.09,
     0.0215,
-    -0.1085
+    -0.11
    ],
    "tam": [
     0.03,
@@ -2528,7 +2528,7 @@
    "centro": [
     0.09,
     -0.0215,
-    -0.1085
+    -0.11
    ],
    "tam": [
     0.03,
@@ -2544,7 +2544,7 @@
    "centro": [
     0.105,
     0.0,
-    -0.1085
+    -0.11
    ],
    "tam": [
     0.004,
@@ -2560,7 +2560,7 @@
    "centro": [
     0.1085,
     0.0,
-    -0.0955
+    -0.097
    ],
    "tam": [
     0.003,
@@ -2576,7 +2576,7 @@
    "centro": [
     0.1115,
     0.0,
-    -0.0955
+    -0.097
    ],
    "tam": [
     0.009,
@@ -2592,7 +2592,7 @@
    "centro": [
     0.1175,
     0.0,
-    -0.1215
+    -0.123
    ],
    "tam": [
     0.0135,
@@ -2608,7 +2608,7 @@
    "centro": [
     0.1252,
     0.0,
-    -0.1215
+    -0.123
    ],
    "tam": [
     0.008,
@@ -2624,7 +2624,7 @@
    "centro": [
     0.098,
     0.0,
-    -0.0745
+    -0.076
    ],
    "tam": [
     0.001,
@@ -2640,7 +2640,7 @@
    "centro": [
     -0.01,
     0.06,
-    -0.0298
+    -0.0293
    ],
    "tam": [
     0.049,
@@ -2655,7 +2655,7 @@
    "centro": [
     -0.01,
     0.06,
-    -0.0345
+    -0.034
    ],
    "tam": [
     0.025,
@@ -2670,7 +2670,7 @@
    "centro": [
     -0.01,
     0.06,
-    -0.0372
+    -0.0367
    ],
    "tam": [
     0.009,
@@ -2689,7 +2689,7 @@
   "tilt": [
    0.075,
    0.0,
-   -0.1085
+   -0.11
   ]
  },
  "piezas_gimbal": [
@@ -3883,7 +3883,7 @@
   "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
   "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
   "Cables: no se modelan",
-  "Variante plus (H): POSICIÓN PROVISIONAL del pan-tilt bajo el chasis y de la 2.ª CSI al piso, y la batería corrida 4 cm hacia atrás (a ojo, con la forma de pan_tilt_servos.scad); las fija Hardware en 05_/config_sim/variante_H.json y Brahian mandará fotos",
+  "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). Hardware recomienda ahora el pan-tilt ARRIBA, sobre la placa de arriba delante de la caja de la Jetson; aquí se modela la opción 2, COLGADO bajo el chasis. Rangos: pan ±89°, tilt −44°…+14°",
   "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)"
  ]
 }

@@ -79,7 +79,7 @@ class TestModeloDron(unittest.TestCase):
             self.assertIsNone(grupos[pieza], pieza)                      # lo fijo al chasis no se mueve
         self.assertLess(P["csi_piso_placa"]["centro"][2], 0)             # la del piso, bajo el chasis y fuera de la batería
         self.assertGreater(abs(P["csi_piso_placa"]["centro"][1]), P["bateria"]["tam"][1] / 2)
-        self.assertLess(P["bateria"]["centro"][0], 0.0)                  # batería corrida hacia atrás por el centro de gravedad
+        self.assertLess(P["bateria"]["centro"][0], 0.0)                  # batería corrida hacia atrás por el centro de gravedad (10 mm, de variante_H.json)
         self.assertLess(dron_real.PIVOTE_TILT[2], dron_real.PIVOTE_PAN[2])
 
     def test_el_tf03_va_en_el_lado_derecho_en_los_dos_drones(self):

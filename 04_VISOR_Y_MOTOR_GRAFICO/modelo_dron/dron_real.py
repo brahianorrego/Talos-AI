@@ -47,7 +47,7 @@ FALTAN = [
     "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
     "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
     "Cables: no se modelan",
-    "Variante plus (H): POSICIÓN PROVISIONAL del pan-tilt bajo el chasis y de la 2.ª CSI al piso, y la batería corrida 4 cm hacia atrás (a ojo, con la forma de pan_tilt_servos.scad); las fija Hardware en 05_/config_sim/variante_H.json y Brahian mandará fotos",
+    "Variante plus (H): las posiciones del pan-tilt, de la 2.ª CSI al piso, del TF03 y de la batería (corrida 10 mm atrás) salen de 05_/config_sim/variante_H.json (campos MONTAJE_*), que Hardware marca PROVISIONALES (nadie ha medido el dron). Hardware recomienda ahora el pan-tilt ARRIBA, sobre la placa de arriba delante de la caja de la Jetson; aquí se modela la opción 2, COLGADO bajo el chasis. Rangos: pan ±89°, tilt −44°…+14°",
     "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)",
 ]
 
@@ -131,18 +131,35 @@ def piezas(variante="minimo"):
               _p("estructura_poste", "cilindro", (0.060, 0.030, -0.056), (0.005, 0.045), "dorado", eje="z"),
               _p("estructura_poste", "cilindro", (0.060, -0.030, -0.056), (0.005, 0.045), "dorado", eje="z")]
     elif variante == "plus":
-        P += [_p("tf03", "caja", (0.118, -0.075, -0.011), (0.047, 0.074, 0.0365), "negro"),          # TF03 fijo al chasis (−5°), donde está hoy: lado derecho
-              _p("tf03_ventana", "caja", (0.1418, -0.075, -0.011), (0.0012, 0.058, 0.022), "gris")]
+        P += [_p("tf03", "caja", TF03_PLUS, (0.047, 0.074, 0.0365), "negro"),          # TF03 fijo al chasis (−5°), donde está hoy: lado derecho
+              _p("tf03_ventana", "caja", (TF03_PLUS[0] + 0.0238, TF03_PLUS[1], TF03_PLUS[2]), (0.0012, 0.058, 0.022), "gris")]
     if variante == "plus":
-        P = [dict(p, centro=(-0.040, p["centro"][1], p["centro"][2])) if p["nombre"] in ("bateria", "velcro_azul") else p for p in P]   # batería atrás por el CG
+        P = [dict(p, centro=(p["centro"][0] + BATERIA_DX, p["centro"][1], p["centro"][2])) if p["nombre"] in ("bateria", "velcro_azul") else p for p in P]   # batería atrás por el CG
         P += _pantilt()
     return P
 
 
 # pan-tilt de 2 servos (05_HARDWARE_Y_VARIANTES/piezas_3d/pan_tilt_servos.scad, solo como referencia de forma): colgado bajo el chasis, eje de pan vertical
 # en x = 0.075, eje de tilt horizontal (a lo largo de y) 0.072 m más abajo; la cuna lleva la CSI y el TF-Luna. Medidas del scad (MG90D de la hoja de datos).
-PIVOTE_PAN = (0.075, 0.0, -0.0365)
-PIVOTE_TILT = (0.075, 0.0, -0.1085)
+def _montaje():
+    """Las posiciones del plus las fija Hardware en 05_HARDWARE_Y_VARIANTES/config_sim/variante_H.json (campos MONTAJE_*, PROVISIONALES, solo lectura aquí)."""
+    por_omision = {"MONTAJE_EJE_PAN_M": [0.075, 0.0, -0.0365], "MONTAJE_EJE_TILT_M": [0.075, 0.0, -0.110], "MONTAJE_CSI2_PISO_M": [-0.010, 0.060, -0.034],
+                   "MONTAJE_TF03_M": [0.118, -0.075, -0.011], "MONTAJE_BATERIA_DESPLAZ_X_M": -0.010}
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "05_HARDWARE_Y_VARIANTES", "config_sim", "variante_H.json"), encoding="utf-8") as f:
+            d = json.load(f)
+        por_omision.update({k: d[k] for k in por_omision if k in d})
+    except (OSError, ValueError):
+        pass
+    return por_omision
+
+
+_M = _montaje()
+PIVOTE_PAN = tuple(_M["MONTAJE_EJE_PAN_M"])
+PIVOTE_TILT = tuple(_M["MONTAJE_EJE_TILT_M"])
+CSI_PISO = tuple(_M["MONTAJE_CSI2_PISO_M"])
+TF03_PLUS = tuple(_M["MONTAJE_TF03_M"])
+BATERIA_DX = _M["MONTAJE_BATERIA_DESPLAZ_X_M"]
 
 
 def _pantilt():
@@ -152,7 +169,7 @@ def _pantilt():
         # fijo al chasis
         _p("pantilt_base", "caja", (px, 0.0, -0.0345), (0.064, 0.056, 0.003), "negro"),
         _p("servo_pan", "caja", (px + 0.0055, 0.0, -0.0473), (0.0228, 0.0122, 0.0225), "servo"),
-        _p("tf03_base", "caja", (0.112, -0.075, -0.032), (0.052, 0.080, 0.003), "negro"),
+        _p("tf03_base", "caja", (TF03_PLUS[0] - 0.006, TF03_PLUS[1], TF03_PLUS[2] - 0.021), (0.052, 0.080, 0.003), "negro"),
         # gira con el PAN (yaw): plataforma, mejillas y servo del tilt
         _p("pan_plataforma", "caja", (px, 0.0, -0.0675), (0.052, 0.056, 0.003), "negro", grupo="pan"),
         _p("pan_mejilla_a", "caja", (px, -0.0285, -0.0875), (0.052, 0.004, 0.040), "negro", grupo="pan"),
@@ -169,9 +186,9 @@ def _pantilt():
         _p("luna_lente", "cilindro", (tx + 0.0502, 0.0, tz - 0.013), (0.008, 0.003), "gris", eje="x", grupo="tilt"),
         _p("csi_flex", "caja", (tx + 0.023, 0.0, tz + 0.034), (0.001, 0.016, 0.040), "flex", grupo="tilt"),
         # 2.ª CSI fija mirando al piso (CAM1, −90°): al costado izquierdo, fuera de la batería, bajo el chasis
-        _p("csi_piso_soporte", "caja", (-0.010, 0.060, -0.0298), (0.049, 0.044, 0.0065), "negro"),
-        _p("csi_piso_placa", "caja", (-0.010, 0.060, -0.0345), (0.025, 0.024, 0.003), "verde"),
-        _p("csi_piso_lente", "cilindro", (-0.010, 0.060, -0.0372), (0.009, 0.004), "negro", eje="z"),
+        _p("csi_piso_soporte", "caja", (CSI_PISO[0], CSI_PISO[1], CSI_PISO[2] + 0.0047), (0.049, 0.044, 0.0065), "negro"),
+        _p("csi_piso_placa", "caja", CSI_PISO, (0.025, 0.024, 0.003), "verde"),
+        _p("csi_piso_lente", "cilindro", (CSI_PISO[0], CSI_PISO[1], CSI_PISO[2] - 0.0027), (0.009, 0.004), "negro", eje="z"),
     ]
 
 
