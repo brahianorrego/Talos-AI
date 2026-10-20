@@ -952,7 +952,7 @@ class EntornoDronPersona(object):
         self.t_clic = np.full(n, 99.0)                   # V16: s desde el último clic del operador (tracker amarrado)
         self.n_ruleta, self.n_escudo = z(), z()          # V17 · L3 y L4: cuántas veces lo hizo el ladrón en la partida
         self.cmd_reg, self.quien, self.arb = z(5), zi(), zi()
-        self.pan = z()                                   # D-075: ángulo del pan (°, + = a la izquierda de la nariz)
+        self.pan, self.pan_meta = z(), z()               # D-075: ángulo del pan y el que pide la regla (°, + = izquierda)
         self.phi_racha = z()                             # V17.1: potencial de la racha en curso
         self.b4_meta = np.full(n, Z_SEGURA)              # D-067 · B4: altura meta de la regla   # V17 · visor: consignas, quién manda y motivo del árbitro
         self.z_v17 = np.full(n, Z_SEGURA)                # V17 · E2: altura que piden SUBIR y BAJAR (con el objetivo fijado)
@@ -1333,7 +1333,7 @@ class EntornoDronPersona(object):
         self.n_ruleta[m] = self.n_escudo[m] = 0.0
         self.phi_racha[m] = 0.0
         self.b4_meta[m] = Z_SEGURA
-        self.pan[m] = 0.0
+        self.pan[m] = self.pan_meta[m] = 0.0
         self.z_v17[m] = Z_SEGURA
         # V16 · A3: tipo de gimbal, alcance del TF-Luna y ruido de navegación de la partida (solo en la V16)
         iv = np.where(m)[0][lv >= NIVEL_V16]
@@ -3479,7 +3479,8 @@ class EntornoDronPersona(object):
             busca_p = pred | inv | cnt | (aso & ~self.aso_gira)
             rel_p = np.degrees(envolver(np.arctan2(my_ - self.dy, mx_ - self.dx) - self.psi))
             pan_meta = np.where(tiene, self.pan - a_f, np.where(busca_p, rel_p, 0.0))
-            err_p = np.clip(pan_meta, -PAN_MAX, PAN_MAX) - self.pan
+            self.pan_meta = np.clip(pan_meta, -PAN_MAX, PAN_MAX)
+            err_p = self.pan_meta - self.pan
             self.pan = np.clip(self.pan + np.where(np.abs(err_p) > PAN_BANDA, np.clip(err_p, -PAN_VEL * DT, PAN_VEL * DT), 0.0),
                                -PAN_MAX, PAN_MAX)
         e_f = np.take_along_axis(elev_s, np.clip(foco, 0, N_PERS - 1)[:, None], 1)[:, 0]
@@ -4407,6 +4408,7 @@ class EntornoDronPersona(object):
             # V16 · contrato con el visor
             "v16": bool(self.lvl_ep[i] >= NIVEL_V16),
             "v17": bool(self.lvl_ep[i] == NIVEL_V17), "z_v17": round(float(self.z_v17[i]), 2),   # V17: cancha; altura que pide la red
+            "pan": round(float(self.pan[i]), 2), "pan_meta": round(float(self.pan_meta[i]), 2),   # D-075 (°, + = izquierda)
             "fase": "zona",                                                                      # V17: la partida empieza en la activación
             # V17 · cmd = [vx, vy, vz (m/s, mundo), guiñada (°/s), gimbal (°), modo, quién manda]; arb = motivo del árbitro
             "cmd": [round(float(v), 3) for v in self.cmd_reg[i]] + [NOMBRE_ESTADO[int(self.modo[i])],

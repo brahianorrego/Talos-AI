@@ -177,6 +177,9 @@ class TestVarianteH(unittest.TestCase):
                 self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all() and (env.cam_pitch <= E.GIMBAL_MAX + EPS).all())
                 pan_max = max(pan_max, float(np.abs(env.pan).max()))
             self.assertGreater(pan_max, 10.0)                                # el pan sí se mueve
+            f = env.foto(0)                                                  # y la estación / Unreal lo reciben
+            self.assertEqual(f["pan"], round(float(env.pan[0]), 2))
+            self.assertIn("pan_meta", f)
         finally:
             E.aplicar_hw("BASE")
         self.assertFalse(E.PAN_ACTIVO)
