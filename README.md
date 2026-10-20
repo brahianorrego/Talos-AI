@@ -233,6 +233,18 @@ humano es quien dice cuál persona es el sospechoso.
 <sub>Visor 3D de la estación de tierra (three.js): el dron encontró a una persona y espera que el operador la confirme. A la derecha, lo que ve su cámara; abajo, el mapa del LiDAR.</sub>
 </div>
 
+### Dos configuraciones del dron: mínimo y plus
+
+| | **Mínimo (variante G, el dron de hoy)** | **Plus (variante H)** |
+|---|---|---|
+| Cámara | CSI IMX219 fija, ~5° hacia abajo | CSI IMX219 en un **pan-tilt impreso de dos servos** (yaw y pitch, sin roll: el roll lo controla el dron) |
+| LiDAR | TF03 fijo, paralelo a la cámara | TF03 fijo al chasis **+ TF-Luna junto a la cámara, en el pan-tilt** |
+| Cámara al piso | no | segunda CSI fija mirando al piso |
+| Gimbal | ninguno | ninguno: el tilt de los servos tiene topes mecánicos de −45° a +15° |
+
+Las dos son configuraciones distintas: el mínimo es lo que el comité aprobó y ya está montado; el plus se entrena en la H y todavía no se ha construido
+([`docs/DECISIONES.md`](docs/DECISIONES.md), D-074; estado físico en [`docs/ESTADO_FISICO_20OCT.md`](docs/ESTADO_FISICO_20OCT.md)).
+
 ### V17: la misión real en la cancha de la universidad
 
 Desde la V17 el plus se mide en el escenario que se va a montar: una cancha de fútbol, una zona de 30 × 30 m con dos conjuntos
