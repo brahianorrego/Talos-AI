@@ -1,7 +1,7 @@
 // Modos de la estación (pedido de Brahian, 17-oct): en vez de ventanas sueltas que se pueden cerrar y desordenar, cinco
 // pantallas ya organizadas que se eligen con los botones de arriba (o las teclas 1 a 5). Ningún panel se pierde: cada modo
 // pone los que necesita en su lugar y guarda los demás. El modo elegido se recuerda.
-//   Vista del dron  · la cámara USB con YOLO, la telemetría y el mapa SLAM encima; más las cámaras CSI (frontal y piso) y el LiDAR 360°,
+//   Vista del dron  · la cámara USB con YOLO, la telemetría y el mapa SLAM encima; más las cámaras CSI (frontal y piso) y los dos LiDAR de 1 haz,
 //                     que se encienden y apagan con los botones de arriba o las teclas P, G y L (camaras.js)
 //   Simulación 3D   · el mundo 3D a pantalla completa; "Ocultar paneles" deja solo la simulación
 //   Mapa            · el mapa del LiDAR grande (rueda: acercar; arrastrar: mover; doble clic: centrar)
