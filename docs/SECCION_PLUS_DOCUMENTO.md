@@ -32,6 +32,9 @@ seguridad; altura mínima de 3.30 m con personas a menos de 8 m (con 0.5 m de ma
 - **El dron del plus (variante H, D-074):** una base impresa con **dos servos que mueven el yaw (pan) y el pitch (tilt)**, sin roll (el roll lo
   controla el dron); en ella van la cámara CSI principal y el LiDAR TF-Luna **juntos**; una **segunda CSI fija mirando al piso**; y el TF03 fijo
   al chasis. El mínimo usa otra configuración (variante G: CSI fija y TF03 fijo, sin gimbal). El plus se entrena en H.
+- **Por qué el TF03 va fijo y el TF-Luna en el pan-tilt (D-075):** el TF03 es grande y de cable grueso (ya trabó el pitch del gimbal anterior);
+  la misión tiene dos fases en el mismo vuelo y, con el pan-tilt en pan 0° y tilt −5°, el plus equivale a la cámara fija del mínimo mientras el TF03
+  conserva el frenado de seguridad; y el TF-Luna mide lo que mira la cámara sin sincronizar ángulos de servo con el TF03.
 - **Sensores simulados (H):** cámara principal CSI de 62.2° × 48.8° (nominal, sin medir) con pan y tilt, cámara al piso, TF03 al chasis y TF-Luna
   junto a la cámara, con ruido, retardo y pérdidas de detección. **Ojo:** las corridas de la V17 de este documento se entrenaron antes con la cámara
   USB de 38.9° y un gimbal virtual; hay que repetirlas con H (**[pendiente]**).

@@ -18,14 +18,20 @@ No hay IPs, usuarios ni claves en este archivo. Lo que sale de un solo dicho o d
 | **Gimbal BaseCam** | **Quitado** (Brahian lo descartó) | `05_HARDWARE_Y_VARIANTES/VARIANTES.md` §0 (D-072) |
 | **Cámara USB** | **Quitada**: el sensor se dañó con el sol | `VARIANTES.md` §0 |
 | **Cámara principal** | **CSI IMX219 en CAM0, fija ~5° hacia abajo**, sobre la caja acrílica de la Jetson, con su cable plano; placa `J8IM228-V3.0` (foto) | `VARIANTES.md` §0; `08_EVIDENCIA_Y_DIAGRAMAS/fotos/19_camara_csi_imx219_J8IM228_en_cam0.jpg` y `19_...20oct_1.webp` a `23_...` |
-| **LiDAR TF03** | **Fijo**, en la misma base que la cámara, paralelo a ella (−5°) | `VARIANTES.md` §0 y `config_sim/variante_G.json`. En las fotos no pude distinguirlo con seguridad |
+| **LiDAR TF03** | **Fijo**, en la misma base que la cámara, paralelo a ella (−5°). Según el Coordinador, está **en el lado derecho** del dron; en las fotos no pude distinguirlo con seguridad | `VARIANTES.md` §0 y `config_sim/variante_G.json`; Coordinador (dicho) |
 | **Jetson Orin Nano** | En caja acrílica transparente encima del chasis, con dos antenas WiFi y un módulo GPS Radiolink visibles | Fotos del 20-oct |
-| **Batería LiPo** | Colgada **bajo el chasis**, entre las patas, con correa azul (visible) | Fotos 2, 3 y 4 de la serie del 20-oct |
+| **Batería LiPo** | Colgada **bajo el chasis**, entre las patas, con correa azul. Lo confirman las fotos `19_dron_sin_gimbal_20oct_2`, `_3` y `_4` | Fotos del 20-oct (`08_EVIDENCIA_Y_DIAGRAMAS/fotos/20_...`, `21_...`, `22_...`) |
 | **Pixhawk** | Según el Coordinador, **boca abajo bajo el chasis, junto a la batería**. En las fotos se ve una caja negra en ese lugar, compatible con eso, **pero no puedo confirmar que sea la Pixhawk ni su orientación** | Coordinador (dicho); fotos 3-4 |
 | **Cámara CSI al piso** | **No hay** (es de la meta H) | `variante_G.json` (`CAM_PISO_ACTIVA: false`) |
 
 Masa: la G suma +5 g (CSI) y quita la BaseCam y la USB. **El peso total de hoy no está medido** (2 371 g era con gimbal; hay que pesar
 el dron). Fuente: `VARIANTES.md` §0.
+
+### Por qué el plus (H) lleva el TF03 fijo y el TF-Luna en el pan-tilt (D-075)
+
+Decidido por el Coordinador por encargo de Brahian (20-oct), no medido por mí: (1) el TF03 es grande y de cable grueso (ya trabó el pitch del gimbal);
+(2) la misión tiene **dos fases en el mismo vuelo**, y con el pan-tilt en pan 0°/tilt −5° el plus equivale a la cámara fija del mínimo, mientras el TF03
+fijo conserva el frenado de seguridad; (3) el TF-Luna mide lo que mira la cámara, sin sincronizar los ángulos de los servos con el TF03.
 
 ## 2. Qué funcionó y qué no
 
