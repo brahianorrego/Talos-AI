@@ -31,7 +31,8 @@ export async function aplicarModeloReal(dron, ruta = "recursos/dron_real.json") 
     return mats[k];
   };
   const rotores = {};
-  modelo.piezas.forEach(p => {
+  const piezas = new URLSearchParams(location.search).get("dron") === "gimbal" ? modelo.piezas_gimbal : modelo.piezas;     // ?dron=gimbal: el dron de antes
+  piezas.forEach(p => {
     const [x, y, z] = p.centro;
     let geo, eje = p.eje || "z";
     if (p.forma === "caja") geo = new THREE.BoxGeometry(p.tam[0], p.tam[2], p.tam[1]);
@@ -52,7 +53,7 @@ export async function aplicarModeloReal(dron, ruta = "recursos/dron_real.json") 
     if (k) {
       const n = k[2];
       if (!rotores[n]) {
-        const mo = modelo.piezas.find(q => q.nombre === "motor" + n);
+        const mo = piezas.find(q => q.nombre === "motor" + n);
         const g = new THREE.Group();
         g.position.copy(tres(mo.centro[0], mo.centro[1], 0));
         real.add(g);

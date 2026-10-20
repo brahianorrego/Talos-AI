@@ -213,7 +213,7 @@ def dron(etiqueta="Dron", z_centro=3.3):
     raiz.set_folder_path("Dron")
     mats = {}
     piezas = []
-    for p in modelo["piezas"]:
+    for p in (modelo["piezas_gimbal"] if os.environ.get("DRONIA_DRON") == "gimbal" else modelo["piezas"]):    # DRONIA_DRON=gimbal: el dron de antes
         col = tuple(modelo["colores"][p["color"]])
         if p["color"] not in mats:
             mats[p["color"]] = (material_translucido("Dron_" + p["color"], col, 0.22) if p.get("translucido")

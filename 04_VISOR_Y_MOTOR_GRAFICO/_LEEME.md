@@ -282,3 +282,14 @@ privada): todo en un entorno, con la cancha de fútbol, la cancha cerrada y los 
   igual (carpeta `Repeticion/Ruta`; `DRONIA_SIN_RUTA=1` la quita). Es el recorrido ideal que enseña el maestro B5: cuando Simulación grabe repeticiones
   con la ruta, se verá cómo la sigue. Pruebas: `pruebas/test_ruta_busqueda.py`.
 - La estación normaliza la `fase` de la V17 (texto "zona") a los números 1 (piloto) y 2 (IA) que usa el visor.
+
+## D-072 · El dron sin gimbal y la cámara CSI fija (2026-10-20)
+
+- **Modelo 3D** (`modelo_dron/dron_real.py`): sin BaseCam ni cámara USB; CSI y TF03 fijos, flex dorado y estructura volteada como se ven en las fotos
+  19 a 23; el de antes queda como `piezas_gimbal` (`DRONIA_DRON=gimbal` o `?dron=gimbal`).
+- **Estación, "Vista del dron"**: la cámara principal es la **CSI fija** (sin gimbal, HFOV 62.2° nominal, inclinada 5° hacia abajo, montada arriba
+  de la caja de la Jetson) y la **CSI al piso (−90°)** es la segunda; se quitó la cámara USB y la CSI frontal (que era la variante F). La imagen lleva
+  el cartel "CÁMARA FIJA · SIN GIMBAL" y el indicador de pitch del gimbal ya no está (queda "CSI FIJA −5° · HFOV 62.2°"; en telemetría, "Cámara: CSI fija
+  −5°"). Teclas P (principal), G (piso) y L (LiDAR 360°). `?camara=gimbal` devuelve la cámara de antes. **Ojo:** la simulación V17 todavía modela una
+  cámara con gimbal y HFOV 38.9°; la estación dibuja la cámara fija como será en el dron real, pero las cajas de YOLO de la principal siguen
+  saliendo de la simulación (su campo de visión es el angosto). Cuando Simulación cambie el sensor, esto se alinea.

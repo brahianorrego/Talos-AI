@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Modelo del DRON REAL como lista de piezas simples (cajas y cilindros), hecho a ojo con las fotos de
-08_EVIDENCIA_Y_DIAGRAMAS/fotos (08, 09, 10, 14 a 18) y con los datos de 05_HARDWARE_Y_VARIANTES/hardware.md.
+08_EVIDENCIA_Y_DIAGRAMAS/fotos (08, 09, 10, 14 a 18 y, desde el 20-oct, 19 a 23) y con los datos de 05_HARDWARE_Y_VARIANTES/hardware.md.
+DOS VARIANTES (D-072): "sin_gimbal" (la de hoy: sin BaseCam ni cámara USB; cámara CSI IMX219 y TF03 fijos) y "gimbal" (la de antes). El JSON
+trae `piezas` (la de hoy) y `piezas_gimbal` (la anterior); los programas muestran la de hoy y la anterior con DRONIA_DRON=gimbal (Unreal, Blender)
+o ?dron=gimbal (visores).
 NO es fotorrealista: es proporcionado, con los colores del dron, y lo usan Unreal (unreal/dronia_ue.py), Blender
 (blender/video_cancha_v17.py) y el visor web (modelo_dron/dron_real.json, que genera este archivo).
 
@@ -23,7 +26,7 @@ import os
 COLORES = {
     "carbono": (0.020, 0.020, 0.025), "negro": (0.010, 0.010, 0.012), "rojo": (0.55, 0.030, 0.030), "dorado": (0.60, 0.40, 0.08),
     "turquesa": (0.03, 0.55, 0.60), "acrilico": (0.80, 0.85, 0.90), "azul": (0.03, 0.15, 0.70), "gris": (0.20, 0.20, 0.22),
-    "amarillo": (0.80, 0.50, 0.03), "verde": (0.03, 0.30, 0.08), "placa": (0.04, 0.10, 0.35), "espuma": (0.015, 0.015, 0.015),
+    "amarillo": (0.80, 0.50, 0.03), "verde": (0.03, 0.30, 0.08), "placa": (0.04, 0.10, 0.35), "espuma": (0.015, 0.015, 0.015), "flex": (0.70, 0.45, 0.06),
 }
 
 MEDIDAS = {
@@ -43,6 +46,7 @@ FALTAN = [
     "Hacia dónde apunta el largo de la batería (hoy hacia adelante) y cuál lado del TF03 es el frente",
     "Posición exacta del GPS, de la cámara USB y de los 2 conectores amarillos (XT60)",
     "Cables: no se modelan",
+    "Variante sin gimbal (foto 19 a 23): posición y tamaño de la base impresa, de la estructura volteada y de su agujero redondo (hoy a ojo); el lazo del flex y la inclinación de la CSI (la CSI va fija, pero hoy se modela vertical)",
 ]
 
 R_MOTOR = 0.25            # distancia del centro al motor (la mitad de la distancia entre motores opuestos)
@@ -55,7 +59,7 @@ def _p(nombre, forma, centro, tam, color, **kw):
     return d
 
 
-def piezas():
+def piezas(variante="sin_gimbal"):
     P = []
     # --- chasis: dos placas de carbono, el Pixhawk entre ellas y la placa de la batería
     P += [_p("placa_inferior", "caja", (0, 0, -0.025), (0.19, 0.19, 0.003), "carbono"),
@@ -96,16 +100,33 @@ def piezas():
               _p("apoyo_espuma", "cilindro", (0.0, 0.17 * sy, -0.245), (0.030, 0.34), "espuma", eje="x")]
         for ax in (-0.15, 0.0, 0.15):
             P += [_p("anillo_rojo", "cilindro", (ax, 0.17 * sy, -0.245), (0.033, 0.010), "rojo", eje="x")]
-    # --- gimbal BaseCam (roll y pitch) con el TF03 y la cámara USB encima (fotos 15 a 18)
-    P += [_p("gimbal_placa", "caja", (0.095, 0.0, -0.088), (0.085, 0.075, 0.003), "negro"),
-          _p("gimbal_placa_azul", "caja", (0.045, 0.0, -0.092), (0.050, 0.040, 0.006), "placa"),
-          _p("gimbal_motor_roll", "cilindro", (0.125, 0.0, -0.108), (0.058, 0.030), "negro", eje="x"),
-          _p("gimbal_brazo", "caja", (0.150, 0.0, -0.160), (0.010, 0.014, 0.090), "negro"),
-          _p("gimbal_motor_pitch", "cilindro", (0.150, 0.030, -0.200), (0.055, 0.030), "negro", eje="y"),
-          _p("gimbal_plataforma", "caja", (0.185, 0.0, -0.200), (0.060, 0.050, 0.004), "negro"),
-          _p("tf03", "caja", (0.200, 0.0, -0.222), (0.047, 0.074, 0.0365), "negro"),
-          _p("camara_usb_placa", "caja", (0.193, 0.0, -0.1995), (0.026, 0.028, 0.002), "verde"),
-          _p("camara_usb_lente", "cilindro", (0.206, 0.0, -0.1965), (0.016, 0.022), "negro", eje="x")]
+    if variante == "gimbal":
+        # --- gimbal BaseCam (roll y pitch) con el TF03 y la cámara USB encima (fotos 15 a 18)
+        P += [_p("gimbal_placa", "caja", (0.095, 0.0, -0.088), (0.085, 0.075, 0.003), "negro"),
+              _p("gimbal_placa_azul", "caja", (0.045, 0.0, -0.092), (0.050, 0.040, 0.006), "placa"),
+              _p("gimbal_motor_roll", "cilindro", (0.125, 0.0, -0.108), (0.058, 0.030), "negro", eje="x"),
+              _p("gimbal_brazo", "caja", (0.150, 0.0, -0.160), (0.010, 0.014, 0.090), "negro"),
+              _p("gimbal_motor_pitch", "cilindro", (0.150, 0.030, -0.200), (0.055, 0.030), "negro", eje="y"),
+              _p("gimbal_plataforma", "caja", (0.185, 0.0, -0.200), (0.060, 0.050, 0.004), "negro"),
+              _p("tf03", "caja", (0.200, 0.0, -0.222), (0.047, 0.074, 0.0365), "negro"),
+              _p("camara_usb_placa", "caja", (0.193, 0.0, -0.1995), (0.026, 0.028, 0.002), "verde"),
+              _p("camara_usb_lente", "cilindro", (0.206, 0.0, -0.1965), (0.016, 0.022), "negro", eje="x")]
+    else:
+        # --- 20-oct (fotos 19 a 23): sin gimbal ni cámara USB. TF03 fijo en una base impresa, adelante y abajo, a la altura de las placas
+        P += [_p("base_impresa", "caja", (0.112, 0.0, -0.032), (0.062, 0.088, 0.004), "negro"),
+              _p("tf03", "caja", (0.118, 0.0, -0.011), (0.047, 0.074, 0.0365), "negro"),
+              _p("tf03_ventana", "caja", (0.1418, 0.0, -0.011), (0.0012, 0.058, 0.022), "gris")]
+        # --- cámara CSI IMX219 arriba de la caja de acrílico, al frente, mirando adelante; su cable flex dorado sube, da un lazo y entra a la Jetson
+        P += [_p("csi_placa", "caja", (0.060, 0.0, 0.1385), (0.003, 0.024, 0.025), "verde"),
+              _p("csi_lente", "cilindro", (0.0635, 0.0, 0.1385), (0.009, 0.004), "negro", eje="x"),
+              _p("csi_flex_sube", "caja", (0.057, 0.0, 0.158), (0.001, 0.016, 0.030), "flex"),
+              _p("csi_flex_lazo", "caja", (0.033, 0.0, 0.1735), (0.050, 0.016, 0.001), "flex"),
+              _p("csi_flex_baja", "caja", (0.009, 0.0, 0.1535), (0.001, 0.016, 0.040), "flex")]
+        # --- estructura impresa volteada bajo el chasis, sobre el frente de la batería, colgada con dos separadores dorados
+        P += [_p("estructura_volteada", "caja", (0.075, 0.0, -0.0765), (0.075, 0.072, 0.012), "negro"),
+              _p("estructura_agujero", "cilindro", (0.075, 0.0, -0.0702), (0.032, 0.0012), "gris", eje="z"),
+              _p("estructura_poste", "cilindro", (0.060, 0.030, -0.056), (0.005, 0.045), "dorado", eje="z"),
+              _p("estructura_poste", "cilindro", (0.060, -0.030, -0.056), (0.005, 0.045), "dorado", eje="z")]
     return P
 
 
@@ -127,7 +148,7 @@ def tamano_total():
 if __name__ == "__main__":
     aqui = os.path.dirname(os.path.abspath(__file__))
     datos = {"unidades": "m", "marco": "x adelante, y izquierda, z arriba; origen = centro de la placa del medio",
-             "colores": COLORES, "piezas": piezas(), "faltan": FALTAN}
+             "colores": COLORES, "variante": "sin_gimbal", "piezas": piezas(), "piezas_gimbal": piezas("gimbal"), "faltan": FALTAN}
     for destino in (os.path.join(aqui, "dron_real.json"),                                        # Unreal y Blender
                     os.path.join(aqui, "..", "v16", "simulacion", "recursos", "dron_real.json"),  # visor V16
                     os.path.join(aqui, "..", "estacion", "dron_real.json")):                      # estación de tierra

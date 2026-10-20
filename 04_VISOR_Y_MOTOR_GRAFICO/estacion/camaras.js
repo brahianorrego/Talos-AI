@@ -1,8 +1,8 @@
-// Vista del dron con las TRES cámaras posibles (variante F de 05_HARDWARE_Y_VARIANTES) y el LiDAR de 360°, como paneles que se activan
-// y se apagan con los botones de arriba:
-//   · USB principal   (la de siempre: en el gimbal, con la telemetría y las cajas de YOLO que calcula la simulación)
-//   · CSI CAM1 frontal ancha, fija al chasis, 0°, HFOV 62.2° (IMX219; el dato es nominal, sin medir)
-//   · CSI CAM0 al piso, fija al chasis, -90°, HFOV 62.2°
+// Vista del dron (D-072, 20-oct: el dron ya no tiene gimbal ni cámara USB) con sus cámaras y el LiDAR de 360°, como paneles que se activan y
+// se apagan con los botones de arriba (teclas P, G y L):
+//   · CSI principal FIJA al chasis, inclinada 5° hacia abajo, HFOV 62.2° (IMX219; el dato es nominal, sin medir), con la telemetría y las cajas
+//     de YOLO que calcula la simulación (la simulación aún modela una cámara con gimbal: las cajas siguen su campo de visión)
+//   · CSI al piso, fija al chasis, -90°, HFOV 62.2° (la segunda cámara; en el dron real la batería taparía parte de su imagen)
 //   · LiDAR 360°: mapa de puntos alrededor del dron, vista desde arriba con el frente hacia arriba; se calcula en el navegador con la
 //     geometría de la escena (paneles, personas, árboles y edificios) con el haz inclinado (−10° por omisión): solo choca con lo que mide más que la altura del haz a esa distancia. El TF03 real es de un solo haz hacia
 //     adelante: este mapa es lo que armaría un LiDAR que girara (el giro de 360° del dron lo hace con el yaw); es una vista simulada.
@@ -13,11 +13,10 @@
   const CLAVE = "estacion-camaras-v1";
   const $ = id => document.getElementById(id);
   const CAMS = [
-    { id: "usb", panel: "fpv", nombre: "USB principal", corto: "USB · gimbal" },
-    { id: "csi1", panel: "cam-csi1", nombre: "CSI CAM1 · frontal ancha", corto: "CSI frontal", hfov: 62.2, vfov: 48.3, pitch: 0 },
+    { id: "usb", panel: "fpv", nombre: "CSI principal (fija)", corto: "CSI fija" },
     { id: "csi0", panel: "cam-csi0", nombre: "CSI CAM0 · piso", corto: "CSI piso", hfov: 62.2, vfov: 48.3, pitch: -90 },
   ];
-  let activas = { usb: true, csi1: true, csi0: true, lid: true };
+  let activas = { usb: true, csi0: true, lid: true };
   try { Object.assign(activas, JSON.parse(localStorage.getItem(CLAVE) || "{}")); } catch (e) {}
   let entorno = null;
   fetch("entorno_u.json").then(r => r.json()).then(j => { entorno = j; }).catch(() => {});
@@ -38,7 +37,7 @@
   document.body.appendChild(lid);
   const barra = document.createElement("div");
   barra.id = "camaras-ui";
-  barra.innerHTML = `<span>Mostrar:</span>` + [["usb", "USB principal"], ["csi1", "CSI frontal"], ["csi0", "CSI piso"], ["lid", "LiDAR 360°"]]
+  barra.innerHTML = `<span>Mostrar:</span>` + [["usb", "CSI principal (fija)"], ["csi0", "CSI piso"], ["lid", "LiDAR 360°"]]
     .map(([id, t]) => `<button data-vista="${id}" title="Activar o apagar este panel">${t}</button>`).join("");
   document.body.appendChild(barra);
 
@@ -193,7 +192,6 @@
   // ---------------------------------------------------------------------------------------------------------- encendido y apagado
   function aplicar() {
     document.body.classList.toggle("cam-off-usb", !activas.usb);
-    document.body.classList.toggle("cam-off-csi1", !activas.csi1);
     document.body.classList.toggle("cam-off-csi0", !activas.csi0);
     document.body.classList.toggle("cam-off-lid", !activas.lid);
     barra.querySelectorAll("button").forEach(b => b.classList.toggle("activo", !!activas[b.dataset.vista]));
@@ -202,10 +200,9 @@
     if (centro) {                                      // rejilla: 1 cámara sola, 2 en columnas, 3 = la principal grande y las otras dos apiladas
       const n = vis.length;
       centro.style.display = n > 1 ? "grid" : "flex";
-      centro.style.gridTemplateColumns = n === 3 ? "minmax(0, 1.7fr) minmax(0, 1fr)" : n === 2 ? "minmax(0, 1fr) minmax(0, 1fr)" : "";
-      centro.style.gridTemplateRows = n === 3 ? "minmax(0, 1fr) minmax(0, 1fr)" : "minmax(0, 1fr)";
+      centro.style.gridTemplateColumns = n === 2 ? "minmax(0, 1.7fr) minmax(0, 1fr)" : "";
+      centro.style.gridTemplateRows = "minmax(0, 1fr)";
       centro.style.gap = "8px";
-      vis.forEach((c, i) => { const p = $(c.panel); if (p) p.style.gridRow = n === 3 && i === 0 ? "1 / span 2" : ""; });
     }
     try { localStorage.setItem(CLAVE, JSON.stringify(activas)); } catch (e) {}
   }
@@ -218,7 +215,7 @@
   window.CAMARAS_APLICAR = aplicar;
   addEventListener("keydown", ev => {
     if (/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || ev.ctrlKey || ev.altKey) return;
-    const m = { KeyU: "usb", KeyF: "csi1", KeyG: "csi0", KeyL: "lid" }[ev.code];
+    const m = { KeyP: "usb", KeyG: "csi0", KeyL: "lid" }[ev.code];
     if (m) { activas[m] = !activas[m]; aplicar(); }
   });
 

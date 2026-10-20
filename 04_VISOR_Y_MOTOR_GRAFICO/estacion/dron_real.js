@@ -3,7 +3,7 @@
 // (dron, chasis, rotores, leds, ventilador, gimbalPitch, estrobo, etqDron, halo): se quita la geometría vieja (no solo se oculta,
 // porque el reproductor vuelve a mostrar leds y estrobo en cada cuadro), pero siguen girando las hélices y el gimbal inclinándose.
 // Marco del JSON: x adelante, y izquierda, z arriba  ->  three.js: X = x, Y = z, Z = -y (como mundo()).
-// Con ?dron=viejo se ve el dron decorativo de antes.
+// Con ?dron=viejo se ve el dron decorativo de antes; con ?dron=gimbal, el modelo anterior (BaseCam + cámara USB).
 "use strict";
 (async () => {
   if (new URLSearchParams(location.search).get("dron") === "viejo") return;
@@ -37,7 +37,8 @@
     return mats[k];
   };
   const grupos = {};
-  modelo.piezas.forEach(p => {
+  const piezas = new URLSearchParams(location.search).get("dron") === "gimbal" ? modelo.piezas_gimbal : modelo.piezas;     // ?dron=gimbal: el dron de antes (con gimbal)
+  piezas.forEach(p => {
     const [x, y, z] = p.centro, eje = p.eje || "z";
     const geo = p.forma === "caja" ? new THREE.BoxGeometry(p.tam[0], p.tam[2], p.tam[1]) : new THREE.CylinderGeometry(p.tam[0] / 2, p.tam[0] / 2, p.tam[1], 20);
     const m = new THREE.Mesh(geo, material(p));
@@ -54,7 +55,7 @@
     if (k) {                                                   // hélice y cono giran juntos alrededor de su motor
       const n = k[2];
       if (!grupos[n]) {
-        const mo = modelo.piezas.find(q => q.nombre === "motor" + n);
+        const mo = piezas.find(q => q.nombre === "motor" + n);
         const g = new THREE.Group();
         g.position.copy(tres(mo.centro[0], mo.centro[1], 0));
         real.add(g);

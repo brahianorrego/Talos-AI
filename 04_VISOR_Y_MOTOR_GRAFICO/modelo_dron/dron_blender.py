@@ -39,7 +39,7 @@ def construir(nombre="dron", modelo=None):
             modelo = json.load(f)
     raiz = bpy.data.objects.new(nombre, None)
     bpy.context.scene.collection.objects.link(raiz)
-    for p in modelo["piezas"]:
+    for p in (modelo["piezas_gimbal"] if os.environ.get("DRONIA_DRON") == "gimbal" else modelo["piezas"]):    # DRONIA_DRON=gimbal: el dron de antes
         x, y, z = p["centro"]
         yaw, incl = math.radians(p.get("yaw", 0.0)), math.radians(p.get("inclinacion", 0.0))
         if p["forma"] == "caja":

@@ -2,7 +2,7 @@
 // pantallas ya organizadas que se eligen con los botones de arriba (o las teclas 1 a 5). Ningún panel se pierde: cada modo
 // pone los que necesita en su lugar y guarda los demás. El modo elegido se recuerda.
 //   Vista del dron  · la cámara USB con YOLO, la telemetría y el mapa SLAM encima; más las cámaras CSI (frontal y piso) y el LiDAR 360°,
-//                     que se encienden y apagan con los botones de arriba o las teclas U, F, G y L (camaras.js)
+//                     que se encienden y apagan con los botones de arriba o las teclas P, G y L (camaras.js)
 //   Simulación 3D   · el mundo 3D a pantalla completa; "Ocultar paneles" deja solo la simulación
 //   Mapa            · el mapa del LiDAR grande (rueda: acercar; arrastrar: mover; doble clic: centrar)
 //   Ingeniería      · todo el análisis alrededor del 3D: estados, decisiones, árbitro, tracker, entrenamiento
@@ -12,13 +12,13 @@
 (() => {
   const CLAVE = "estacion-modo-v3";
   const MODOS = {
-    dron:  { principal: "dron", centro: ["fpv", "cam-csi1", "cam-csi0"], sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"], "sobre-bl": ["p-lid360"] }, abajo: ["reproductor"] },
+    dron:  { principal: "dron", centro: ["fpv", "cam-csi0"], sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"], "sobre-bl": ["p-lid360"] }, abajo: ["reproductor"] },
     "3d":  { principal: "3d", izq: ["fpv", "rc", "p-slam"], der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"], ocultable: true },
     mapa:  { principal: "mapa", centro: "p-slam", der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"] },
     ing:   { principal: "3d", izq: ["p-fsm", "p-dec", "p-obj"], der: ["p-cus", "p-tel", "p-arb", "monitor"], abajo: ["estado-linea", "log", "reproductor"] },
     vuelo: { principal: "dron", centro: "fpv", der: ["p-enlace", "p-tel", "rc", "p-arb", "p-slam"], abajo: ["estado-linea", "log"], derAncha: true },
   };
-  const PANELES = ["fpv", "cam-csi1", "cam-csi0", "p-lid360", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
+  const PANELES = ["fpv", "cam-csi0", "p-lid360", "rc", "p-slam", "p-cus", "p-tel", "p-fsm", "p-obj", "p-arb", "p-dec", "monitor", "p-enlace", "estado-linea", "log", "reproductor", "p-3d"];
   const $ = id => document.getElementById(id);
   const caja = (id, clase) => { const d = document.createElement("div"); d.id = id; d.className = "caja " + clase; document.body.appendChild(d); return d; };
   let modo = "dron";

@@ -1,5 +1,13 @@
 # Modelo 3D del dron real (hecho con primitivas)
 
+> **D-072 (20-oct): el dron cambió.** Brahian quitó el gimbal BaseCam y la cámara USB. Hoy el modelo (`piezas`) es el de las fotos
+> `08_EVIDENCIA_Y_DIAGRAMAS/fotos/19_dron_sin_gimbal_20oct_1` a `23`: **cámara CSI IMX219 fija arriba de la caja de acrílico de la Jetson, con
+> su cable flex dorado en lazo; TF03 fijo, la caja negra al frente a la altura de las placas, sobre una base impresa; y una estructura impresa
+> volteada bajo el chasis, sobre el frente de la batería azul, con dos separadores dorados y un agujero redondo.** El modelo anterior (BaseCam +
+> USB) se conserva como `piezas_gimbal` en el mismo JSON: `DRONIA_DRON=gimbal` (Unreal y Blender) o `?dron=gimbal` (estación y visor V16) lo
+> muestran. Lo que falta medir de la variante nueva está en `FALTAN` (a ojo: base impresa, estructura volteada, lazo del flex, inclinación de la CSI).
+> Vistas: `mediciones/capturas/dron_real_sin_gimbal_{tres_cuartos,lado,arriba}.jpg`. Pruebas: `pruebas/test_modelo_dron.py` (7).
+
 Pedido por el Coordinador con las fotos de Brahian (`08_EVIDENCIA_Y_DIAGRAMAS/fotos/` 08, 09, 10, 14 a 18). **No es
 fotorrealista**: es un modelo proporcionado de **77 piezas** (cajas y cilindros) con los colores del dron.
 
