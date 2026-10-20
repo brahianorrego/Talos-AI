@@ -419,6 +419,7 @@ cámara fija.
 | B0 QUEDARSE | 3.7 % | **62.3 %** | 95.7 % | 33.4 | 126.4 | 91.6 % | 20.9 % | 3.5 % |
 | B3 siempre SUBIR | 0.8 % | **78.3 %** | 96.9 % | 37.8 | 119.2 | 92.0 % | 38.7 % | 3.5 % |
 | **B5 ruta de Brahian** (+ SUBIR) | 1.8 % | **92.0 %** | 98.2 % | 41.7 | 126.4 | 99.3 % | 59.8 % | **0 %** |
+| B5s ruta de Brahian + QUEDARSE | — | **87.3 %** | — | 39.7 | 137.3 | 99.3 % | 44.9 % | 0 % |
 | V17.2 (50 M, sin reentrenar) | 2.5 % | **72.7 %** | 97.1 % | 36.5 | 123.0 | 91.6 % | 31.4 % | 2.9 % |
 | V17.6 (red entrenada en G) | 3.7 % | — | — | — | — | — | — | — |
 
@@ -426,6 +427,8 @@ Seguridad en H: alcanzado 0-0.2 %, choque con panel 0-0.2 %, geocerca y gimbal f
 
 - **El pan-tilt es la diferencia grande:** B0 pasa de 3.7 % a 62.3 % de M1. Es el argumento para el documento de por qué el
   plus necesita el pan-tilt.
+- **La ruta explica casi todo:** B5s (la ruta sin subir, `h_b5s.json`) da 87.3 % (+25 puntos sobre B0), y subir agrega
+  +4.7 hasta el 92.0 % de B5.
 - **Con el pan, la ruta de Brahian sí gana:** B5 saca 92.0 %, 13.7 puntos sobre B3, y no pierde ninguna misión. Cumple el
   primer criterio de D-071 (B5 ≥ B3 + 5). Sin pan no ganaba, porque había que volar hasta detrás de la V para mirar.
 - **Métricas:** en H la M1 de 30 s separa bien (62 a 92 %), y la racha ≥ 15 s se satura (96-98 %). En G pasa al revés: la de
