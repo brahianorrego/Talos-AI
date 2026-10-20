@@ -463,6 +463,9 @@ pasando los 8.2 M gracias al lanzamiento vía WMI):
   `03_SIMULACION_RL\repeticiones_v17_h\` (fuera de Git), con
   `herramientas\grabar_repeticiones_v17.py --modelo modelos_v17_7\ultimo.zip --hw H --set BUSQUEDA_RUTA_V17=1 --salida repeticiones_v17_h`.
   Las de la V17.2 (sin pan) quedan en `repeticiones_v17\`.
+  **Grabadas** (08:36, semillas 500-501): rendición, re-encuentro estando alto, civil curioso y cambio de V. **El salto no salió
+  en 80 partidas**: con el pan-tilt el dron casi siempre está alto y el ladrón casi no intenta saltar (para Unreal sirve el
+  `salto.json` de `repeticiones_v17\`, que es de la V17.2).
 
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
