@@ -18,7 +18,7 @@
         <span class="ens-sep"></span>
         <button class="btn" id="ens-ir">Ir</button><button class="btn" id="ens-parar">Parar</button><button class="btn" id="ens-ultimo">Borrar último</button><button class="btn" id="ens-todos">Borrar todos</button>
         <span class="ens-sep"></span>
-        <button class="btn" id="ens-grabar">● Grabar demostración</button><button class="btn" id="ens-reset" title="Empieza otra partida">Otra partida</button>
+        <button class="btn" id="ens-cam" title="El pan-tilt sigue solo al ladrón mientras usted vuela">Cámara asistida</button><button class="btn" id="ens-grabar">● Grabar demostración</button><button class="btn" id="ens-reset" title="Empieza otra partida">Otra partida</button>
       </div>
       <div class="ens-punto" id="ens-punto">Haga clic en el mapa para poner el primer punto.</div>
       <canvas id="ens-lienzo"></canvas>
@@ -136,6 +136,8 @@
   $("ens-ultimo").onclick = () => { L.pop(); sel = L.length - 1; mostrarPunto(); post("/waypoint", { borrar: "ultimo" }); };
   $("ens-todos").onclick = () => { L.length = 0; sel = -1; mostrarPunto(); post("/waypoint", { borrar: "todos" }); };
   $("ens-grabar").onclick = () => post("/grabar", { on: !(ultimoE && ultimoE.graba) });
+  let asist = false;
+  $("ens-cam").onclick = () => { asist = !asist; $("ens-cam").classList.toggle("activo", asist); post("/camara", { modo: asist ? "asistida" : "manual" }); };
   $("ens-reset").onclick = () => { L.length = 0; sel = -1; mostrarPunto(); post("/reset"); };
 
   // ----------------------------------------------------------------------------------------------------------- manual (teclado y gamepad)
@@ -147,8 +149,10 @@
     if (!modoActivo() || sub !== "manual") return;
     const gp = (navigator.getGamepads ? [...navigator.getGamepads()].find(x => x) : null), z = v => (Math.abs(v) < 0.15 ? 0 : v);
     cmdManual = {
+      // gamepad: palanca izquierda = avanzar y lado; derecha = giro (←→) y tilt (↑↓); botones superiores LB/RB (4 y 5) o la cruceta ← → = pan
       vx: eje("KeyW", "KeyS") || (gp ? -z(gp.axes[1]) : 0), vy: eje("KeyA", "KeyD") || (gp ? -z(gp.axes[0]) : 0), wz: eje("KeyQ", "KeyE") || (gp ? -z(gp.axes[2]) : 0),
-      pan: eje("ArrowLeft", "ArrowRight") || (gp ? (gp.buttons[14] && gp.buttons[14].pressed ? 1 : 0) - (gp.buttons[15] && gp.buttons[15].pressed ? 1 : 0) : 0), tilt: eje("ArrowUp", "ArrowDown") || (gp ? -z(gp.axes[3] || 0) : 0),
+      pan: eje("ArrowLeft", "ArrowRight") || (gp ? ["4", "14"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) - ["5", "15"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) : 0),
+      tilt: eje("ArrowUp", "ArrowDown") || (gp ? -z(gp.axes[3] || 0) : 0),
     };
     post("/manual", cmdManual);
   }, 100);

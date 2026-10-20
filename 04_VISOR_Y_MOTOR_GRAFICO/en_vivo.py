@@ -13,6 +13,7 @@ MODO ENSEÑAR (la estación manda por POST a 127.0.0.1:8767): Brahian dirige al 
   /waypoint {x, y, yaw, pan, tilt}   agrega un punto de paso (yaw y pan en °, + = izquierda; tilt en °, -45..+15)
             {"borrar": "ultimo" | "todos"}    {"ir": true | false}    (ir = seguir los puntos; false = parar)
   /manual   {vx, vy, wz, pan, tilt}  de -1 a 1: adelante, a la izquierda, giro y velocidad del pan y del tilt
+  /camara   {"modo": "asistida" | "manual"}   asistida = el pan-tilt sigue al ladrón mientras se vuela a mano
   /reset    empieza otra partida (si se estaba grabando, guarda la demostración)
   /grabar   {"on": true | false}     al apagar guarda 03_SIMULACION_RL/demos_brahian/demo_<fecha>.json (fuera de Git)
 El dron lo lleva el autopiloto del entorno con el control del operador de la Simulación (set_manual, set_objetivo, objetivo_llego, liberar):
@@ -59,7 +60,7 @@ estado = {"partida": 0, "cabecera": None, "cuadros": []}
 cambio = threading.Condition()
 
 # ---------------------------------------------------------------------------------------------------------------- modo enseñar
-ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": ""}
+ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": "", "cam": "manual", "cam_enviada": ""}
 lock = threading.Lock()
 DEMOS = os.path.join(SIM, "demos_brahian")
 
@@ -76,7 +77,14 @@ def mandar(env):
         i = ens["i"]
     if manual:
         enviado["i"] = -1
-        env.set_manual(0, *(float(man.get(k, 0.0)) for k in ("vx", "vy", "wz", "pan", "tilt")))
+        asistida = ens["cam"] == "asistida"                 # cámara asistida: el pan-tilt sigue solo al ladrón mientras Brahian vuela
+        v = [float(man.get(k, 0.0)) for k in ("vx", "vy", "wz", "pan", "tilt")]
+        if asistida:
+            v[3] = v[4] = 0.0
+        env.set_manual(0, *v)
+        if asistida and ens["cam_enviada"] != "asistida":
+            env.set_camara(0, "asistida")
+        ens["cam_enviada"] = ens["cam"]
     elif c is not None:
         if enviado["i"] != i:
             env.set_objetivo(0, c["x"], c["y"], c["yaw"], c["pan"], c["tilt"])
@@ -201,6 +209,8 @@ class Manejador(BaseHTTPRequestHandler):
                                         "pan": float(np.clip(m.get("pan", 0.0), -90.0, 90.0)), "tilt": float(np.clip(m.get("tilt", -5.0), -45.0, 15.0))})
             elif ruta == "/manual":
                 ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt")}, time.time()
+            elif ruta == "/camara":
+                ens["cam"] = "asistida" if m.get("modo") == "asistida" else "manual"
             elif ruta == "/reset":
                 ens["reset"] = True
             elif ruta == "/grabar":
