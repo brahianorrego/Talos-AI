@@ -1,14 +1,10 @@
-// Vista del dron (D-072, 20-oct: el dron ya no tiene gimbal ni cámara USB) con sus cámaras y el LiDAR de 360°, como paneles que se activan y
+// Vista del dron (D-072, 20-oct: el dron ya no tiene gimbal ni cámara USB) con sus cámaras y el mapa de los dos LiDAR de 1 haz, como paneles que se activan y
 // se apagan con los botones de arriba (teclas P, G y L):
 //   · CSI principal FIJA al chasis, inclinada 5° hacia abajo, HFOV 62.2° (IMX219; el dato es nominal, sin medir), con la telemetría y las cajas
 //     de YOLO que calcula la simulación (la simulación aún modela una cámara con gimbal: las cajas siguen su campo de visión)
 //   · CSI al piso, fija al chasis, -90°, HFOV 62.2° (solo en el dron plus, variante H; el mínimo no la tiene)
 // El botón "Dron" cambia entre el mínimo (G: CSI fija) y el plus (H: CSI y TF-Luna en un pan-tilt de 2 servos, más la CSI al piso).
-//   · LiDAR 360°: mapa de puntos alrededor del dron, vista desde arriba con el frente hacia arriba; se calcula en el navegador con la
-//     geometría de la escena (paneles, personas, árboles y edificios) con el haz inclinado (−10° por omisión): solo choca con lo que mide más que la altura del haz a esa distancia. El TF03 real es de un solo haz hacia
-//     adelante: este mapa es lo que armaría un LiDAR que girara (el giro de 360° del dron lo hace con el yaw); es una vista simulada.
-// Las cajas de las cámaras CSI son SIMULADAS: persona dentro del campo de la cámara, a menos de 30 m y sin un panel en medio, con una
-// confianza que baja con la distancia (no es la salida de YOLO real). Lo dibuja el mismo renderer que la cámara principal.
+//   · LiDAR 1D: los DOS haces del dron (TF03 fijo al frente y TF-Luna en el pan-tilt), con los puntos acumulados; no existe LiDAR de 360°
 "use strict";
 (() => {
   const CLAVE = "estacion-camaras-v1";
@@ -33,12 +29,12 @@
   CAMS.filter(c => c.hfov).forEach(panelCamara);
   const lid = document.createElement("section");
   lid.className = "panel"; lid.id = "p-lid360";
-  lid.innerHTML = `<div class="cab"><h3>LiDAR 360° · mapa de puntos</h3><select id="lid360-incl" title="Inclinación del haz del LiDAR que gira"><option value="0">0°</option><option value="-5">−5°</option><option value="-10" selected>−10°</option><option value="-20">−20°</option></select><span class="tag" id="lid360-tag" style="color:var(--tenue)">–</span></div>
-    <div class="cuerpo"><canvas id="lid360-lienzo"></canvas><div class="slam-ley"><span><i style="background:#ff4d4f"></i>cerca</span><span><i style="background:#f5c542"></i>medio</span><span><i style="background:#2db7ff"></i>lejos</span><span>anillos 5 · 10 · 20 · 30 m · frente arriba</span></div></div>`;
+  lid.innerHTML = `<div class="cab"><h3>LiDAR · TF03 y TF-Luna (1 haz)</h3><select id="lid360-incl" title="Alcance del mapa"><option value="12" selected>12 m</option><option value="20">20 m</option><option value="35">35 m</option></select><span class="tag" id="lid360-tag" style="color:var(--tenue)">–</span></div>
+    <div class="cuerpo"><canvas id="lid360-lienzo"></canvas><div class="slam-ley"><span><i style="background:#2db7ff"></i>TF03 (fijo, al frente)</span><span><i style="background:#ffb020"></i>TF-Luna (en el pan-tilt)</span><span>norte arriba</span></div></div>`;
   document.body.appendChild(lid);
   const barra = document.createElement("div");
   barra.id = "camaras-ui";
-  barra.innerHTML = `<span>Mostrar:</span>` + [["usb", "CSI principal (fija)"], ["csi0", "CSI piso"], ["lid", "LiDAR 360°"]]
+  barra.innerHTML = `<span>Mostrar:</span>` + [["usb", "CSI principal (fija)"], ["csi0", "CSI piso"], ["lid", "LiDAR 1D"]]
     .map(([id, t]) => `<button data-vista="${id}" title="Activar o apagar este panel">${t}</button>`).join("");
   document.body.appendChild(barra);
 
@@ -126,7 +122,11 @@
     $(c.id + "-tag").style.color = cj.length ? "var(--ok, #33d17a)" : "var(--tenue)";
   }
 
-  // ---------------------------------------------------------------------------------------------------------- LiDAR 360°
+  // ---------------------------------------------------------------------------------------------------------- los DOS LiDAR de 1 haz
+  // No hay LiDAR de 360°: el dron lleva el TF03, fijo al chasis y apuntando al frente (−5°, hasta 30 m), y el TF-Luna, en el pan-tilt junto a la CSI
+  // (apunta donde la cámara: pan y tilt de la partida; hasta ~8 m). Aquí se dibuja SOLO lo que miden esos dos haces: cada medida es un punto, y los
+  // puntos se acumulan a medida que el dron gira y el pan-tilt se mueve. La distancia se calcula con la geometría de la escena (paneles, personas, árboles,
+  // edificios): choca si el haz, inclinado, está a esa distancia a una altura menor que la del objeto y mayor que el suelo.
   function circulo(x, y, psi, c, r) {                  // distancia a lo largo del rayo hasta un círculo
     const dx = Math.cos(psi), dy = Math.sin(psi), rx = c[0] - x, ry = c[1] - y, t = rx * dx + ry * dy;
     if (t <= 0) return null;
@@ -139,55 +139,60 @@
     const t = ((a[0] - x) * ey - (a[1] - y) * ex) / den, u = ((a[0] - x) * dy - (a[1] - y) * dx) / den;
     return t > 0 && u >= 0 && u <= 1 ? t : null;
   }
-  function escanear(e) {
-    const N = 240, R = 40, pts = [], tg = Math.tan(-Number($("lid360-incl").value) * Math.PI / 180);
-    const choca = (m, alto) => { const h = e.z - m * tg; return h >= 0 && h <= alto; };      // el haz inclinado a esa distancia está a la altura h
+  function medir(e, ang, pitchRad, R) {                // distancia (m) del haz, o null si no toca nada
+    const tg = Math.tan(pitchRad);
+    const choca = (m, alto) => { const h = e.z + m * tg; return h >= 0 && h <= alto; };
     const P = (partida && partida.paneles) || [], A = (partida && partida.arboles) || [], B = entorno ? entorno.edificios : [];
     const arbolesCampus = entorno ? entorno.arboles : [];
-    for (let i = 0; i < N; i++) {
-      const ang = e.psi + (i / N) * 2 * Math.PI;
-      let m = R;
-      for (const p of P) { const t = segmento(e.x, e.y, ang, [p[0], p[1]], [p[2], p[3]]); if (t !== null && t < m && choca(t, p[4])) m = t; }
-      for (const a of A) { const t = circulo(e.x, e.y, ang, a.p, a.r); if (t !== null && t < m && choca(t, a.alto)) m = t; }
-      for (const q of e.pers) { const t = circulo(e.x, e.y, ang, q.p, 0.3); if (t !== null && t < m && choca(t, q.alto || q.est || 1.72)) m = t; }
-      for (const a of arbolesCampus) if (Math.abs(a.p[0] - e.x) < R && Math.abs(a.p[1] - e.y) < R) { const t = circulo(e.x, e.y, ang, a.p, 0.3); if (t !== null && t < m && choca(t, a.alto)) m = t; }
-      for (const b of B) {
-        if (Math.abs(b.centro[0] - e.x) > R + b.tam[0] || Math.abs(b.centro[1] - e.y) > R + b.tam[1]) continue;
-        const x0 = b.centro[0] - b.tam[0] / 2, x1 = b.centro[0] + b.tam[0] / 2, y0 = b.centro[1] - b.tam[1] / 2, y1 = b.centro[1] + b.tam[1] / 2;
-        for (const [a1, a2] of [[[x0, y0], [x1, y0]], [[x1, y0], [x1, y1]], [[x1, y1], [x0, y1]], [[x0, y1], [x0, y0]]]) { const t = segmento(e.x, e.y, ang, a1, a2); if (t !== null && t < m && choca(t, b.alto)) m = t; }
-      }
-      if (m < R) pts.push([i / N * 2 * Math.PI, m]);
+    let m = R;
+    for (const p of P) { const t = segmento(e.x, e.y, ang, [p[0], p[1]], [p[2], p[3]]); if (t !== null && t < m && choca(t, p[4])) m = t; }
+    for (const a of A) { const t = circulo(e.x, e.y, ang, a.p, a.r); if (t !== null && t < m && choca(t, a.alto)) m = t; }
+    for (const q of e.pers) { const t = circulo(e.x, e.y, ang, q.p, 0.3); if (t !== null && t < m && choca(t, q.alto || q.est || 1.72)) m = t; }
+    for (const a of arbolesCampus) if (Math.abs(a.p[0] - e.x) < R && Math.abs(a.p[1] - e.y) < R) { const t = circulo(e.x, e.y, ang, a.p, 0.3); if (t !== null && t < m && choca(t, a.alto)) m = t; }
+    for (const b of B) {
+      if (Math.abs(b.centro[0] - e.x) > R + b.tam[0] || Math.abs(b.centro[1] - e.y) > R + b.tam[1]) continue;
+      const x0 = b.centro[0] - b.tam[0] / 2, x1 = b.centro[0] + b.tam[0] / 2, y0 = b.centro[1] - b.tam[1] / 2, y1 = b.centro[1] + b.tam[1] / 2;
+      for (const [a1, a2] of [[[x0, y0], [x1, y0]], [[x1, y0], [x1, y1]], [[x1, y1], [x0, y1]], [[x0, y1], [x0, y0]]]) { const t = segmento(e.x, e.y, ang, a1, a2); if (t !== null && t < m && choca(t, b.alto)) m = t; }
     }
-    return pts;
+    return m < R ? m : null;
   }
   const lienzo = $("lid360-lienzo");
-  let t0 = performance.now();
+  const nube = [];                                     // puntos acumulados: [x, y, k, haz]  (haz 0 = TF03, 1 = TF-Luna)
+  let ultimoKL = 0;
+  const TF03 = { alcance: 30, pitch: -5 }, LUNA = { alcance: 8 };
   function dibujarLidar(e) {
     const r = lienzo.getBoundingClientRect(), dpr = Math.min(devicePixelRatio, 2);
     if (r.width < 8) return;
+    if (e.k < ultimoKL - 5) nube.length = 0;           // la repetición volvió atrás: se vacía el mapa
+    ultimoKL = e.k;
+    const plus = typeof MODO_DRON !== "undefined" && MODO_DRON === "plus";
+    const rad = Math.PI / 180, pan = plus && typeof panDeg !== "undefined" ? panDeg * rad : 0;
+    const tilt = plus && window.PANTILT ? window.PANTILT.tilt.rotation.z : TF03.pitch * rad;
+    const mA = medir(e, e.psi, TF03.pitch * rad, TF03.alcance);
+    const mB = plus ? medir(e, e.psi + pan, tilt, LUNA.alcance) : null;
+    if (mA !== null) nube.push([e.x + Math.cos(e.psi) * mA, e.y + Math.sin(e.psi) * mA, e.k, 0]);
+    if (mB !== null) nube.push([e.x + Math.cos(e.psi + pan) * mB, e.y + Math.sin(e.psi + pan) * mB, e.k, 1]);
+    if (nube.length > 3000) nube.splice(0, nube.length - 3000);
     if (lienzo.width !== Math.round(r.width * dpr)) { lienzo.width = Math.round(r.width * dpr); lienzo.height = Math.round(r.height * dpr); }
-    const g = lienzo.getContext("2d"), W = r.width, H = r.height, cx = W / 2, cy = H / 2, esc = Math.min(W, H) / 2 / 33;
+    const g = lienzo.getContext("2d"), W = r.width, H = r.height, cx = W / 2, cy = H / 2, R = Number($("lid360-incl").value), esc = Math.min(W, H) / 2 / R;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = "#070b10"; g.fillRect(0, 0, W, H);
     g.strokeStyle = "#1f2c3b"; g.lineWidth = 1; g.fillStyle = "#56667a"; g.font = "9px 'Roboto Mono', monospace";
-    [5, 10, 20, 30].forEach(m => { g.beginPath(); g.arc(cx, cy, m * esc, 0, 2 * Math.PI); g.stroke(); g.fillText(m + " m", cx + 3, cy - m * esc + 10); });
-    g.beginPath(); g.moveTo(cx, cy - 33 * esc); g.lineTo(cx, cy + 33 * esc); g.moveTo(cx - 33 * esc, cy); g.lineTo(cx + 33 * esc, cy); g.stroke();
-    const pts = escanear(e), barrido = ((performance.now() - t0) / 1500) % 1 * 2 * Math.PI;
-    pts.forEach(([a, m]) => {
-      const X = cx + Math.sin(a) * m * esc, Y = cy - Math.cos(a) * m * esc;            // a = ángulo desde el frente, antihorario en la simulación
-      const sx = cx - Math.sin(a) * m * esc;
-      const col = m < 5 ? "#ff4d4f" : m < 12 ? "#f5c542" : "#2db7ff";
-      const da = ((barrido - a) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-      g.globalAlpha = da < 1.2 ? 1 : 0.55;
-      g.fillStyle = col; g.beginPath(); g.arc(sx, Y, da < 1.2 ? 2.4 : 1.8, 0, 2 * Math.PI); g.fill();
-    });
+    [5, 10, 20, 30].filter(m => m < R * 1.4).forEach(m => { g.beginPath(); g.arc(cx, cy, m * esc, 0, 2 * Math.PI); g.stroke(); g.fillText(m + " m", cx + 3, cy - m * esc + 10); });
+    g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, H); g.moveTo(0, cy); g.lineTo(W, cy); g.stroke();
+    g.fillStyle = "#56667a"; g.fillText("N", cx + 4, 11);
+    const X = x => cx + (x - e.x) * esc, Y = y => cy - (y - e.y) * esc;                 // norte arriba, centrado en el dron
+    const COL = ["#2db7ff", "#ffb020"];
+    nube.forEach(([x, y, k, h]) => { g.globalAlpha = Math.max(0.15, 1 - (e.k - k) / 600); g.fillStyle = COL[h]; g.beginPath(); g.arc(X(x), Y(y), 1.8, 0, 2 * Math.PI); g.fill(); });
     g.globalAlpha = 1;
-    g.strokeStyle = "rgba(51,209,122,.5)";                                              // línea del barrido
-    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx - Math.sin(barrido) * 33 * esc, cy - Math.cos(barrido) * 33 * esc); g.stroke();
-    g.fillStyle = "#33d17a"; g.beginPath(); g.moveTo(cx, cy - 7); g.lineTo(cx - 5, cy + 5); g.lineTo(cx + 5, cy + 5); g.closePath(); g.fill();   // el dron, nariz arriba
-    const cerca = pts.length ? Math.min(...pts.map(q => q[1])) : null;
-    $("lid360-tag").textContent = `${pts.length} pts` + (cerca !== null ? ` · mín ${cerca.toFixed(1)} m` : "");
-    $("lid360-tag").style.color = cerca !== null && cerca < 5 ? "#ff4d4f" : "var(--suave)";
+    const haz = (ang, m, alc, col) => { const L = m === null ? alc : m; g.strokeStyle = col; g.globalAlpha = 0.55; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(ang) * L * esc, cy - Math.sin(ang) * L * esc); g.stroke(); g.globalAlpha = 1; };
+    haz(e.psi, mA, TF03.alcance, COL[0]);
+    if (plus) haz(e.psi + pan, mB, LUNA.alcance, COL[1]);
+    g.save(); g.translate(cx, cy); g.rotate(-(e.psi - Math.PI / 2)); g.fillStyle = "#33d17a";                           // el dron, con la nariz hacia donde apunta
+    g.beginPath(); g.moveTo(0, -7); g.lineTo(-5, 5); g.lineTo(5, 5); g.closePath(); g.fill(); g.restore();
+    const fmt = m => m === null ? "—" : m.toFixed(1) + " m";
+    $("lid360-tag").textContent = `TF03 ${fmt(mA)}` + (plus ? ` · Luna ${fmt(mB)}` : "");
+    $("lid360-tag").style.color = (mA !== null && mA < 5) || (mB !== null && mB < 3) ? "#ff4d4f" : "var(--suave)";
   }
 
   // ---------------------------------------------------------------------------------------------------------- encendido y apagado
