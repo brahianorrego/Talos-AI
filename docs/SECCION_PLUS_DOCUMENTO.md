@@ -17,9 +17,9 @@ vista aunque se esconda tras unos paneles. Se desarrolló y se midió **solo en 
 - Las **reglas** hacen el seguimiento fino, la búsqueda tras perder al objetivo, el árbitro de seguridad, la geocerca y la
   evasión ante una amenaza.
 - **El humano** decide quién es el sospechoso. La IA nunca lo decide.
-- **La red no estabiliza nada:** eso lo hacen los controladores de ArduPilot y del gimbal.
+- **La red no estabiliza nada:** eso lo hacen los controladores de ArduPilot (incluido el roll) y los servos del pan-tilt.
 
-Reglas duras que nunca se relajan: gimbal entre −45° y +15°; el dron no sale de la zona; humano en el lazo; árbitro de
+Reglas duras que nunca se relajan: tilt del pan-tilt entre −45° y +15° (con topes mecánicos); el dron no sale de la zona; humano en el lazo; árbitro de
 seguridad; altura mínima de 3.30 m con personas a menos de 8 m (con 0.5 m de margen por el error del barómetro, D-063).
 
 ## 2. El juego dron-ladrón
@@ -29,8 +29,12 @@ seguridad; altura mínima de 3.30 m con personas a menos de 8 m (con 0.5 m de ma
   Dibujo: `docs/v17_zona_ia.png`. Captura: `capturas/v17_cancha_arriba.jpg`.
 - **Ladrón:** corre, se agacha, gatea, se recuesta contra el panel, salta para agarrar el dron y se esconde tras las V.
   **Civil:** camina y a veces mira o graba al dron (`docs/PROGRESO_V16.md` de la rama `v16-simulacion`, fase A2).
-- **Sensores simulados:** cámara principal de 38.9° (la USB real), cámara al piso, LiDAR TF03 al chasis y TF-Luna junto a la
-  cámara, con ruido, retardo y pérdidas de detección.
+- **El dron del plus (variante H, D-074):** una base impresa con **dos servos que mueven el yaw (pan) y el pitch (tilt)**, sin roll (el roll lo
+  controla el dron); en ella van la cámara CSI principal y el LiDAR TF-Luna **juntos**; una **segunda CSI fija mirando al piso**; y el TF03 fijo
+  al chasis. El mínimo usa otra configuración (variante G: CSI fija y TF03 fijo, sin gimbal). El plus se entrena en H.
+- **Sensores simulados (H):** cámara principal CSI de 62.2° × 48.8° (nominal, sin medir) con pan y tilt, cámara al piso, TF03 al chasis y TF-Luna
+  junto a la cámara, con ruido, retardo y pérdidas de detección. **Ojo:** las corridas de la V17 de este documento se entrenaron antes con la cámara
+  USB de 38.9° y un gimbal virtual; hay que repetirlas con H (**[pendiente]**).
 - **Gana el dron** si mantiene al ladrón a la vista hasta que se rinde; **gana el ladrón** si alcanza al dron, si lo pierde o si
   no lo encuentra (D-035).
 

@@ -5,7 +5,13 @@ Arquitecto, por pedido del Coordinador. **Solo lectura:** reuní lo que ya está
 otra persona y el pedido me llegó de otra sesión, no de Brahian. Si Brahian quiere que se cruce con ellas, que lo pida él directamente.
 No hay IPs, usuarios ni claves en este archivo. Lo que sale de un solo dicho o de una foto lo marco.
 
-## 1. Qué hardware tiene hoy el dron (variante G)
+> **Actualización (D-074, 20-oct, según el Coordinador: Brahian la aprobó en su chat):** son **dos configuraciones, una para cada parte del
+> proyecto**, no "la de hoy" y "la meta" del mismo dron. **G = el mínimo** (CSI fija + TF03 fijo, sin gimbal; así queda físicamente).
+> **H = el plus**: base impresa con **dos servos que mueven yaw (pan) y pitch (tilt), sin roll** (el roll lo controla el dron), con la CSI
+> principal y el TF-Luna juntos en el pan-tilt, una **segunda CSI fija mirando al piso** (CAM0 y CAM1 por cable plano) y el TF03 fijo al chasis.
+> El plus se entrena en H; G solo corre el mínimo.
+
+## 1. Qué hardware tiene hoy el dron (variante G, la del mínimo)
 
 | Pieza | Estado hoy | Fuente |
 |---|---|---|
@@ -41,11 +47,14 @@ el dron). Fuente: `VARIANTES.md` §0.
 
 ## 4. Consecuencias para lo ya hecho
 
+- **El plus (H) tiene pan y tilt libres:** D-056 (pan bloqueado) queda revocada (D-074). La zona ciega de G (~3.0 m) es la del mínimo; en H el tilt
+  hasta −45° y la CSI al piso la quitan (`05_HARDWARE_Y_VARIANTES/COBERTURA.md`).
+
 - El **mínimo** se entrenó con el TF03 alineado a una cámara USB de 38.9° a −5°: ahora la cámara es otra (62.2° × 48.8°). La regla del
   proyecto ya dice que un cambio de esos obliga a **re-simular el mínimo** (`CLAUDE.md`).
 - Sin gimbal, con la cámara fija a −5°, el dron **no ve a menos de ~3.0 m ni el suelo hasta ~5.9 m** (`05_HARDWARE_Y_VARIANTES/COBERTURA.md`).
 
-## 5. Lo que el simulador debe cambiar para parecerse al dron de hoy (variante G)
+## 5. Lo que el simulador debe cambiar para parecerse al dron (G para el mínimo, H para el plus)
 
 Para Simulación V17, **sin duplicar su encargo actual** (esto se hace después de cerrar la V17.5 y de la ruta de Brahian). Fuente de cada
 valor: `05_HARDWARE_Y_VARIANTES/config_sim/variante_G.json` y `VARIANTES.md` §0. `validar_variantes.py` ya lista estas diferencias.
@@ -59,5 +68,5 @@ valor: `05_HARDWARE_Y_VARIANTES/config_sim/variante_G.json` y `VARIANTES.md` §0
 4. **Zona ciega:** la cabeza se ve desde ~3.0 m y el suelo desde ~5.9 m (`COBERTURA.md`). La simulación debe dejar de ver a quien se acerca a menos de ~3 m.
 5. **Imagen real:** la CSI tiene ISP por software (exposición y balance de blancos en la CPU, ~12 ms por cuadro): añadir **sobreexposición a pleno sol**
    (el sensor USB se dañó con el sol) y pérdidas de detección por brillo; el YOLO medido es **30.8 FPS**, no más.
-6. **Guardar la H como variante de entrenamiento aparte**, no como la única: la meta es el pan-tilt con tilt −45°..+15°, la CSI al piso y el TF-Luna.
+6. **El plus se entrena en H** (D-074): pan y tilt libres, CSI principal y TF-Luna juntos en el pan-tilt, segunda CSI fija al piso (62.2° × 48.8° a −90°), TF03 fijo al chasis, el roll lo controla el dron. **G solo corre el mínimo** (puntos 1-5 aplican a G y al re-simular el mínimo; la H usa la cámara de 62.2° × 48.8° con tilt libre).
 7. **No cambiar** las reglas duras ni el árbitro; la simulación puede seguir acotando el gimbal virtual a −45°..+15° (más estricto que sin gimbal).

@@ -248,6 +248,16 @@ corridas de 5.2. Pruebas para cada cambio (reglas duras intactas), copias `_vN` 
 - Contrato `foto()`: el de la V16 (`docs/PROGRESO_V16.md`, fase A2) más `fase` (tránsito, activación, zona) y los
   botones nuevos de la red (E2).
 
+### 7.0 Variantes de hardware (D-072/D-074, 20-oct): una por cada parte
+
+- **Mínimo = variante G:** CSI fija a ~−5° + TF03 fijo, sin gimbal ni USB. Así queda físicamente. Solo corre el mínimo.
+- **Plus = variante H** y **el plus se entrena en H**: base impresa con dos servos (pan = yaw, tilt = pitch, sin roll; el roll lo controla el dron),
+  CSI principal y TF-Luna juntos en el pan-tilt, segunda CSI fija mirando al piso (CAM0/CAM1 por cable plano), TF03 fijo al chasis.
+- Esto **reemplaza** lo de D-055 (C primero, D de plan B, `GIMBAL_TIPO = "mixto"`) y **revoca D-056** (pan bloqueado): en H el pan se mueve.
+  Las 7 acciones de D-049 no incluyen el pan; la sesión de simulación decide, midiendo, si el pan lo mueve una regla (seguimiento) o se agrega a la
+  red. Hasta entonces la V17.x queda como línea base medida con tilt libre y pan automático.
+- Las reglas duras no cambian: el tilt entre −45° y +15° con topes mecánicos (en `CLAUDE.md` sigue como regla 1; su reescritura está por confirmar, D-073).
+
 ### 7.3 Hardware y variantes (`05_HARDWARE_Y_VARIANTES/`)
 - Tener en cuenta que los paneles reales miden ~2.0 m: un LiDAR horizontal a 3.30 m pasa por encima. Para mapear los
   paneles hace falta volar más bajo sin personas cerca, inclinar el LiDAR, o el TF-Luna en el gimbal. Incluirlo en la
