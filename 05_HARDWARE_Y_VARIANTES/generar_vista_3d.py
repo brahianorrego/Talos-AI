@@ -13,9 +13,9 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 STL = os.path.join(AQUI, "piezas_3d", "stl")
 
 PIEZAS = [
-    ("pan_tilt_base", "Pan-tilt D · base"),
-    ("pan_tilt_plataforma", "Pan-tilt D · plataforma con mejillas"),
-    ("pan_tilt_cuna", "Pan-tilt D · cuna con el pin del tope"),
+    ("pan_tilt_base", "Pan-tilt H · base"),
+    ("pan_tilt_plataforma", "Pan-tilt H · plataforma con mejillas"),
+    ("pan_tilt_cuna", "Pan-tilt H · cuna con placa para CSI + TF-Luna"),
     ("soporte_luna_pod", "Variante C · soporte del TF-Luna para el pod"),
     ("soporte_tf03_colgante", "Variante C/D · soporte del TF03 al chasis"),
     ("soporte_lidar_luna_pantilt", "Variante D · soporte del TF-Luna en la cuna"),
@@ -55,13 +55,13 @@ button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .nota{background:var(--card);border-radius:12px;padding:12px;margin-top:12px;font-size:.93rem}
 input[type=range]{width:min(360px,70vw)}
 </style></head><body><main>
-<h1>El pan-tilt del plus, casi real</h1>
+<h1>El pan-tilt de la variante H, casi real</h1>
 <div class="fila" id="modos"></div>
 <div class="fila" id="color"></div>
 <div class="fila" id="extra"></div>
 <canvas id="vista"></canvas>
 <div class="nota" id="info"></div>
-<div class="nota">Arrastra para girar, rueda para acercar, Mayús + arrastrar para mover. Las piezas impresas están <b>diseñadas por nosotros</b> (no se descargaron de ningún sitio) y <b>aún no se han impreso</b>. Los servos MG90D, la cámara USB y el TF-Luna son <b>ilustraciones</b> con sus medidas aproximadas: la fijación definitiva de la cámara USB y del riel del pod está pendiente de medir (ver <code>piezas_3d/ESTADO_IMPRESION.md</code>). El módulo va <b>colgado bajo el chasis</b> (de cabeza). El deslizador de cabeceo se detiene donde el pin de plástico choca con la ranura: −44° y +14° con la regla dura 1. El botón de rango ancho muestra solo la <b>capacidad mecánica</b> (mirar hasta el suelo, −89°, y +44°): <b>no está aprobado</b> y la fórmula del PWM no lo cubre.</div>
+<div class="nota">Arrastra para girar, rueda para acercar, Mayús + arrastrar para mover. Las piezas impresas están <b>diseñadas por nosotros</b> (no se descargaron de ningún sitio) y <b>aún no se han impreso</b>. Los servos MG90D, la CSI IMX219 (medidas del dibujo oficial de Raspberry Pi) y el TF-Luna (ficha oficial) son <b>ilustraciones</b>: el cable flex dorado es solo una indicación. La base y su montaje en el dron dependen de medidas pendientes (ver <code>piezas_3d/ESTADO_IMPRESION.md</code>). El módulo va <b>colgado bajo el chasis</b> (de cabeza). El deslizador de cabeceo se detiene donde el pin de plástico choca con la ranura: −44° y +14° con la regla dura 1. El botón de rango ancho muestra solo la <b>capacidad mecánica</b> (mirar hasta el suelo, −89°, y +44°): <b>no está aprobado</b> y la fórmula del PWM no lo cubre.</div>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -96,19 +96,21 @@ function servo(){
   const curva=new THREE.CatmullRomCurve3([new THREE.Vector3(-5.9,dy,-17),new THREE.Vector3(-12,dy,-19),new THREE.Vector3(-20,dy+3,-14),new THREE.Vector3(-26,dy+4,-20)]);
   const t=new THREE.Mesh(new THREE.TubeGeometry(curva,16,.55,6,false),M(c,.6));t.castShadow=true;g.add(t)});
  return g}
-function camara(){ // placa redonda verde con lente negro hexagonal, mira a +X
+function camara(){ // CSI IMX219 (Raspberry Pi Camera Module 2): placa 25 x 23.862, lente cuadrado de 8.5 mm, mira a +X. Marco: centro de la placa
  const g=new THREE.Group();
- const pcb=cil(11,11,1.6,M(0x1f7a3a,.45),48);pcb.rotation.z=Math.PI/2;g.add(pcb);
- const tubo=cil(6,6,14,M(0x0f0f12,.4),32);tubo.rotation.z=Math.PI/2;tubo.position.x=8.5;g.add(tubo);
- const tuerca=cil(7.2,7.2,4,M(0x0b0b0d,.45),6);tuerca.rotation.z=Math.PI/2;tuerca.position.x=13.5;g.add(tuerca);
- const vidrio=cil(4,4,.4,M(0x222a44,.1,.2),32);vidrio.rotation.z=Math.PI/2;vidrio.position.x=15.8;g.add(vidrio);
+ const pcb=caja(1,25,23.862,M(0x1f7a3a,.45),0,0,0);g.add(pcb);
+ const aloj=caja(5,8.5,8.5,M(0x15161a,.45),3,0,2.569);g.add(aloj);
+ const tubo=cil(3.4,3.4,4,M(0x0b0b0d,.4),28);tubo.rotation.z=Math.PI/2;tubo.position.set(7,0,2.569);g.add(tubo);
+ const vidrio=cil(2.2,2.2,.3,M(0x222a44,.1,.2),24);vidrio.rotation.z=Math.PI/2;vidrio.position.set(9.1,0,2.569);g.add(vidrio);
+ const conector=caja(2.5,20.8,3,M(0xe8e2cf,.5),-1.5,0,8.5);g.add(conector);
+ const flex=caja(.4,16,40,M(0xd89a2b,.5),-2.5,0,28);flex.name='flex';g.add(flex);
  return g}
-function luna(){ // TF-Luna: 35 de ancho con orejas, 21.25 de alto, 12 de fondo; lentes a +X
+function luna(){ // TF-Luna: 35 de ancho con orejas (atrás), 26.5 de cuerpo, 21.25 de alto, 12 de fondo; lentes a +X. Marco: el plano de las orejas
  const g=new THREE.Group(),n=M(0x17181c,.5);
- g.add(caja(12,26.5,21.25,n,6,0,0));
- g.add(caja(2,35,9,n,1,0,6.5));
- [-5.25,5.25].forEach(y=>{const l=cil(5.25,5.25,1.5,M(0x0d0e11,.35),32);l.rotation.z=Math.PI/2;l.position.set(12.75,y,2);g.add(l);
-  const v=cil(3.6,3.6,.3,M(0x3a1d22,.1,.3),24);v.rotation.z=Math.PI/2;v.position.set(13.6,y,2);g.add(v)});
+ g.add(caja(12,26.5,21.25,n,6,0,-1.6));            // cuerpo (su centro queda 1.6 mm bajo la altura de las orejas)
+ g.add(caja(2,35,9,n,1,0,0));                      // orejas
+ [-5.25,5.25].forEach(y=>{const l=cil(5.25,5.25,1.5,M(0x0d0e11,.35),32);l.rotation.z=Math.PI/2;l.position.set(12.75,y,0);g.add(l);
+  const v=cil(3.6,3.6,.3,M(0x3a1d22,.1,.3),24);v.rotation.z=Math.PI/2;v.position.set(13.6,y,0);g.add(v)});
  return g}
 function construir(){
  grupoMontaje=new THREE.Group();grupoMontaje.name='montaje';
@@ -120,9 +122,9 @@ function construir(){
  const env=new THREE.Group();env.position.set(0,YA,Z_EJE);env.rotation.y=Math.PI;const st=servo();st.rotation.x=-Math.PI/2;env.add(st);env.name='elec';grupoMontaje.add(env);
  // cuna que gira con el tilt (marco con el eje en el origen)
  grupoCuna=new THREE.Group();grupoCuna.position.set(0,0,Z_EJE);grupoCuna.add(pla(g2));
- const lu=luna();lu.position.set(10,-7,0);lu.name='elec';grupoCuna.add(lu);
- const ca=camara();ca.position.set(34,13,13.5);ca.name='elec';grupoCuna.add(ca);
- const base=caja(8,22,3,matPLA(),34,13,1.5);piezasPLA.push(base);base.castShadow=true;grupoCuna.add(base);
+ // placa frontal de la carga en x = 24 (cuna csi_luna): la CSI arriba (lente a z = +6) y el TF-Luna abajo (agujeros a z = -12.4)
+ const lu=luna();lu.position.set(24,0,-12.4);lu.name='elec';grupoCuna.add(lu);
+ const ca=camara();ca.position.set(24+3.5+.5,0,6-2.569);ca.name='elec';grupoCuna.add(ca);
  grupoMontaje.add(grupoCuna);
  grupoMontaje.position.set(0,0,0);esc.add(grupoMontaje);
  // placa del chasis del dron (solo de referencia): la base se atornilla a su cara de abajo
@@ -171,7 +173,7 @@ function aplicarModo(){
  if(piezaMalla){esc.remove(piezaMalla);piezasPLA.splice(piezasPLA.indexOf(piezaMalla),1);piezaMalla.geometry.dispose();piezaMalla=null}
  grupoMontaje.visible=(modo==='montaje');if(chasis)chasis.visible=colgado&&modo==='montaje';extras();
  if(modo==='montaje'){mira.set(0,0,colgado?-18:12);dist=colgado?330:250;rot={x:colgado?-0.25:-0.5,z:0.8};setElec();
-  info.innerHTML='<b>Montaje completo</b> (pan-tilt de la variante D): base, plataforma con el servo de giro, mejillas con el servo de subir-bajar y cuna con el TF-Luna y la cámara USB. Eje X hacia adelante.'}
+  info.innerHTML='<b>Montaje completo</b> (pan-tilt de la variante H): base, plataforma con el servo de giro, mejillas con el servo de subir-bajar y cuna con la CSI IMX219 y el TF-Luna. Eje X hacia adelante.'}
  else{const i=+modo.slice(5),p=PIEZAS[i],g=geom(p.b64),bb=g.boundingBox,c=new THREE.Vector3(),s=new THREE.Vector3();bb.getCenter(c);bb.getSize(s);
   g.translate(-c.x,-c.y,-c.z);piezaMalla=pla(g);piezaMalla.position.z=0;esc.add(piezaMalla);mira.set(0,0,0);dist=Math.max(s.x,s.y,s.z)*2.6;rot={x:-0.6,z:0.7};
   info.innerHTML='<b>'+p.titulo+'</b><br>Tamaño: '+s.x.toFixed(1)+' × '+s.y.toFixed(1)+' × '+s.z.toFixed(1)+' mm.'}

@@ -14,6 +14,7 @@
 // los servos y el cuerno que te lleguen y cambia solo estos números.
 
 parte = "vista";
+carga = "csi_luna";       // "csi_luna" (variante H: CSI IMX219 + TF-Luna en una placa frontal) | "usb" (diseño anterior, con cubierta y cuadrícula M2)
 angulo_vista = 0;        // cabeceo del MUNDO para la vista armada (prueba -44 y 14: el pin debe tocar el final de la ranura)
 $fn = 48;
 
@@ -43,15 +44,15 @@ R_tope = 16;                // radio del pin respecto al eje del tilt
 pin_d = 4;
 
 // ---- geometría ----
-cuna_w = 56;             // ancho exterior de la cuna: cabe el TF-Luna (18) + una cámara CSI (25) lado a lado
+cuna_w = carga == "csi_luna" ? 44 : 56;   // ancho exterior de la cuna (csi_luna: el TF-Luna de 35 mm y la CSI de 25 mm van apilados, no lado a lado)
 pared_cuna = 2.5;
 pared_A = 4;             // pared de la cuna donde se atornilla el cuerno (más gruesa)
 gap_cuerno = cuerno_h + 0.5;   // entre la mejilla del servo y la pared A
 gap_B = 0.6;
 mejilla_B = 3;
-z_eje_rel = 38;          // altura del eje del tilt sobre la plataforma (con 45° de bajada la cuna no toca la plataforma)
-deck_x0 = 8;
-deck_x1 = 45;            // la carga llega hasta aquí
+z_eje_rel = carga == "csi_luna" ? 40 : 38;          // altura del eje del tilt sobre la plataforma (con 45° de bajada la cuna no toca la plataforma)
+deck_x0 = carga == "csi_luna" ? 6 : 8;
+deck_x1 = carga == "csi_luna" ? 24 : 45;   // la carga llega hasta aquí
 deck_t = 3;
 paso_agujeros = 10;      // cuadrícula M2 de la cubierta: x = 15, 25, 35 e y = -20..20 de 10 en 10 (los soportes de cámara y LiDAR usan este paso)
 base_x = 64; base_y = 56; placa_t = 3;
@@ -67,6 +68,16 @@ delta = asin(pin_d/2 / R_tope);          // ángulo que el pin ocupa a cada lado
 // Ángulos del tope en el marco del módulo (arriba = +): colgado, el mundo está invertido respecto al módulo.
 a_min = colgado ? -(tilt_max - margen_interior_deg) : tilt_min + margen_interior_deg;
 a_max = colgado ? -(tilt_min + margen_interior_deg) : tilt_max - margen_interior_deg;
+
+// ---- carga CSI + TF-Luna (medidas oficiales; ver ESTADO_IMPRESION.md) ----
+// IMX219 (Raspberry Pi Camera Module 2): placa 23.862 x 25, agujeros Φ2.2 a 12.5 x 21 mm, lente sobre la columna de 14.5 mm (dibujo oficial).
+csi_w = 25; csi_h = 23.862; csi_sep_y = 21; csi_dz1 = -9.931; csi_dz2 = 2.569; csi_lente_dz = 2.569;
+sep_csi = 3.5;                 // separadores bajo la placa de la CSI
+// TF-Luna (ficha oficial): 35 de ancho con orejas, 21.25 de alto, 13.5 de fondo; agujeros Φ2.2 a 30.5 mm, 9 mm bajo el borde de arriba.
+luna_w = 35; luna_h = 21.25; luna_oreja_sep = 30.5; luna_oreja_z = 9;
+z_lente_csi = 6;               // altura del lente de la CSI sobre el eje del tilt
+z_lente_luna = -12.4;          // altura del lente del Luna (a la altura de sus agujeros)
+carga_t = 3;                   // espesor de la placa frontal de la carga
 
 // ---- ayudas de forma (diseño): placas de esquinas redondas con el canto de arriba biselado ----
 module rrect2d(x0, x1, y0, y1, r) { hull() for (x = [x0 + r, x1 - r]) for (y = [y0 + r, y1 - r]) translate([x, y]) circle(r); }
@@ -156,6 +167,7 @@ module cuna_tilt() {
             translate([0, cuna_w/2 - pared_cuna, 0]) rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(pared_cuna) pared_2d();
             // cubierta
             placa_r(deck_x0, deck_x1, -cuna_w/2, cuna_w/2, -deck_t, deck_t, 4, 0.8);
+            if (carga == "csi_luna") placa_carga();
             // pin del tope: sale de la pared B hacia la mejilla B
             translate([R_tope, cuna_w/2, 0]) rotate([-90, 0, 0]) cylinder(d = pin_d, h = gap_B + mejilla_B - 0.5);
         }
@@ -163,10 +175,30 @@ module cuna_tilt() {
         translate([0, -cuna_w/2 - 1, 0]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = pared_A + 2);
         for (a = [0, 90, 180, 270]) translate([cuerno_r*cos(a), -cuna_w/2 - 1, cuerno_r*sin(a)]) rotate([-90, 0, 0]) cylinder(d = 1.8, h = pared_A + 2);
         translate([0, cuna_w/2 - pared_cuna - 1, 0]) rotate([-90, 0, 0]) cylinder(d = 2.4, h = pared_cuna + gap_B + 4);
-        // cuadrícula M2 de la cubierta
-        for (x = [15, 25, 35]) for (y = [-20, -10, 0, 10, 20])
+        // cuadrícula M2 de la cubierta (solo en el diseño con cubierta)
+        if (carga == "usb") for (x = [15, 25, 35]) for (y = [-20, -10, 0, 10, 20])
             translate([x, y, -deck_t - 1]) cylinder(d = 2.2, h = deck_t + 2);
+        if (carga == "csi_luna") agujeros_carga();
     }
+}
+// placa frontal de la carga: cara de adelante en x = deck_x1. Arriba la CSI, abajo el TF-Luna, lentes paralelos.
+module placa_carga() {
+    zt = z_lente_csi - csi_lente_dz + csi_h/2 + 3;     // borde de arriba de la placa
+    zb = z_lente_luna - (luna_h - luna_oreja_z) - 3;   // borde de abajo
+    translate([deck_x1 - carga_t, -cuna_w/2, zb]) cube([carga_t, cuna_w, zt - zb]);
+    // separadores de la CSI sobre la cara de adelante
+    zc = z_lente_csi - csi_lente_dz;                    // centro de la placa de la CSI
+    for (y = [-csi_sep_y/2, csi_sep_y/2]) for (dz = [csi_dz1, csi_dz2])
+        translate([deck_x1, y, zc + dz]) rotate([0, 90, 0]) cylinder(d = 4.8, h = sep_csi);
+}
+module agujeros_carga() {
+    zc = z_lente_csi - csi_lente_dz;
+    for (y = [-csi_sep_y/2, csi_sep_y/2]) for (dz = [csi_dz1, csi_dz2])       // M2 autorroscante en los separadores
+        translate([deck_x1 - carga_t - 1, y, zc + dz]) rotate([0, 90, 0]) cylinder(d = 1.8, h = carga_t + sep_csi + 1.01);
+    for (y = [-luna_oreja_sep/2, luna_oreja_sep/2])                          // los dos agujeros de las orejas del Luna
+        translate([deck_x1 - carga_t - 1, y, z_lente_luna]) rotate([0, 90, 0]) cylinder(d = 1.8, h = carga_t + 1.01);
+    translate([deck_x1 - carga_t - 1, -8.5, zc + csi_h/2 - 1]) cube([carga_t + 2, 17, 2.5]);   // paso del flex de la CSI (16 mm de ancho)
+    translate([deck_x1 - carga_t - 1, -6, z_lente_luna - 9]) cube([carga_t + 2, 12, 3]);       // paso del cable del Luna
 }
 module pared_2d() {
     difference() {

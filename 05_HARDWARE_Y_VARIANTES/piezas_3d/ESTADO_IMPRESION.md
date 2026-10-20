@@ -156,3 +156,39 @@ error mío: la posición del lente estaba del lado contrario.) Modos: `frente`, 
 bajo el chasis con la cámara al piso y una pared colgante con la frontal ancha de la variante F; ≈ 10 g a 35 % de relleno, 66.5 × 49 × 35 mm).
 **Pendiente:** los módulos IMX219 "para Jetson" de otras marcas pueden tener otras medidas (comprobar el que llegue); el espesor de la placa (1 mm) es
 supuesto; el flex 15→22 pines (15–20 cm) sale por el borde de 25 mm de la placa y no entra en este diseño todavía.
+
+## Pan-tilt rediseñado para la variante H: CSI + TF-Luna (2026-10-20, D-072)
+
+Contexto (D-072): el gimbal y la cámara USB ya no están. Hoy hay una CSI IMX219 en CAM0 y el TF03, fijos en una base impresa; la meta (H) es un pan-tilt de
+2 servos con **la CSI y el TF-Luna**, el TF03 fijo y una segunda CSI al piso. `pan_tilt_servos.scad` trae `carga = "csi_luna"` (por defecto; `carga = "usb"`
+reproduce el diseño anterior).
+
+**Qué cambió.** La cuna es más angosta (44 mm: antes 56) porque el TF-Luna (35 mm con orejas) y la CSI (25 mm) van **apilados** en una placa frontal, no lado a lado:
+la CSI arriba (lente a +6 mm del eje del tilt) y el TF-Luna abajo (agujeros de sus orejas a −12.4 mm), con los lentes **paralelos** (separados 18.4 mm en vertical:
+unos 0.3° de paralaje a 3.5 m). La CSI se atornilla con 4 M2 a separadores de 3.5 mm (medidas del dibujo oficial); el TF-Luna con 2 M2 por los agujeros de sus
+orejas (30.5 mm, ficha oficial). La placa tiene un paso para el cable plano de la CSI (16 mm) y otro para el cable del Luna. El eje del tilt sube a 40 mm sobre la
+plataforma para que la placa no toque al bajar. **Comprobado en el modelo** (intersección cuna–plataforma): libre entre −44° y +14° del mundo y topado más allá, tanto con el
+módulo colgado como hacia arriba. Peso estimado a 35 % de relleno: base 12 g, plataforma 22 g, cuna 10 g (≈ 44 g).
+
+**Riesgo nuevo y real:** la CSI **se mueve** con el pan-tilt y su cable plano no está hecho para doblarse una y otra vez. Hay que dejarle un **lazo flojo** (radio amplio, ≥ 15 mm, mi regla
+práctica), sujetarlo a la base sin tensión y no pasarlo por el eje de giro con holgura justa. Si el cable falla, la solución es un cable plano más largo o una cámara USB/otra.
+
+### Lo que se ve en las fotos 19 a 23 (solo describo lo que veo)
+
+- **Arriba:** la Jetson dentro de una caja acrílica transparente, sobre cuatro separadores azules encima de la placa de arriba; la **CSI** está montada al frente-izquierda de la
+  caja, con su **cable plano dorado** que sube y se curva hacia el puerto. Encima van las antenas y el GPS.
+- **Abajo, al frente:** una **caja negra con etiqueta (el TF03)** colgada debajo de la placa de abajo, hacia el lado y el frente. No veo dónde ni cómo está atornillada.
+- **Abajo, atrás:** la batería amarrada con velcro bajo el chasis, y un marco negro cuadrado con un agujero circular sobre ella (no sé para qué sirve).
+- Las patas son tubos de carbono largos; los brazos y los variadores van al mismo nivel que las placas.
+- **No se ve** la base impresa de la CSI + TF03 en estas fotos que revisé, ni su ancho, ni el ángulo: se necesitan medidas (ver `LISTA_PARA_BRAHIAN.md`).
+
+### Dos opciones de montaje del pan-tilt (propuestas; no sé el espacio real)
+
+| | **Opción 1 · arriba, en el morro** | **Opción 2 · abajo, colgado, adelante** |
+|---|---|---|
+| Dónde | Sobre la placa de arriba, delante de la caja acrílica de la Jetson (`colgado = false`) | Bajo la placa de abajo, adelante, donde hoy cuelga el TF03 (`colgado = true`) |
+| A favor | Cable plano corto y limpio hacia la Jetson; vista libre hacia adelante y hacia abajo; no choca con el suelo al aterrizar | Más libertad de ángulo hacia el suelo (el lado libre del giro mira abajo); cerca del TF03 (misma línea de vista); centro de gravedad bajo |
+| En contra | Las hélices y las antenas pueden entrar en el cuadro si se activa el pan; el peso queda arriba y adelante | Hay que dejar espacio sobre las patas y la batería; el cable hasta la Jetson es más largo; la CSI queda de cabeza (se gira la placa 180°) |
+| Qué hay que medir | Espacio libre delante de la caja acrílica; altura de las antenas y del cable dorado | Espacio libre debajo (patas, batería, el TF03 actual); distancia al suelo |
+
+Mi recomendación provisional es la **opción 2** (ya está colgado en el visor), **pero solo si el espacio bajo el chasis lo permite**; si no, la opción 1. Brahian decide con las medidas.
