@@ -150,7 +150,7 @@ def _montaje():
     try:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "05_HARDWARE_Y_VARIANTES", "config_sim", "variante_H.json"), encoding="utf-8") as f:
             d = json.load(f)
-        por_omision.update({k: d[k] for k in por_omision if k in d})
+        por_omision.update({k: d[k] for k in por_omision if d.get(k) is not None})      # un campo en null (p. ej. la CSI del piso, hoy reemplazada allá por una CSI trasera) deja el valor por omisión
     except (OSError, ValueError):
         pass
     return por_omision

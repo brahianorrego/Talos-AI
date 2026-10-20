@@ -329,7 +329,7 @@
     <span id="reloj">0.0 s</span>
     <button class="btn activo" id="b-operador" title="MANUAL: la repetición se detiene en la alerta hasta que usted haga clic sobre el sospechoso (en la cámara FPV o en la lista del tracker). AUTO: el clic lo hace el operador simulado.">Operador · MANUAL</button>
     <div class="seg" id="camaras">
-      <button data-cam="cine" class="activo">Cine</button><button data-cam="seguir">Seguir</button><button data-cam="orbita">Libre</button><button data-cam="arriba">Cenital</button><button id="b-vuelo" class="btn" title="Vuela de la cancha de fútbol a la cancha cerrada y de vuelta (tecla T)">✈ Canchas (T)</button>
+      <button data-cam="cine" class="activo">Cine</button><button data-cam="seguir">Seguir</button><button data-cam="orbita">Libre</button><button data-cam="arriba">Cenital</button>
     </div>
   </div>
 </div>
@@ -2040,7 +2040,6 @@ function animar(ahora) {
     sol.position.set(dx - 25, 45, -dy + 20);
     sol.target.position.set(dx, 0, -dy);
   }
-  if (window.VUELO_PASO) VUELO_PASO(dtReal);              // vuelo entre canchas (universidad.js, tecla T)
   controles.update();
   renderer.setScissorTest(false);
   renderer.setViewport(0, 0, innerWidth, innerHeight);

@@ -1,6 +1,6 @@
 // El campus de la universidad en la estación de tierra (pedido de Brahian, 18-oct): la cancha de fútbol con la zona de IA, las
 // canchas cerradas (tenis y múltiple), el coliseo, el parqueadero, edificios de ladrillo, torres, árboles y los cerros, todo desde
-// entorno/entorno_u.json (la misma especificación que construye Unreal). Tecla T: la cámara vuela entre las dos canchas.
+// entorno/entorno_u.json (la misma especificación que construye Unreal). Selector de lugar: cancha de fútbol o cancha de tenis, una a la vez.
 // Se carga después de index.html y usa sus variables (escena, camara, controles, sol, ponerCamara, aviso, dtReal...).
 // Marco de la simulación: x este, y norte, z arriba  ->  three.js: X = x, Y = z, Z = -y (igual que mundo()).
 // Con ?entorno=arena se ve la arena blanca de antes.
@@ -58,6 +58,7 @@
   }
 
   // ---------------------------------------------------------------------------------------------- cancha de fútbol (césped con franjas y líneas)
+  const n0 = grupo.children.length;
   {
     const PPM = 18, W = Math.round(E.campo.tam[0] * PPM), H = Math.round(E.campo.tam[1] * PPM), [c, g] = lienzo(W, H);
     const fx = x => W / 2 + x * PPM, fy = y => H / 2 - (y - E.campo.centro[1]) * PPM;       // metros de la simulación -> píxeles del lienzo
@@ -121,19 +122,21 @@
     zl.computeLineDistances(); grupo.add(zl);
   }
 
+  const objFutbol = grupo.children.slice(n0);                                    // lo que es de la cancha de fútbol (césped, líneas, arcos, redes)
+  const n1 = grupo.children.length;
   // ---------------------------------------------------------------------------------------------- canchas cerradas (tenis y múltiple)
   E.canchas.forEach(cn => {
     const PPM = 22, W = Math.round(cn.tam[0] * PPM), H = Math.round(cn.tam[1] * PPM), [c, g] = lienzo(W, H);
-    g.fillStyle = "#8a2f2a"; g.fillRect(0, 0, W, H); ruido(g, W, H, 20000, 0.1);
+    g.fillStyle = cn.tipo === "tenis" ? "#2f7d57" : "#c4572b"; g.fillRect(0, 0, W, H); ruido(g, W, H, 20000, 0.1);        // pisos de colores: tenis verde y azul; múltiple naranja
     g.strokeStyle = "rgba(245,245,240,.95)"; g.lineWidth = 3;
     if (cn.tipo === "tenis") {
       const cw = 10.97 * PPM, ch = 23.77 * PPM, x0 = (W - cw) / 2, y0 = (H - ch) / 2;
-      g.fillStyle = "#4d6b5c"; g.fillRect(x0 - 3 * PPM, y0 - 4 * PPM, cw + 6 * PPM, ch + 8 * PPM);
+      g.fillStyle = "#2c5fa6"; g.fillRect(x0 - 3 * PPM, y0 - 4 * PPM, cw + 6 * PPM, ch + 8 * PPM);
       g.strokeRect(x0, y0, cw, ch); g.strokeRect(x0 + 1.37 * PPM, y0, cw - 2.74 * PPM, ch);
       g.beginPath(); g.moveTo(x0 + 1.37 * PPM, y0 + 6.4 * PPM); g.lineTo(x0 + cw - 1.37 * PPM, y0 + 6.4 * PPM); g.moveTo(x0 + 1.37 * PPM, y0 + ch - 6.4 * PPM); g.lineTo(x0 + cw - 1.37 * PPM, y0 + ch - 6.4 * PPM);
       g.moveTo(W / 2, y0 + 6.4 * PPM); g.lineTo(W / 2, y0 + ch - 6.4 * PPM); g.stroke();
     } else {                                                                     // múltiple: futsal verde con baloncesto
-      g.fillStyle = "#3f6b4a"; g.fillRect(1 * PPM, 1.5 * PPM, W - 2 * PPM, H - 3 * PPM);
+      g.fillStyle = "#d97a32"; g.fillRect(1 * PPM, 1.5 * PPM, W - 2 * PPM, H - 3 * PPM);
       g.strokeRect(1 * PPM, 1.5 * PPM, W - 2 * PPM, H - 3 * PPM);
       g.beginPath(); g.moveTo(1 * PPM, H / 2); g.lineTo(W - 1 * PPM, H / 2); g.stroke();
       g.beginPath(); g.arc(W / 2, H / 2, 3 * PPM, 0, 2 * Math.PI); g.stroke();
@@ -152,6 +155,7 @@
     }
   });
 
+  const objTenis = grupo.children.slice(n1);                                     // pisos, redes y aros de las canchas cerradas (la malla se agrega abajo)
   // ---------------------------------------------------------------------------------------------- suelos (parqueadero, caminos, vías)
   E.suelos.forEach(s => {
     const PPM = 8, W = Math.max(8, Math.round(s.tam[0] * PPM)), H = Math.max(8, Math.round(s.tam[1] * PPM)), [c, g] = lienzo(Math.min(W, 2048), Math.min(H, 2048));
@@ -215,7 +219,8 @@
           const m = malla.clone(); m.needsUpdate = true; m.repeat.set(L / 2.4, v.alto / 2.4);
           const pl = new THREE.Mesh(new THREE.PlaneGeometry(L, v.alto), new THREE.MeshBasicMaterial({ map: m, transparent: true, side: THREE.DoubleSide, depthWrite: false, alphaTest: 0.05 }));
           pl.position.copy(T3((ax + bx) / 2, (ay + by) / 2, v.alto / 2)); pl.rotation.y = ang; grupo.add(pl);
-          for (let d = 0; d <= L; d += 3.5) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, v.alto, 6), poste); p.position.copy(T3(ax + Math.cos(ang) * d, ay + Math.sin(ang) * d, v.alto / 2)); p.castShadow = true; grupo.add(p); }
+          const delLugar = v.nombre === "cerco_canchas" || v.nombre === "malla_divisoria"; if (delLugar) pl.userData.lugar = "tenis";
+          for (let d = 0; d <= L; d += 3.5) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, v.alto, 6), poste); p.position.copy(T3(ax + Math.cos(ang) * d, ay + Math.sin(ang) * d, v.alto / 2)); p.castShadow = true; if (delLugar) p.userData.lugar = "tenis"; grupo.add(p); }
         } else caja3((ax + bx) / 2, (ay + by) / 2, L, 0.35, v.alto, mat(0x4a3a35), 0, -ang);
       }
     });
@@ -257,35 +262,36 @@
     [losa, carcasa, turbina, base].forEach(m => { m.castShadow = m.receiveShadow = true; g.add(m); }); losa.position.y = 0.06; grupo.add(g);
   });
 
-  // ---------------------------------------------------------------------------------------------- vuelo entre las dos canchas (tecla T)
-  const P = E.poses, vuelo = { activo: false, t: 0, de: null, a: null, destino: "cancha_cerrada", en: "campo" };
-  const pose = n => ({ pos: T3(P[n].pos[0], P[n].pos[1], P[n].pos[2]), mira: T3(P[n].mira[0], P[n].mira[1], P[n].mira[2]) });
-  const suave = t => t * t * (3 - 2 * t);
-  window.volarEntreCanchas = () => {
-    if (vuelo.activo) return;
-    vuelo.destino = vuelo.en === "campo" ? "cancha_cerrada" : "campo";
-    const d = pose(vuelo.destino);
-    vuelo.de = { pos: camara.position.clone(), mira: controles.target.clone() }; vuelo.a = d; vuelo.t = 0; vuelo.activo = true;
-    controles.enabled = false;
-    aviso("VUELO · " + P[vuelo.destino].nombre, COL.nominal || "#2db7ff", P.segundos);
+  // ---------------------------------------------------------------------------------------------- el lugar: cancha de fútbol o cancha de tenis (una a la vez)
+  // La zona de IA (30 x 30 m) siempre está en el origen de la simulación; lo que cambia es el campus de abajo: en "tenis" se corre para que el centro de las
+  // canchas cerradas (tenis y múltiple, rodeadas por la malla) quede en el origen, y se oculta la cancha de fútbol (y al revés). Sin vuelos entre canchas.
+  const P = E.poses;
+  const cerco = E.vallas.find(v => v.nombre === "cerco_canchas").p, cT = [(cerco[0][0] + cerco[1][0]) / 2, (cerco[0][1] + cerco[2][1]) / 2];
+  const objMalla = grupo.children.filter(o => o.userData && o.userData.lugar === "tenis");
+  window.LUGARES = { futbol: "Cancha de fútbol", tenis: "Cancha de tenis" };
+  window.LUGAR = (() => {
+    const q = new URLSearchParams(location.search).get("lugar");
+    if (q in window.LUGARES) return q;
+    try { return localStorage.getItem("estacion-lugar") || "futbol"; } catch (e) { return "futbol"; }
+  })();
+  window.PONER_LUGAR = (l, camara_nueva = true) => {
+    window.LUGAR = l;
+    try { localStorage.setItem("estacion-lugar", l); } catch (e) {}
+    objFutbol.forEach(o => { o.visible = l === "futbol"; });
+    [...objTenis, ...grupo.children.filter(o => o.userData && o.userData.lugar === "tenis")].forEach(o => { o.visible = l === "tenis"; });
+    grupo.position.set(l === "tenis" ? -cT[0] : 0, 0, l === "tenis" ? cT[1] : 0);        // z de three = -y: correr el campus -cT en la simulación
+    if (camara_nueva) { const p0 = P.campo; camara.position.copy(T3(p0.pos[0], p0.pos[1], p0.pos[2])); controles.target.copy(T3(p0.mira[0], p0.mira[1], p0.mira[2])); }
+    const s = document.getElementById("lugar"); if (s) s.value = l;
   };
-  window.VUELO_PASO = dt => {
-    if (!vuelo.activo) return;
-    vuelo.t = Math.min(1, vuelo.t + dt / P.segundos);
-    const u = suave(vuelo.t), alto = P.altura_de_vuelo, a = vuelo.de.pos, b = vuelo.a.pos;
-    const c1 = new THREE.Vector3(a.x, Math.max(a.y, alto), a.z), c2 = new THREE.Vector3(b.x, Math.max(b.y, alto), b.z);       // sube, cruza y baja (curva de Bézier)
-    const w = 1 - u;
-    camara.position.set(...["x", "y", "z"].map(k => w * w * w * a[k] + 3 * w * w * u * c1[k] + 3 * w * u * u * c2[k] + u * u * u * b[k]));
-    controles.target.lerpVectors(vuelo.de.mira, vuelo.a.mira, suave(Math.min(1, vuelo.t * 1.15)));
-    if (vuelo.t >= 1) {
-      vuelo.activo = false; vuelo.en = vuelo.destino; controles.enabled = true;
-      modoCam = "orbita"; document.querySelectorAll("[data-cam]").forEach(x => x.classList.toggle("activo", x.dataset.cam === "orbita"));
-    }
-  };
-  addEventListener("keydown", ev => { if (ev.code === "KeyT" && !/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName)) window.volarEntreCanchas(); });
-  const boton = document.getElementById("b-vuelo");
-  if (boton) boton.onclick = window.volarEntreCanchas;
+  {
+    const s = document.createElement("select");
+    s.id = "lugar"; s.title = "Dónde se ve la misión: la cancha de fútbol o la cancha de tenis (una a la vez)";
+    s.innerHTML = Object.entries(window.LUGARES).map(([k, t]) => `<option value="${k}">${t}</option>`).join("");
+    s.onchange = () => PONER_LUGAR(s.value);
+    const ref = document.getElementById("selector");
+    if (ref && ref.parentNode) ref.parentNode.insertBefore(s, ref);
+  }
   // arranque: la cámara mira la zona de IA desde el borde de la cancha
-  const p0 = pose("campo"); camara.position.copy(p0.pos); controles.target.copy(p0.mira);
+  PONER_LUGAR(window.LUGAR, true);
   document.body.dataset.entorno = "universidad";
 })();

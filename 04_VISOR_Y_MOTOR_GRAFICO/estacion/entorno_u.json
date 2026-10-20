@@ -320,7 +320,7 @@
   {
    "nombre": "cerco_canchas",
    "tipo": "malla",
-   "alto": 4.5,
+   "alto": 10.0,
    "cerrado": true,
    "p": [
     [
@@ -337,6 +337,22 @@
     ],
     [
      -74.0,
+     39.0
+    ]
+   ]
+  },
+  {
+   "nombre": "malla_divisoria",
+   "tipo": "malla",
+   "alto": 10.0,
+   "cerrado": false,
+   "p": [
+    [
+     -52.5,
+     3.8
+    ],
+    [
+     -52.5,
      39.0
     ]
    ]

@@ -70,8 +70,10 @@ CERROS = [      # (centro x, y), radios (x, y), alto: los cerros orientales, gra
 def vallas():
     """Mallas y muros: el cerco de las canchas cerradas, el muro oscuro del costado este del campo y la malla del parqueadero."""
     return [
-        {"nombre": "cerco_canchas", "tipo": "malla", "alto": 4.5, "cerrado": True,
+        {"nombre": "cerco_canchas", "tipo": "malla", "alto": 10.0, "cerrado": True,                  # malla metálica de unos 10 m alrededor de las canchas cerradas
          "p": [[-74.0, 3.8], [-37.6, 3.8], [-37.6, 39.0], [-74.0, 39.0]]},
+        {"nombre": "malla_divisoria", "tipo": "malla", "alto": 10.0, "cerrado": False,              # la misma malla divide la cancha de tenis de la de baloncesto y fútbol, que están pegadas
+         "p": [[-52.5, 3.8], [-52.5, 39.0]]},
         {"nombre": "muro_este_campo", "tipo": "muro", "alto": 1.9, "cerrado": False, "p": [[38.0, -80.0], [38.0, 28.0]]},
         {"nombre": "malla_parqueadero", "tipo": "malla", "alto": 2.4, "cerrado": False, "p": [[-98.0, -72.0], [-98.0, -47.0], [-43.0, -47.0]]},
     ]
