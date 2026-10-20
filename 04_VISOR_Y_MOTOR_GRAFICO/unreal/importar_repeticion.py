@@ -260,6 +260,9 @@ def main(ruta=None, desde=0.0, hasta=None):
         L = max(math.hypot(ux, uy), 1e-3)
         objetivo = unreal.Vector((x + ux / L * 4.5 + uy / L * 2.0) * D.M, -(y + uy / L * 4.5 - ux / L * 2.0) * D.M, (z + 0.6) * D.M)
         mira = unreal.Vector((0.4 * x + 0.6 * lx) * D.M, -(0.4 * y + 0.6 * ly) * D.M, (1.3 if lad else max(1.3, z - 0.5)) * D.M)   # en el tránsito mira al dron, no al suelo
+        if os.environ.get("DRONIA_CAMARA") == "dron":            # cámara CERCANA: delante y a la izquierda del dron, mirándolo (para ver el pan-tilt y su CSI moverse)
+            objetivo = unreal.Vector((x + math.cos(psi + 0.7) * 1.9) * D.M, -(y + math.sin(psi + 0.7) * 1.9) * D.M, (z + 0.45) * D.M)
+            mira = unreal.Vector(x * D.M, -y * D.M, z * D.M)
         cam_pos = objetivo if cam_pos is None else cam_pos + (objetivo - cam_pos) * 0.12
         cam_mira = mira if cam_mira is None else cam_mira + (mira - cam_mira) * 0.15
         rot = unreal.MathLibrary.find_look_at_rotation(cam_pos, cam_mira)
