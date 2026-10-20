@@ -467,6 +467,55 @@ pasando los 8.2 M gracias al lanzamiento vía WMI):
   en 80 partidas**: con el pan-tilt el dron casi siempre está alto y el ladrón casi no intenta saltar (para Unreal sirve el
   `salto.json` de `repeticiones_v17\`, que es de la V17.2).
 
+### Verificación del pan y desglose (20-oct, alerta del Visor)
+
+- **El pan sí se mueve.** En H con la ruta (64 partidas): |pan| medio 11.8°, 8.9° con el objetivo fijado y 25.3° en la búsqueda.
+  Pasa de 10° el 24 % del tiempo y llega a ±90°. Se aplica en `entorno.py`: la regla del pan está en el paso del gimbal y la
+  cámara y el TF-Luna miran a `rumbo + pan` en `_sensores`. El visor veía 0 porque `foto()` no traía el campo: ahora trae
+  **`pan`** y **`pan_meta`** (°, + = a la izquierda de la nariz), con prueba. Las repeticiones de `repeticiones_v17_h\` se
+  regrabaron con el campo (en la de rendición, el pan llega a ±90°).
+- **Cuánto aporta cada pieza** (512 partidas; `h_sinpan_*.json` = H con `--set PAN_ACTIVO=0`):
+
+  | M1 | G (cámara fija) | H sin pan (cámara 62.2° + tilt) | H con pan |
+  |---|---:|---:|---:|
+  | B0 | 3.7 % | 25.2 % | 62.3 % |
+  | B5 ruta de Brahian | 1.8 % | 60.2 % | 92.0 % |
+
+  El pan aporta +37 puntos en B0 y +32 en B5; la cámara ancha con el tilt aporta el resto.
+
+### Robustez de B5 y V17.7 en H (20-oct)
+
+256 partidas por escenario, con la ruta, `informes/v17/rob_*.json`. Perillas nuevas: `N_CIVILES_V17`, `FACTOR_SERVO_H`
+(servos `f` veces más lentos, con `f` veces el retardo y ruido de pan) y `RECALL_YOLO`.
+
+| Escenario | M1 B5 | M1 V17.7 | Vista B5 / V17.7 (s) | Misión perdida B5 / V17.7 | Seguridad |
+|---|---:|---:|---|---|---|
+| Base | 93.8 % | 91.0 % | 122 / 127 | 0 / 0.4 % | 0 |
+| (a) agachado y gateando más (`P_POSTURA_ESCONDIDO=0.05,0.45,0.5`, `P_GATEAR=0.6`) | 82.8 % | **86.3 %** | 131 / 133 | 0 / 0 | 0 |
+| (b) 2 civiles curiosos (`N_CIVILES_V17=2`) | 89.5 % | 87.5 % | 128 / 136 | 0 / 0 | 0 |
+| (c) V movidas ±3 m, ±30° (`AZAR_POS_V17=3`, `AZAR_ANG_V17=30`) | 91.0 % | 89.5 % | 123 / 119 | 0.8 / 0.8 % | 0 |
+| (d) servos ×2 (`FACTOR_SERVO_H=2`) | 89.1 % | 89.8 % | 126 / 132 | 0 / 0.4 % | 0 |
+| (e) YOLO con recall 0.7 (`RECALL_YOLO=0.7`) | 90.6 % | 89.1 % | 99 / 106 | 0 / 0 | alcanzado 0.4 % |
+
+Con 256 partidas el margen es de ±3.5 puntos. **La ruta y la red aguantan** todos los escenarios: 83-94 % de M1 y ≤ 0.8 % de
+misión perdida. La V17.7 empata con B5 en todos, y con el ladrón agachando y gateando más le saca +3.5 puntos.
+
+### V17.8 · la red decide el pan (20-oct)
+
+- `PAN_RED_V17` (en `False` por defecto) da 3 botones más: **PAN_IZQ, PAN_DER, PAN_CENTRO** (±20° sobre lo que pide la regla,
+  o volver a 0). En la búsqueda la red **solo apunta la cámara**: no puede mover el dron, porque los botones de mover quedan
+  bloqueados y la ruta de Brahian sigue volando (búsqueda determinista). Con el ladrón a la vista, la regla centra la cámara.
+- `K_VAIVEN_V17`: multa por cada cambio de sentido de la altura que pide la red (V17.8: 0.1).
+- `--desde` copia las 7 salidas de la V17.7; los 3 botones nuevos arrancan con probabilidad baja (1.2 %). Prueba:
+  `test_v17.TestPanRed` (buscando, la red no mueve el dron; con el objetivo, el pan es de la regla).
+- **Criterio (Coordinador):** supera a B5 por ≥ 3 puntos, o iguala con menos de 15 cambios de altura por minuto.
+- **En marcha desde 2026-10-20 09:04**, vía WMI, registro `03_SIMULACION_RL\modelos_v17_8.log`. Comando (PowerShell, desde
+  `03_SIMULACION_RL`):
+  `Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd.exe /c ".venv\Scripts\python.exe -u entrenar_master.py --hw H --set BUSQUEDA_RUTA_V17=1 --set PAN_RED_V17=1 --set K_VAIVEN_V17=0.1 --desde modelos_v17_7\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_8 --dir-master modelos_v17_8 --dir-modelos modelos_v17_8 > modelos_v17_8.log 2>&1"'; CurrentDirectory=(Get-Location).Path}`
+  Medirla con las mismas `--set` y `--pol modelos_v17_8\ultimo.zip`.
+- No se hizo la imitación de la ruta, porque la ruta ya es la búsqueda (regla) y la red solo apunta la cámara encima de
+  ella.
+
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
 Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,
