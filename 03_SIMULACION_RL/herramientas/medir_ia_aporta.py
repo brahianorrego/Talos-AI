@@ -291,7 +291,7 @@ def v17(pol, n, semilla, max_pasos):
                racha_s=float(racha.mean()), vista_s=float(np.mean([f["vista"] for f in F])),
                # complementarias (la de 60 s seguidos se satura en 0 en la cancha): racha >= 30 s y la de la V16 (rendición o
                # 60 s de vista acumulada)
-               custodia30=float(np.mean(racha >= 30.0)),
+               custodia30=float(np.mean(racha >= 30.0)), custodia15=float(np.mean(racha >= 15.0)),
                m1=float(np.mean(racha >= E.RACHA_M1_V17)),            # V17.1 · D-059: M1 = racha >= 30 s
                altura_m_por_min=float(z_rec / max(t_tot * E.DT / 60.0, 1e-9)),
                cambios_sentido_altura_por_min=float(z_cambios / max(t_tot * E.DT / 60.0, 1e-9)),

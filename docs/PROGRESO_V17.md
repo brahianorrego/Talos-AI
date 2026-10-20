@@ -350,6 +350,47 @@ debajo, dentro del ruido. Resultado honesto: **"la ruta de Brahian no mejora a s
 entrena la imitación de B5 ni el bono de progreso. La ruta queda en el código, apagada (`BUSQUEDA_RUTA_V17 = False`), con
 `D_RUTA_B5 = 3.0` m (la mejor medida), por si se cambia la cancha.
 
+## D-072 · Hardware actual: cámara fija, sin gimbal (20-oct)
+
+Brahian cambió el dron: no hay gimbal ni cámara USB. Ahora tiene una CSI IMX219 (62.2° × 48.8°) **fija** al chasis,
+inclinada ~5° hacia abajo, con el TF03 paralelo en la misma base y sin TF-Luna. La cámara al piso está planeada pero todavía
+no montada.
+
+- **En la simulación:** `entorno.aplicar_hw("ACTUAL")`, o `--hw ACTUAL` en `medir_ia_aporta.py` y `entrenar_master.py`.
+  - Cámara a `CAM_FIJA_PITCH = −5°` más el cabeceo del chasis; el seguimiento vertical ya no la mueve.
+  - FOV de la IMX219, TF03 a −5°, sin TF-Luna (la distancia láser la da el TF03).
+  - Cámara al piso apagada (`--set CAM_PISO_ACTIVA=1` para la planeada).
+  - Zona ciega con la inclinación real (a 3.8 m: 7.7 m, antes 3.2 m).
+  - Las demás variantes quedan como están (`aplicar_hw("BASE")` = gimbal V16) y el pan-tilt queda para después (D-056).
+  - **Regla dura 1:** la barrera −45..+15° se conserva sobre la cámara aunque hoy no haya gimbal.
+  - Prueba: `test_v17.TestHardwareActual`.
+- **Por qué murieron la V17.4 y la V17.5 a los 8.2 M:** las dos se cortaron a los ~61 min de lanzarse, sin ningún error en
+  su registro: algo cierra los procesos hijos de la sesión de Claude. Desde la V17.6 los entrenamientos se crean **vía WMI**
+  (`Invoke-CimMethod Win32_Process Create`), que no cuelgan del árbol de procesos de la sesión.
+
+**Línea base con la cámara fija** (cancha real, 512 partidas, semilla 123, `informes/v17/actual_*.json`):
+
+| | M1 (30 s) | Racha media (s) | Vista (s) | M2 ≤ 10 s | Misión perdida | Seguridad |
+|---|---:|---:|---:|---:|---:|---|
+| B0 quedarse | **3.7 %** | 13.6 | 63.5 | 76.4 % | 4.9 % | alcanzado 0.4 % |
+| B1 azar | 1.6 % | — | 60.2 | 76.7 % | 7.6 % | alcanzado 0.2 % |
+| B3 siempre subir | 0.8 % | — | 55.8 | 77.7 % | 10.0 % | alcanzado 0.2 % |
+| B5 ruta de Brahian (3.0 m) | 1.8 % | 12.1 | **66.3** | 78.3 % | **0.8 %** | 0 |
+| V17.2 (50 M, sin reentrenar) | 2.5 % | 12.4 | 60.5 | 76.7 % | 8.2 % | alcanzado 0.2 % |
+
+- Con la cámara fija **todo cae**: la racha media es de ~12-13 s y casi nunca hay 30 s seguidos. **Subir ahora empeora**,
+  porque la cámara ya no mira hacia abajo. La ruta de Brahian da la mayor vista total y casi nunca pierde la misión (0.8 %,
+  contra 4.9 % de B0), aunque no gana en M1.
+- M1 (30 s) vuelve a estar casi en 0: desde ahora la herramienta reporta también `custodia15` (racha ≥ 15 s) como apoyo.
+  La M1 sigue siendo la de D-059.
+
+**V17.6 en marcha** (afinado de la V17.2 con el hardware actual, 10 M, entropía 0.01, sin D-069). **Inicio 2026-10-20 01:38**,
+creado vía WMI. Registro `03_SIMULACION_RL\modelos_v17_6.log`, modelos en `modelos_v17_6\`. Comando (PowerShell, desde
+`03_SIMULACION_RL`):
+`Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd.exe /c ".venv\Scripts\python.exe -u entrenar_master.py --hw ACTUAL --desde modelos_v17_2\ultimo.zip --pasos 1e7 --envs 512 --semilla 17 --ent 0.01 --repeticiones 5 --salida salida_v17_6 --dir-master modelos_v17_6 --dir-modelos modelos_v17_6 > modelos_v17_6.log 2>&1"'; CurrentDirectory=(Get-Location).Path}`
+Si se corta, cambiar `--desde modelos_v17_2\ultimo.zip` por `--continuar`. Medirla con
+`herramientas\medir_ia_aporta.py v17 --hw ACTUAL --pol modelos_v17_6\ultimo.zip,modelos_v17_6\ultimo.zip-est --n 512 --salida informes\v17\actual_v176.json`.
+
 ## Entrenamiento en marcha y cómo retomarlo (19-oct)
 
 Los entrenamientos y mediciones se lanzan ahora **desacoplados de la sesión** (PowerShell `Start-Process -WindowStyle Hidden`,
