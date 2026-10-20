@@ -71,7 +71,9 @@ body.sin-paneles #abajo { left: 10px; right: 10px; }
 .vista-cam { position: relative; width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 4 / 3; box-shadow: 0 0 0 6px rgba(12, 17, 24, .96), 0 0 0 1px #2c3b4e inset; }
 .vista-cam .filtro { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, .38) 100%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .05) 0 1px, transparent 1px 3px); }
 .vista-cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-#cam-csi0 { background: transparent !important; border: 1px solid var(--borde) !important; border-radius: 6px; box-shadow: none !important; }
+#cam-csi0 { background: transparent !important; border: 1px solid var(--borde) !important; border-radius: 6px; box-shadow: none !important;
+            backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }       /* sin esto el panel DESENFOCA la imagen 3D que hay detrás (la cámara del piso salía borrosa) */
+#cam-csi0 > .cuerpo { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 #cam-csi0 > .cab { background: var(--panel); border: 0 !important; border-bottom: 1px solid var(--linea) !important; border-radius: 6px 6px 0 0; }
 #cam-csi0 > .cuerpo { border: 0 !important; box-shadow: none !important; padding: 6px !important; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 body.cam-off-usb #fpv, body.cam-off-csi0 #cam-csi0, body.cam-off-lid #p-lid360 { display: none !important; }

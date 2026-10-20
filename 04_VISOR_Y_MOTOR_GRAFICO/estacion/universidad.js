@@ -64,21 +64,50 @@
     for (let k = 0; k * 5 * PPM < H; k++) { g.fillStyle = k % 2 ? "#4f7a2f" : "#5b8736"; g.fillRect(0, k * 5 * PPM, W, 5 * PPM + 1); }   // franjas de corte de 5 m
     ruido(g, W, H, 60000, 0.12);
     for (let i = 0; i < 90; i++) { const x = Math.random() * W, y = Math.random() * H, r = 10 + Math.random() * 40; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(110,110,60,.22)"); gr.addColorStop(1, "rgba(110,110,60,0)"); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
-    g.strokeStyle = "rgba(240,240,235,.92)"; g.lineWidth = 3; g.fillStyle = "rgba(240,240,235,.92)";
+    // las líneas de la cancha son GEOMETRÍA (no pintura de la imagen de 5.5 cm por píxel): se ven nítidas también desde la cámara del piso
     const J = E.campo.juego, cy = E.campo.centro[1];
-    g.strokeRect(fx(-J.x), fy(J.y1), 2 * J.x * PPM, (J.y1 - J.y0) * PPM);
-    g.beginPath(); g.moveTo(fx(-J.x), fy(cy)); g.lineTo(fx(J.x), fy(cy)); g.stroke();
-    g.beginPath(); g.arc(fx(0), fy(cy), 9.15 * PPM, 0, 2 * Math.PI); g.stroke();
-    g.beginPath(); g.arc(fx(0), fy(cy), 0.3 * PPM, 0, 2 * Math.PI); g.fill();
+    const blancoL = new THREE.MeshBasicMaterial({ color: 0xf2f2ec, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    const LW = 0.12, YL = 0.012;
+    const linea3 = (ax, ay, bx, by) => {
+      const L = Math.hypot(bx - ax, by - ay), m = new THREE.Mesh(new THREE.PlaneGeometry(L + LW, LW), blancoL);
+      m.rotation.x = -Math.PI / 2; m.rotation.z = Math.atan2(by - ay, bx - ax); m.position.set((ax + bx) / 2, YL, -(ay + by) / 2); grupo.add(m);
+    };
+    const arco3 = (x, y, r, a0, a1) => {                                           // a0 y a1 en el ángulo de la simulación (antihorario desde +x)
+      const m = new THREE.Mesh(new THREE.RingGeometry(r - LW / 2, r + LW / 2, 72, 1, a0, a1 - a0), blancoL);
+      m.rotation.x = -Math.PI / 2; m.position.set(x, YL, -y); grupo.add(m);
+    };
+    const rect3 = (x0, y0, x1, y1) => { linea3(x0, y0, x1, y0); linea3(x1, y0, x1, y1); linea3(x1, y1, x0, y1); linea3(x0, y1, x0, y0); };
+    rect3(-J.x, J.y0, J.x, J.y1);
+    linea3(-J.x, cy, J.x, cy);
+    arco3(0, cy, 9.15, 0, 2 * Math.PI);
+    const punto3 = (x, y) => { const m = new THREE.Mesh(new THREE.CircleGeometry(0.3, 20), blancoL); m.rotation.x = -Math.PI / 2; m.position.set(x, YL, -y); grupo.add(m); };
+    punto3(0, cy);
     [[J.y1, -1], [J.y0, 1]].forEach(([yl, dentro]) => {                              // áreas y punto penal; "dentro" = hacia el centro de la cancha
-      const franja = (ancho, hondo) => g.strokeRect(fx(-ancho / 2), fy(Math.max(yl, yl + dentro * hondo)), ancho * PPM, hondo * PPM);
+      const franja = (ancho, hondo) => rect3(-ancho / 2, yl, ancho / 2, yl + dentro * hondo);
       franja(40.3, 16.5); franja(18.32, 5.5);
-      g.beginPath(); g.arc(fx(0), fy(yl + dentro * 11), 0.3 * PPM, 0, 2 * Math.PI); g.fill();
-      g.beginPath(); g.arc(fx(0), fy(yl + dentro * 11), 9.15 * PPM, dentro < 0 ? Math.PI * 0.31 : Math.PI * 1.31, dentro < 0 ? Math.PI * 0.69 : Math.PI * 1.69); g.stroke();
+      punto3(0, yl + dentro * 11);
+      const c0 = dentro * Math.PI / 2, al = Math.acos(5.5 / 9.15);                      // el arco del área: lo que queda fuera del área grande
+      arco3(0, yl + dentro * 11, 9.15, c0 - al, c0 + al);
     });
-    [[-J.x, J.y1, 0.5], [J.x, J.y1, 1], [-J.x, J.y0, 0], [J.x, J.y0, 1.5]].forEach(([x, y, q]) => { g.beginPath(); g.arc(fx(x), fy(y), 1 * PPM, q * Math.PI, (q + 0.5) * Math.PI); g.stroke(); });
+    [[-J.x, J.y1, 1.5], [J.x, J.y1, 1], [-J.x, J.y0, 0], [J.x, J.y0, 0.5]].forEach(([x, y, q]) => arco3(x, y, 1, q * Math.PI, (q + 0.5) * Math.PI));   // córners: cuarto de círculo hacia dentro
     const t = tex(c); t.anisotropy = 8;
     plano(E.campo.centro[0], E.campo.centro[1], E.campo.tam[0], E.campo.tam[1], new THREE.MeshStandardMaterial({ map: t, roughness: 0.95 }), 0.0);
+    // detalle fino del pasto (la imagen de la cancha tiene 5.5 cm por píxel: desde 3 m de altura, con la cámara del piso, se veía borrosa): una capa de briznas
+    // repetida cada 1.2 m que se MULTIPLICA con el color de abajo (0.5 cm por píxel)
+    {
+      const [cd, gd] = lienzo(256, 256);
+      gd.fillStyle = "#e9e9e9"; gd.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 5200; i++) {
+        const x = Math.random() * 256, y = Math.random() * 256, a = (Math.random() - 0.5) * 1.3 - Math.PI / 2, L = 8 + Math.random() * 14, v = 130 + Math.random() * 125;
+        gd.strokeStyle = `rgb(${v | 0},${(v + 6) | 0},${(v - 8) | 0})`; gd.lineWidth = 1.4 + Math.random() * 1.2;
+        gd.beginPath(); gd.moveTo(x, y); gd.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); gd.stroke();
+      }
+      for (let i = 0; i < 220; i++) { gd.fillStyle = `rgba(90,80,40,${0.05 + Math.random() * 0.1})`; gd.beginPath(); gd.arc(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 3, 0, 2 * Math.PI); gd.fill(); }
+      const td = tex(cd); td.wrapS = td.wrapT = THREE.RepeatWrapping; td.repeat.set(E.campo.tam[0] / 1.2, E.campo.tam[1] / 1.2); td.anisotropy = 16;
+      const detalle = plano(E.campo.centro[0], E.campo.centro[1], E.campo.tam[0], E.campo.tam[1],
+        new THREE.MeshBasicMaterial({ map: td, transparent: true, blending: THREE.MultiplyBlending, premultipliedAlpha: true, depthWrite: false }), 0.006);
+      if (detalle) detalle.renderOrder = 2;
+    }
     // arcos de fútbol (7.32 x 2.44 m)
     const blanco = mat(0xf2f2ee, { roughness: 0.4 });
     [J.y0, J.y1].forEach(yl => {
