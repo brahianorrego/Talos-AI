@@ -35,8 +35,10 @@ def cargar():
 
 def camaras(v):
     """Lista de cámaras: nombre, pitch (° hacia abajo negativo), vfov, hfov, color, eje largo longitudinal."""
-    pitch = max(v["GIMBAL_TOPE_FISICO_MIN"], -45.0)  # el pitch táctico: −45° o lo que deje el gimbal hoy
-    cs = [dict(n="Principal USB", gimbal=True, p=pitch, vf=v["CAM_PRINCIPAL_VFOV"], hf=v["CAM_PRINCIPAL_HFOV"], c="tab:blue")]
+    fijo = v["GIMBAL_TIPO"] == "fijo"
+    pitch = v["CAM_PRINCIPAL_PITCH_FIJO_DEG"] if fijo else max(v["GIMBAL_TOPE_FISICO_MIN"], -45.0)
+    nom = "Principal " + ("CSI" if v["CAM_PRINCIPAL_TIPO"] == "csi" else "USB")
+    cs = [dict(n=nom, gimbal=not fijo, p=pitch, vf=v["CAM_PRINCIPAL_VFOV"], hf=v["CAM_PRINCIPAL_HFOV"], c="tab:blue")]
     if v["CAM_PISO_ACTIVA"]:
         cs.append(dict(n="Piso CSI", p=v["CAM_PISO_PITCH"], vf=v["CAM_PISO_HFOV"], hf=v["CAM_PISO_VFOV"], c="tab:green"))
     if v["CAM_FRONTAL_ANCHA_ACTIVA"]:

@@ -14,6 +14,8 @@ Supuestos: dron a **3.3 m**; persona de pie de **1.72 m** (cabeza = centro a 1.6
 | **D** | Principal USB (-45°) + Piso CSI (-90°) | 0.0–2.9 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
 | **E** | Principal USB (-45°) + Piso CSI (-90°) | 0.0–2.9 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
 | **F** | Principal USB (-45°) + Piso CSI (-90°) + Frontal ancha CSI (0°) | 0.0–2.9 m; 3.7–más de 15 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
+| **G** | Principal CSI (-5°) | 3.0–más de 15 m | 3.0–más de 15 m | 3.6–más de 15 m | 5.9 m |
+| **H** | Principal CSI (-45°) + Piso CSI (-90°) | 0.0–4.5 m | 0.0–más de 15 m | 0.0–más de 15 m | 0.0 m |
 
 ## Cámara al piso: huella a 3.30 m
 

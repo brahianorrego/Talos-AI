@@ -11,7 +11,7 @@ import os
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-TIPOS_GIMBAL = {"basecam", "servo", "mixto", "servo_sobre_basecam"}
+TIPOS_GIMBAL = {"basecam", "servo", "mixto", "servo_sobre_basecam", "fijo"}
 
 
 def pwm(theta):  # regla dura 1 (CLAUDE.md): pwm = 1500 + θ·500/45
@@ -28,7 +28,9 @@ def revisar(v):
         e.append("el PWM de AUX1 se sale de 1000..1667 µs")
     if v["GIMBAL_TIPO"] not in TIPOS_GIMBAL:
         e.append("GIMBAL_TIPO desconocido")
-    if v["GIMBAL_TIPO"] != "basecam" and not v["GIMBAL_TOPES_MECANICOS"]:
+    if v["GIMBAL_TIPO"] == "fijo" and not (v["GIMBAL_MIN"] <= v["CAM_PRINCIPAL_PITCH_FIJO_DEG"] <= v["GIMBAL_MAX"]):
+        e.append("cámara fija: su pitch debe quedar dentro de −45°..+15°")
+    if v["GIMBAL_TIPO"] not in ("basecam", "fijo") and not v["GIMBAL_TOPES_MECANICOS"]:
         e.append("un gimbal por servo debe llevar topes mecánicos")
     if v["PAN_ACTIVO_EN_ENTRENAMIENTO"] and not v["PAN_DISPONIBLE"]:
         e.append("PAN activo sin estar disponible")
@@ -38,11 +40,11 @@ def revisar(v):
         e.append("la cámara al piso va recta a −90°")
     if v["CAM_PISO_ACTIVA"] and v["CAM_PISO_PUERTO"] == v["CAM_FRONTAL_ANCHA_PUERTO"]:
         e.append("dos cámaras CSI en el mismo puerto")
-    if v["LIDAR_TF03_MONTAJE"] == "chasis" and not -5.0 <= v["LIDAR_TF03_PITCH_DEG"] <= 5.0:
+    if v["LIDAR_TF03_MONTAJE"] in ("chasis", "base_fija") and not -5.0 <= v["LIDAR_TF03_PITCH_DEG"] <= 5.0:
         e.append("TF03 fijo al chasis: cabeceo de montaje debe quedar entre −5° y +5°")
-    if v["LIDAR_TF03_MONTAJE"] == "chasis" and not v["LIDAR_DESCARTE_SUELO_CON_ACTITUD"]:
+    if v["LIDAR_TF03_MONTAJE"] in ("chasis", "base_fija") and not v["LIDAR_DESCARTE_SUELO_CON_ACTITUD"]:
         e.append("TF03 al chasis exige descartar impactos al suelo con la actitud")
-    if v["LIDAR_TF03_MONTAJE"] == "chasis" and v["LIDAR_TF03_SIGUE_GIMBAL"]:
+    if v["LIDAR_TF03_MONTAJE"] in ("chasis", "base_fija") and v["LIDAR_TF03_SIGUE_GIMBAL"]:
         e.append("TF03 al chasis no puede seguir al gimbal")
     return e
 
@@ -78,8 +80,9 @@ def constantes(archivo, prefijo):
 
 def contra_simulacion(v, c):
     """Lista de (clave JSON, valor JSON, constante, valor de la simulación, estado) para una variante."""
-    servo = v["GIMBAL_TIPO_EQUIVALENTE_V16"] == "servo"
-    g = (MX + "SERVO_VEL", MX + "RETARDO", MX + "SERVO_BANDA") if servo else (BC + "VEL_MAX", BC + "TAU_ESTAB", None)
+    eq = v["GIMBAL_TIPO_EQUIVALENTE_V16"]
+    g = ((MX + "SERVO_VEL", MX + "RETARDO", MX + "SERVO_BANDA") if eq == "servo" else (None, None, None) if eq == "fijo"
+         else (BC + "VEL_MAX", BC + "TAU_ESTAB", None))
     filas = [
         ("GIMBAL_MIN", v["GIMBAL_MIN"], "GIMBAL_MIN", None),
         ("GIMBAL_MAX", v["GIMBAL_MAX"], "GIMBAL_MAX", None),
@@ -111,7 +114,7 @@ def contra_simulacion(v, c):
     # el tipo de gimbal: la V17 entrena "mixto", que incluye BaseCam y servo
     tipo = c.get("GIMBAL_TIPO")
     res.append(("GIMBAL_TIPO_EQUIVALENTE_V16", v["GIMBAL_TIPO_EQUIVALENTE_V16"], "GIMBAL_TIPO", tipo,
-                "OK" if tipo in ("mixto", v["GIMBAL_TIPO_EQUIVALENTE_V16"]) else "DIFIERE"))
+                "OK" if tipo == eq or (tipo == "mixto" and eq in ("basecam", "servo")) else "DIFIERE"))
     return res
 
 
@@ -122,7 +125,7 @@ def informe_simulacion(datos):
         return 0
     c = {**constantes(ent, "entorno."), **constantes(ctl, "control.")}
     dif = 0
-    for nombre in ("variante_C.json", "variante_D.json"):
+    for nombre in ("variante_G.json", "variante_H.json"):
         print(f"\n== {nombre} contra 03_SIMULACION_RL ==")
         for clave, val, nom, sim, est in contra_simulacion(datos[nombre], c):
             dif += est == "DIFIERE"

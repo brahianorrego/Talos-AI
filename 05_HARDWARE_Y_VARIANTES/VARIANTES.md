@@ -4,6 +4,28 @@ Sesión Hardware y variantes · 2026-10-17 · solo simulación y diseño. **Nada
 Reglas que mandan sobre todo lo de abajo: gimbal −45°..+15° (`pwm = 1500 + θ·500/45`), el mínimo sigue con la
 configuración actual (variante A) hasta terminar, y el TF03 y el gimbal no se tocan en el dron hasta entonces.
 
+## 0. Cambio de rumbo (D-072, 2026-10-20): ahora hay dos variantes que importan, G y H
+
+Brahian **quitó el gimbal y la cámara USB** (el sensor se dañó con el sol). Todo lo de abajo sobre gimbal, USB, BaseCam y las variantes **A a F queda
+DESCARTADO** y se conserva solo como historia y como referencia de cálculo. Hoy el dron es la **G** y la meta es la **H**. Archivos:
+`config_sim/variante_G.json` y `variante_H.json`; cobertura en `COBERTURA.md`.
+
+| | **G · ACTUAL** | **H · META** |
+|---|---|---|
+| Cámara principal | CSI IMX219 (CAM0), **fija ~5° hacia abajo**, en una base impresa | CSI IMX219 (CAM0) en el **pan-tilt de 2 servos** |
+| Cámara al piso | no | **segunda CSI (CAM1), recta a −90°**, fija |
+| LiDAR | TF03 **fijo en la misma base, paralelo a la cámara** (−5°) | TF03 fijo (−5°) **+ TF-Luna en el pan-tilt**, mirando donde la cámara |
+| Gimbal / estabilización | ninguna (`GIMBAL_TIPO = "fijo"`) | servos MG90D, la Pixhawk estabiliza el tilt; topes −44°/+14° (regla dura 1); pan bloqueado en la V17 |
+| Cobertura (cabeza de 1.72 m) | **ciega a menos de ~3.0 m**; suelo ciego hasta ~5.9 m | **sin anillo ciego**: ve desde ~0.6 m (tilt libre) y la CSI del piso cubre lo de justo debajo |
+| Masa añadida | +5 g (CSI) menos la BaseCam y la USB **(pesar el dron: 2 371 g era con gimbal)** | **+111 g** sobre G (pan-tilt 45 + servos 27 + BEC y cables 15 + TF-Luna con soporte 14 + CSI y soporte del piso 10), menos el soporte actual de la cámara (sin dato) |
+| Centro de gravedad | — | ΔCG ≈ **+6.7 mm** hacia adelante si el pan-tilt va a 150 mm del CG (111 g × 150 mm / 2 482 g): por encima de ~5 mm, **hay que correr la batería hacia atrás** o ponerlo más cerca del CG |
+| Potencia (desde la batería) | −USB (≈1 W) − motores del gimbal (sin dato) + CSI (0.8 W) | **+1.9 W típico, +9.5 W pico** sobre G (CSI 0.8 + Luna 0.35 + servos 0.6 + pérdida del BEC); estimados |
+| Jetson (YOLO) | **≈ 30.8 FPS medido** (CSI sola) | 2 CSI: **≈ 20 FPS la principal y ≈ 10 la del piso, ESTIMADO** (no medido) |
+| Toca el mínimo | sí: el mínimo se entrenó con TF03 alineado a la cámara a −5° y HFOV 38.9° de la USB | sí |
+
+**Diferencias que la simulación debe resolver** (lo dice `python validar_variantes.py` contra `03_SIMULACION_RL`): (1) el entorno modela la **cámara USB** (HFOV 38.9° × VFOV 29.7°) y
+las variantes G/H son de **62.2° × 48.8° nominal sin medir**; (2) falta `GIMBAL_TIPO = "fijo"`; (3) el TF03 del entorno está a −3° (`TF03_PITCH_V17`) y el real va a −5°.
+
 ## 1. En pocas palabras (para Brahian)
 
 - Hoy el gimbal solo baja a −10° porque el cable grueso del TF03 hace palanca. Para el plus se necesita llegar a −45°.

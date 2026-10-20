@@ -1,7 +1,7 @@
 {
   "VARIANTE": "A",
   "NOMBRE": "Actual: USB en el gimbal BaseCam, TF03 en el pod",
-  "ESTADO": "actual (construida)",
+  "ESTADO": "descartada (D-072: gimbal y cámara USB retirados el 2026-10-19) · era la actual",
   "TOCA_EL_MINIMO": false,
   "MASA_SUMA_G": 0,
   "MASA_QUITA_G": 0,
@@ -24,6 +24,7 @@
   "PAN_MAX": 0.0,
   "PAN_VEL_DPS": 0.0,
   "CAM_PRINCIPAL_TIPO": "usb",
+  "CAM_PRINCIPAL_PITCH_FIJO_DEG": null,
   "CAM_PRINCIPAL_MONTAJE": "gimbal",
   "CAM_PRINCIPAL_HFOV": 38.9,
   "CAM_PRINCIPAL_VFOV": 29.7,
