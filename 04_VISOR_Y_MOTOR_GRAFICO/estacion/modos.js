@@ -1,8 +1,8 @@
 // Modos de la estación (pedido de Brahian, 17-oct): en vez de ventanas sueltas que se pueden cerrar y desordenar, cinco
 // pantallas ya organizadas que se eligen con los botones de arriba (o las teclas 1 a 5). Ningún panel se pierde: cada modo
 // pone los que necesita en su lugar y guarda los demás. El modo elegido se recuerda.
-//   Vista del dron  · la cámara USB con YOLO, la telemetría y el mapa SLAM encima; más las cámaras CSI (frontal y piso) y los dos LiDAR de 1 haz,
-//                     que se encienden y apagan con los botones de arriba o las teclas P, G y L (camaras.js)
+//   Vista del dron  · la CSI#1 (pan-tilt) casi a pantalla completa con YOLO y la telemetría de operación encima, la CSI#2 en un cuadro pequeño y al lado el mapa de los dos
+//                     LiDAR de 1 haz; la imagen es el render de Unreal desde el dron (camaras.js) y, sin Unreal, el de three.js
 //   Simulación 3D   · el mundo 3D a pantalla completa; "Ocultar paneles" deja solo la simulación
 //   Mapa            · el mapa del LiDAR grande (rueda: acercar; arrastrar: mover; doble clic: centrar)
 //   Ingeniería      · todo el análisis alrededor del 3D: estados, decisiones, árbitro, tracker, entrenamiento
@@ -12,7 +12,7 @@
 (() => {
   const CLAVE = "estacion-modo-v3";
   const MODOS = {
-    dron:  { principal: "dron", centro: ["fpv", "cam-csi0"], sobre: { "sobre-tl": ["p-tel"], "sobre-br": ["p-slam"], "sobre-tr": ["p-cus"], "sobre-bl": ["p-lid360"] }, abajo: ["reproductor"] },
+    dron:  { principal: "dron", centro: ["fpv"], der: ["p-lid360", "p-cus"], sobre: { "sobre-br": ["cam-csi0"] }, abajo: ["estado-linea", "reproductor"] },       // VISTA DEL DRON: CSI#1 grande con telemetría encima, CSI#2 pequeña, mapa de los dos LiDAR al lado
     "3d":  { principal: "3d", izq: ["fpv", "rc", "p-slam"], der: ["p-cus", "p-tel", "p-fsm", "p-arb"], abajo: ["estado-linea", "reproductor"], ocultable: true },
     mapa:  { principal: "mapa", centro: "p-slam", abajo: ["reproductor"] },
     ing:   { principal: "3d", izq: ["p-fsm", "p-dec", "p-obj"], der: ["p-cus", "p-tel", "p-arb", "monitor"], abajo: ["estado-linea", "log", "reproductor"] },

@@ -426,7 +426,7 @@ let MODO_DRON = (() => {
 })();
 const CAM_VIEJA = MODO_DRON === "gimbal" || new URLSearchParams(location.search).get("camara") === "gimbal", PITCH_FIJO = -5;
 const camFija = () => !CAM_VIEJA && MODO_DRON === "minimo", camPantilt = () => !CAM_VIEJA && MODO_DRON === "plus";
-const HFOV = CAM_VIEJA ? 38.9 : 62.2, VFOV = CAM_VIEJA ? 29.7 : 48.3;
+const HFOV = CAM_VIEJA ? 38.9 : 68.3, VFOV = CAM_VIEJA ? 29.7 : 54.0;          // CSI medida por Brahian (D-078): 68.3° x 54.0°
 let panDeg = 0;                                                   // el pan del pan-tilt (la V17 lo deja en 0; si la repetición trae c.pan, se usa)
 const mundo = (x, y, z = 0) => new THREE.Vector3(x, z, -y);
 const $ = id => document.getElementById(id);
@@ -1671,6 +1671,28 @@ $("pistas").addEventListener("click", e => {
   const c = cajasActuales.find(q => q.tipo === "cand");
   confirmarClic(c ? (c.x0 + c.x1) / 2 : fpvVista.clientWidth / 2, c ? (c.y0 + c.y1) / 2 : fpvVista.clientHeight / 2);
 });
+// telemetría de operación sobre la imagen de la cámara principal (Vista del dron): modo, objetivo, tiempo seguido, geocerca, batería simulada, distancias de los dos LiDAR de 1 haz y fps
+let _fpsN = 0, _fpsT = performance.now(), _fps = 0;
+function telemetriaOperacion(g, W, H, texto) {
+  const ahora = performance.now(); _fpsN++;
+  if (ahora - _fpsT > 1000) { _fps = _fpsN * 1000 / (ahora - _fpsT); _fpsN = 0; _fpsT = ahora; }
+  const E = window.ESTADO_VISTA, c = E && E.c;
+  if (!c) return;
+  const luna = c.luna && (c.luna[0] || c.luna[1] || c.luna[2]) ? Math.hypot(c.luna[0] - E.x, c.luna[1] - E.y, c.luna[2] - E.z) : null;
+  const tf03 = c.lid !== undefined && c.lid < 29.5 ? c.lid.toFixed(1) + " m" : "> 30 m";
+  const fijado = ["PERSECUCION", "PERDIDA", "RECONFIRMAR", "FIJADO"].includes(c.eb);
+  const margen = 25 - Math.max(Math.abs(E.x), Math.abs(E.y)), bat = Math.max(0, 100 - tPartida / 9);
+  const objetivo = fijado ? "FIJADO" : (c.en_camara && c.en_camara.length ? "posible objetivo" : "ninguno");
+  const filas = [
+    ["MODO", c.eb ?? "–", "#7fd8ff"], ["OBJETIVO", objetivo, fijado ? "#ff8a8d" : (c.en_camara && c.en_camara.length ? "#f5c542" : "#9fb0c3")],
+    ["A LA VISTA", (c.tf ?? 0).toFixed(1) + " s", "#cfe9f5"], ["TF03", tf03, "#4db8ff"], ["TF-LUNA", luna === null ? "sin eco" : luna.toFixed(1) + " m", "#ffb020"],
+    ["PAN/TILT", `${(c.pan ?? 0) >= 0 ? "+" : ""}${(c.pan ?? 0).toFixed(0)}° / ${(c.gmb ?? 0).toFixed(0)}°`, "#cfe9f5"],
+    ["GEOCERCA", margen.toFixed(1) + " m", margen < 3 ? "#ff6b6b" : margen < 8 ? "#f5c542" : "#7ff0b0"], ["BATERÍA", bat.toFixed(0) + " % (sim.)", bat < 20 ? "#ff6b6b" : "#7ff0b0"],
+    ["FPS", _fps.toFixed(0) + (window.UNREAL_CAM && window.UNREAL_CAM.cam0 ? " · imagen Unreal" : " · imagen 3D"), "#9fb0c3"],
+  ];
+  g.fillStyle = "rgba(6,12,18,.62)"; g.fillRect(6, 30, 168, filas.length * 12.5 + 8);
+  filas.forEach(([k, v, col], i) => { texto(k, 12, 43 + i * 12.5, "left", "rgba(150,235,255,.6)", 500, 8.5); texto(v, 170, 43 + i * 12.5, "right", col, 600, 9); });
+}
 function dibujarHUD(s) {
   const W = fpvVista.clientWidth, H = fpvVista.clientHeight, dpr = Math.min(devicePixelRatio, 2);
   if (hud.width !== Math.round(W * dpr)) { hud.width = Math.round(W * dpr); hud.height = Math.round(H * dpr); }
@@ -1729,13 +1751,14 @@ function dibujarHUD(s) {
   texto("● REC " + reloj(s.t), 8, 13, "left", "#ff6b6b", 600, 9);
   texto(`R ${s.roll >= 0 ? "+" : ""}${s.roll.toFixed(1)}°  P ${s.pitch >= 0 ? "+" : ""}${s.pitch.toFixed(1)}°`, W - 8, 13, "right", C2, 500, 8.5);
   texto("LiDAR " + (s.lidarTxt ?? (s.lidar < 19.9 ? s.lidar.toFixed(2) + " m" : "> 20 m")), 8, H - 8, "left", C1, 500, 9);
-  texto(camPantilt() ? `PAN ${s.pan >= 0 ? "+" : ""}${s.pan.toFixed(0)}° · TILT ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : camFija() ? `CSI FIJA ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 62.2°` : `GMB ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 38.9°`, W - 8, H - 8, "right", C1, 500, 9);
+  texto(camPantilt() ? `PAN ${s.pan >= 0 ? "+" : ""}${s.pan.toFixed(0)}° · TILT ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV ${HFOV}°` : camFija() ? `CSI FIJA ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV ${HFOV}°` : `GMB ${s.gimbal >= 0 ? "+" : ""}${s.gimbal.toFixed(0)}° · HFOV 38.9°`, W - 8, H - 8, "right", C1, 500, 9);
   if (camFija() || camPantilt()) {                             // cartel: cámara fija sin gimbal, o la CSI en el pan-tilt de 2 servos
     const cartel = camFija() ? "CÁMARA FIJA · SIN GIMBAL" : s.transito ? "CSI EN PAN-TILT · PARQUEADO 0° / −5° (TRÁNSITO)" : "CSI EN PAN-TILT · 2 SERVOS · SIN ROLL";
     g.font = "600 9px 'Roboto Mono', monospace"; const tw = g.measureText(cartel).width + 14;
     g.fillStyle = "rgba(6,12,18,.82)"; g.fillRect(W / 2 - tw / 2, 4, tw, 16); g.strokeStyle = "rgba(245,197,66,.8)"; g.strokeRect(W / 2 - tw / 2, 4, tw, 16);
     texto(cartel, W / 2, 15.5, "center", "#f5c542", 600, 9);
   }
+  if (document.body.dataset.modo === "dron" || document.body.dataset.modo === "vuelo") telemetriaOperacion(g, W, H, texto);
   // detecciones de YOLO con el ID del tracker
   s.cajas.forEach(k => {
     const col = k.tipo === "objetivo" ? "#ff5a5f" : k.tipo === "reid" || k.tipo === "cand" ? "#f5c542" : k.tipo === "ign" ? "#8b9bb0" : "#7fd8ff";

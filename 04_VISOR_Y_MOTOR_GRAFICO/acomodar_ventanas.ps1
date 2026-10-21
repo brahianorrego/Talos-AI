@@ -1,6 +1,6 @@
 # Pone Unreal a la izquierda y la estacion (Edge) a la derecha de la misma pantalla. Lo lanza VIVO_UNREAL.bat; corre unos minutos y termina.
 # Uso: powershell -File acomodar_ventanas.ps1 -Porcentaje 60
-param([int]$Porcentaje = 60, [int]$Segundos = 400)
+param([int]$Porcentaje = 50, [int]$Segundos = 400)
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System; using System.Runtime.InteropServices;

@@ -11,7 +11,7 @@
   const $ = id => document.getElementById(id);
   const CAMS = [
     { id: "usb", panel: "fpv", nombre: "CSI principal (fija)", corto: "CSI fija" },
-    { id: "csi0", panel: "cam-csi0", nombre: "CSI CAM0 · piso", corto: "CSI piso", hfov: 62.2, vfov: 48.3, pitch: -90 },
+    { id: "csi0", panel: "cam-csi0", nombre: "CSI CAM0 · piso", corto: "CSI piso", hfov: 68.3, vfov: 54.0, pitch: -90 },
   ];
   let activas = { usb: true, csi0: true, lid: true };
   try { Object.assign(activas, JSON.parse(localStorage.getItem(CLAVE) || "{}")); } catch (e) {}
@@ -37,6 +37,27 @@
   barra.innerHTML = `<span>Mostrar:</span>` + [["usb", "CSI principal (fija)"], ["csi0", "CSI piso"], ["lid", "LiDAR 1D"]]
     .map(([id, t]) => `<button data-vista="${id}" title="Activar o apagar este panel">${t}</button>`).join("");
   document.body.appendChild(barra);
+
+  // ---------------------------------------------------------------------------------------------------------- imagen REAL de Unreal (lo que ve el dron)
+  // unreal/vivo_unreal.py renderiza las dos CSI desde el punto de vista del dron (68.3° x 54.0°, -2.4° + pan/tilt) y las guarda como JPG; el servidor las entrega en
+  // /unreal_cam/cam0.jpg (CSI#1) y cam1.jpg (CSI#2). Si no hay Unreal (o la imagen está vieja) se queda el render de three.js que hay debajo.
+  window.UNREAL_CAM = { cam0: false, cam1: false };
+  [["fpv-vista", "cam0.jpg"], ["csi0-vista", "cam1.jpg"]].forEach(([vista, archivo]) => {
+    const cont = $(vista);
+    if (!cont) return;
+    const clave = archivo.slice(0, 4), img = document.createElement("img");
+    img.className = "cam-unreal"; img.alt = "";
+    cont.insertBefore(img, cont.firstChild);
+    let ocupado = false;
+    setInterval(() => {
+      if (ocupado || !cont.offsetParent) return;
+      ocupado = true;
+      fetch(`/unreal_cam/${archivo}?t=${Date.now()}`).then(r => (r.ok && +r.headers.get("X-Edad") < 2.5) ? r.blob() : Promise.reject())
+        .then(b => { const u = URL.createObjectURL(b); img.onload = () => { URL.revokeObjectURL(u); img.style.display = "block"; window.UNREAL_CAM[clave] = true; }; img.src = u; })
+        .catch(() => { img.style.display = "none"; window.UNREAL_CAM[clave] = false; })
+        .finally(() => { ocupado = false; });
+    }, 110);
+  });
 
   // ---------------------------------------------------------------------------------------------------------- cámaras de three.js
   const camCsi = {}, filas = {};
@@ -210,7 +231,7 @@
     const vis = CAMS.filter(c => ef(c.id));
     const centro = $("centro");
     if (centro) {                                      // rejilla (solo en "Vista del dron"): 1 cámara sola, 2 en columnas
-      const n = document.body.dataset.modo === "dron" ? vis.length : 1;
+      const n = document.body.dataset.modo === "dron" ? centro.children.length : 1;
       centro.style.display = n > 1 ? "grid" : "flex";
       centro.style.gridTemplateColumns = n === 2 ? "minmax(0, 1.7fr) minmax(0, 1fr)" : "";
       centro.style.gridTemplateRows = "minmax(0, 1fr)";

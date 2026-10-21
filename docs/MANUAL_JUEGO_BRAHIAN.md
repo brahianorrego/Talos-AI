@@ -1,8 +1,8 @@
 # Manual del juego (Brahian)
 
 ## Empezar en 3 pasos
-1. Haz doble clic en `04_VISOR_Y_MOTOR_GRAFICO\VIVO_UNREAL.bat`. Abre la simulación, Unreal (a la izquierda) y la estación (a la derecha) en la misma pantalla. Espera 1-2 minutos a que Unreal cargue.
-2. En la estación, entra a **Enseñar** (ya abre ahí) y pulsa el botón **Manual** (o la tecla **Tab**).
+1. Haz doble clic en `04_VISOR_Y_MOTOR_GRAFICO\VIVO_UNREAL.bat`. Abre la simulación, Unreal (a la izquierda, el mundo) y la estación (a la derecha) en la misma pantalla, sin ventanas negras de consola. Espera 1-2 minutos a que Unreal cargue.
+2. En la estación, entra a **Enseñar** (ya abre ahí) y pulsa el botón **Manual** (o la tecla **M**). Para ver lo que ve el dron pulsa **Tab** (otra vez Tab regresa al mundo).
 3. Vuela con las teclas de abajo. Si Unreal se cierra o algo falla, vuelve a abrir el `.bat`; el aviso de error de Unreal se cierra solo.
 
 Antes de jugar: mantén la ventana de la estación al frente al teclear (las teclas las lee ella, no Unreal).
@@ -20,8 +20,11 @@ Antes de jugar: mantén la ventana de la estación al frente al teclear (las tec
 | **Botón central del mouse, arrastrando** | mueve la cámara (pan y tilt) |
 | Rueda | acerca o aleja el mapa |
 | V · flechas | cámara asistida (sigue sola al objetivo) · pan y tilt con el teclado |
-| 1 · 2 · 3 · 4 | cámara principal grande · cámara 2 grande · vista 3D que sigue · vista 3D libre |
-| Tab | cambia entre Puntos (clic en el mapa) y Manual |
+| **Tab** | **alterna centinela (mundo 3D) ⇄ Vista del dron** (lo que ve el dron) |
+| 1 · 2 | mapa y cámaras · Vista del dron |
+| 3 · 4 | centinela: seguir al dron · vista libre |
+| X | la cámara 2 pasa a ser la grande (en la pantalla de mapa y cámaras) |
+| M | cambia entre Puntos (clic en el mapa) y Manual |
 | R · G · B · P · Esc · H | ruta · la IA guía (otra vez te devuelve el control) · grabar tu demostración · pausa · salir · ocultar esta ayuda |
 
 La ayuda también está en pantalla (esquina del mapa) mientras juegas.
@@ -33,3 +36,6 @@ Mantén **F**: el dron gira 360°. Cuando aparezca una persona, sale marcada "po
 - La estación dice "Falta la simulación en vivo": cierra todo y abre otra vez `VIVO_UNREAL.bat`.
 - Unreal se ve lento: cierra otros programas pesados; mide ~60 fps con todo cerrado.
 - Noche (opcional): `docs/PENDIENTES_BRAHIAN_NOCHE.md` y el modo `DRONIA_NOCHE=1` al armar el nivel; por defecto es de día.
+
+## La Vista del dron (la de operación)
+Es lo que ve el dron: la **CSI#1** (cámara principal en el pan-tilt, 68.3° × 54.0°) casi a pantalla completa, con las cajas de YOLO y la telemetría encima (modo, objetivo, tiempo a la vista, distancias del TF03 y del TF-Luna, pan/tilt, geocerca, batería simulada y fps); un cuadro pequeño con la **CSI#2** (mira al piso); y el **mapa de los dos LiDAR de 1 haz** (TF03 azul, TF-Luna ámbar). La imagen es un render de Unreal desde el punto de vista del dron. Si Unreal no está abierto, se ve el render 3D de la propia estación (la telemetría dice "imagen 3D").

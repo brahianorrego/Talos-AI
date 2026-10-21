@@ -22,23 +22,26 @@
       </div>
       <div class="ens-punto" id="ens-punto">Haga clic en el mapa para poner el primer punto.</div>
       <canvas id="ens-lienzo"></canvas>
-      <div id="ens-chuleta" title="H oculta o muestra esta ayuda"><b>Controles</b> <span>(H oculta)</span>
-        <table>
-          <tr><td>W S</td><td>adelante · atrás</td><td>A D</td><td>de lado</td></tr>
-          <tr><td>Q E</td><td>girar</td><td>Espacio · C</td><td>subir · bajar</td></tr>
-          <tr><td>Shift · Ctrl</td><td>rápido · lento</td><td>F (mantener)</td><td>giro 360° buscando</td></tr>
-          <tr><td>Botón central</td><td>arrastrar = pan y tilt</td><td>Rueda</td><td>zoom del mapa</td></tr>
-          <tr><td>Clic izq.</td><td>fijar al posible objetivo</td><td>Clic der.</td><td>soltar objetivo</td></tr>
-          <tr><td>V</td><td>cámara asistida</td><td>flechas</td><td>pan / tilt</td></tr>
-          <tr><td>1 · 2</td><td>CSI#1 · CSI#2 grande</td><td>3 · 4</td><td>3D seguir · libre</td></tr>
-          <tr><td>Tab</td><td>Puntos ⇄ Manual</td><td>R</td><td>ruta</td></tr>
-          <tr><td>G</td><td>la IA guía / devolver</td><td>B</td><td>grabar</td></tr>
-          <tr><td>P</td><td>pausa</td><td>Esc</td><td>salir al 3D</td></tr>
-        </table></div>
+
       <div class="ens-ayuda" id="ens-ayuda"></div>
     </div>`;
   document.body.appendChild(s);
 
+  const chuleta = document.createElement("div");
+  chuleta.id = "ens-chuleta"; chuleta.title = "H oculta o muestra esta ayuda";
+  chuleta.innerHTML = `<b>Controles</b> <span>(H oculta)</span>
+    <table>
+      <tr><td>W S</td><td>adelante · atrás</td><td>A D</td><td>de lado</td></tr>
+      <tr><td>Q E</td><td>girar</td><td>Espacio · C</td><td>subir · bajar</td></tr>
+      <tr><td>Shift · Ctrl</td><td>rápido · lento</td><td>F (mantener)</td><td>giro 360° buscando</td></tr>
+      <tr><td>Botón central</td><td>arrastrar = pan y tilt</td><td>Rueda</td><td>zoom del mapa</td></tr>
+      <tr><td>Clic izq.</td><td>fijar al posible objetivo</td><td>Clic der.</td><td>soltar objetivo</td></tr>
+      <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>X</td><td>CSI#2 grande</td></tr>
+      <tr><td>Tab</td><td>centinela ⇄ vista del dron</td><td>M</td><td>Puntos ⇄ Manual</td></tr>
+      <tr><td>1 · 2</td><td>mapa+cámaras · vista del dron</td><td>3 · 4</td><td>centinela: seguir · libre</td></tr>
+      <tr><td>R · G · B</td><td>ruta · la IA guía · grabar</td><td>P · Esc · H</td><td>pausa · salir · ayuda</td></tr>
+    </table>`;
+  document.body.appendChild(chuleta);
   const cv = $("ens-lienzo"), g = cv.getContext("2d");
   const L = [];                                   // puntos de paso del lado de la estación (x, y, yaw, pan, tilt)
   let sel = -1, arrastre = null, sub = "mapa", conectado = false, ultimoE = null, cmdManual = { vx: 0, vy: 0, wz: 0, pan: 0, tilt: 0, vz: 0 };
@@ -49,7 +52,9 @@
   const aMundo = (px, py) => { const d = dim(); return [(px - d.w / 2) / d.k, (d.h / 2 - py) / d.k]; };
   const rad = 24;                                 // radio del círculo de giro, en píxeles
 
-  const modoActivo = () => document.body.dataset.modo === "ens";
+  const modoActivo = () => document.body.dataset.modo === "ens";                                   // la pantalla de Enseñar (mapa y cámaras)
+  const juego = () => ["ens", "dron", "3d"].includes(document.body.dataset.modo) && !!window.ENSENAR_MANUAL;     // se vuela con el teclado en cualquiera de las tres vistas
+  const vistaModo = m => { const b = document.querySelector(`[data-modo="${m}"]`); if (b) b.click(); };
   const enviarPunto = p => post("/waypoint", { x: p.x, y: p.y, yaw: p.yaw, pan: p.pan, tilt: p.tilt });
   const reenviar = () => { post("/waypoint", { borrar: "todos" }).then(() => L.forEach(enviarPunto)); };   // tras mover o girar un punto se manda la lista de nuevo
 
@@ -159,29 +164,32 @@
   // fija al posible objetivo, clic derecho lo suelta, la rueda acerca el mapa. Resto: V, 1-4, Tab, R, G, B, P, Esc, H y las flechas (pan/tilt alternativo).
   const teclas = new Set();
   let panAng = 0, tiltAng = -5, asist = false, iaGuia = false, ultimoCam = "";
-  const MIAS = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyF", "KeyV", "Digit1", "Digit2",
+  const MIAS = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyF", "KeyV", "KeyX", "KeyM", "Digit1", "Digit2",
     "Digit3", "Digit4", "Tab", "KeyR", "KeyG", "KeyB", "KeyP", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyH"]);
   const clic = id => { const b = document.getElementById(id); if (b) b.click(); };
   const vista = n => { document.body.classList.toggle("ens-vista-2", n === 2); };
   const usarCamara = () => post("/camara", { modo: asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
   const accion = code => {
-    if (code === "Tab") fijarSub(sub === "manual" ? "mapa" : "manual");
-    else if (code === "Escape") { document.querySelector('[data-modo="3d"]').click(); }
-    else if (sub !== "manual") return;
+    if (code === "Escape") { window.ENSENAR_MANUAL = false; sub = "mapa"; iaGuia = false; post("/modo", { modo: "auto" }); vistaModo("3d"); return; }       // salir del juego
+    if (code === "KeyM") { fijarSub(sub === "manual" ? "mapa" : "manual"); vistaModo("ens"); return; }
+    if (sub !== "manual") return;
+    if (code === "Tab") vistaModo(document.body.dataset.modo === "dron" ? "3d" : "dron");                       // centinela ⇄ vista del dron
     else if (code === "KeyV") { asist = !asist; $("ens-cam").classList.toggle("activo", asist); usarCamara(); }
-    else if (code === "Digit1") vista(1);
-    else if (code === "Digit2") vista(2);
-    else if (code === "Digit3") ponerCamara("seguir");
-    else if (code === "Digit4") ponerCamara("orbita");
+    else if (code === "Digit1") vistaModo("ens");
+    else if (code === "Digit2") vistaModo("dron");
+    else if (code === "Digit3") { vistaModo("3d"); ponerCamara("seguir"); }
+    else if (code === "Digit4") { vistaModo("3d"); ponerCamara("orbita"); }
+    else if (code === "KeyX") document.body.classList.toggle("ens-vista-2");
     else if (code === "KeyR") clic("b-ruta");
     else if (code === "KeyG") { iaGuia = !iaGuia; post("/modo", { modo: iaGuia ? "auto" : "ensenar", sub: "manual" }); $("ens-tag").textContent = iaGuia ? "la IA guía (G devuelve el control)" : "listo"; }
     else if (code === "KeyB") clic("ens-grabar");
     else if (code === "KeyP") clic("pausa");
-    else if (code === "KeyH") $("ens-chuleta").classList.toggle("oculta");
+    else if (code === "KeyH") chuleta.classList.toggle("oculta");
   };
   addEventListener("keydown", ev => {
-    if (!modoActivo() || /SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || !MIAS.has(ev.code)) return;
-    if (sub !== "manual" && ev.code !== "Tab" && ev.code !== "Escape") return;          // en "Puntos" solo Tab y Esc son de este modo
+    if (/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || !MIAS.has(ev.code)) return;
+    const propia = juego() || (modoActivo() && (ev.code === "KeyM" || ev.code === "Escape"));       // en "Puntos" solo M y Esc son de este modo
+    if (!propia) return;
     ev.stopImmediatePropagation(); ev.preventDefault();                                  // que no las tomen los atajos de la estación (1-5, E, P, G, L, R, Espacio)
     if (!ev.repeat && !teclas.has(ev.code)) accion(ev.code);
     teclas.add(ev.code);
@@ -191,10 +199,10 @@
   const eje = (m, p) => (teclas.has(m) ? 1 : 0) - (teclas.has(p) ? 1 : 0);
   // mouse: mantener el BOTÓN CENTRAL y arrastrar mueve el pan y el tilt (así el mouse libre no estorba al clic izquierdo, que fija al objetivo)
   let arrastraCam = false;
-  addEventListener("mousedown", ev => { if (modoActivo() && sub === "manual" && ev.button === 1) { arrastraCam = true; ev.preventDefault(); } });
+  addEventListener("mousedown", ev => { if (juego() && sub === "manual" && ev.button === 1) { arrastraCam = true; ev.preventDefault(); } });
   addEventListener("mouseup", ev => { if (ev.button === 1) arrastraCam = false; });
   addEventListener("mousemove", ev => {
-    if (!arrastraCam || !modoActivo() || sub !== "manual" || asist) return;
+    if (!arrastraCam || !juego() || sub !== "manual" || asist) return;
     panAng = Math.round(Math.max(-90, Math.min(90, panAng - ev.movementX * 0.3)));
     tiltAng = Math.round(Math.max(-45, Math.min(15, tiltAng - ev.movementY * 0.3)));
   });
@@ -206,7 +214,7 @@
     return c.en_camara.map(o => ({ q: (E.pers || []).find(p => p.id === o.id), j: o.i })).filter(o => o.q);
   };
   addEventListener("mousedown", ev => {
-    if (!modoActivo() || sub !== "manual" || ev.target.closest("button, select, input, .panel .cab")) return;
+    if (!juego() || sub !== "manual" || ev.target.closest("button, select, input, .panel .cab, #barra")) return;
     if (ev.button === 0) {
       const lista = candidatos();
       if (!lista.length) { $("ens-punto").textContent = "No hay un posible objetivo a la vista: mantenga F para el giro de 360°."; return; }
@@ -219,9 +227,10 @@
       teclas.delete("KeyF");
     } else if (ev.button === 2) { post("/soltar"); $("ens-punto").textContent = "Objetivo soltado."; }
   });
-  addEventListener("contextmenu", ev => { if (modoActivo() && sub === "manual") ev.preventDefault(); });
+  addEventListener("contextmenu", ev => { if (juego() && sub === "manual") ev.preventDefault(); });
   setInterval(() => {
-    if (!modoActivo() || sub !== "manual") return;
+    document.body.classList.toggle("juego", juego());
+    if (!juego() || sub !== "manual") return;
     const f = teclas.has("ControlLeft") || teclas.has("ControlRight") ? 0.25 : (teclas.has("ShiftLeft") || teclas.has("ShiftRight") ? 1.0 : 0.6);
     if (teclas.has("ArrowLeft") || teclas.has("ArrowRight")) panAng = Math.max(-90, Math.min(90, panAng + 9 * eje("ArrowLeft", "ArrowRight")));
     if (teclas.has("ArrowUp") || teclas.has("ArrowDown")) tiltAng = Math.max(-45, Math.min(15, tiltAng + 6 * eje("ArrowUp", "ArrowDown")));
@@ -240,9 +249,9 @@
       if (sl && sl.value !== "vivo") { sl.value = "vivo"; sl.dispatchEvent(new Event("change")); }
       fijarSub(sub);
     }
-    if (!act && anterior) post("/modo", { modo: "auto" });
+    if (!act && anterior && !juego()) post("/modo", { modo: "auto" });
     anterior = act;
-    if (!act) return;
+    if (!act) { if (juego()) ultimoE = (window.ESTADO_VISTA && window.ESTADO_VISTA.c && window.ESTADO_VISTA.c.ens) || ultimoE; return; }
     const e = window.ESTADO_VISTA;
     ultimoE = e && e.c && e.c.ens ? e.c.ens : ultimoE;
     conectado = !!(e && e.c && e.c.ens);

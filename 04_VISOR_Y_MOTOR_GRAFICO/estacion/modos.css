@@ -114,8 +114,8 @@ body.ens-manual[data-modo="ens"] #col-der #fpv #fpv-vista { max-height: 62vh; }
 #col-der > #cam-csi0 > .cuerpo { flex: 1; min-height: 0; }
 
 /* chuleta del Modo Enseñar (ensenar.js): solo en manual */
-#ens-chuleta { display: none; position: absolute; left: 14px; bottom: 34px; z-index: 5; background: rgba(8, 12, 18, .86); border: 1px solid var(--borde); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--suave); pointer-events: none; }
-body.ens-manual #ens-chuleta:not(.oculta) { display: block; }
+#ens-chuleta { display: none; position: fixed; left: 14px; bottom: 76px; z-index: 40; background: rgba(8, 12, 18, .86); border: 1px solid var(--borde); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--suave); pointer-events: none; }
+body.juego #ens-chuleta:not(.oculta) { display: block; }
 #ens-chuleta table { border-collapse: collapse; margin-top: 3px; }
 #ens-chuleta td { padding: 1px 7px 1px 0; white-space: nowrap; }
 #ens-chuleta td:nth-child(odd) { color: #7dd3fc; font-family: 'Roboto Mono', monospace; }
@@ -123,3 +123,30 @@ body.ens-manual #ens-chuleta:not(.oculta) { display: block; }
 /* tecla 2: la CSI#2 pasa a ser la grande */
 body.ens-vista-2[data-modo="ens"] #col-der #cam-csi0 { order: -1; height: 46vh; }
 body.ens-vista-2[data-modo="ens"] #col-der #fpv #fpv-vista { max-height: 22vh; }
+
+/* la imagen real de las cámaras del dron, renderizada en Unreal (camaras.js): va debajo del filtro y de los textos */
+.vista-cam > .cam-unreal, #fpv-vista > .cam-unreal { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; filter: brightness(1.7) contrast(1.06) saturate(0.85); }       /* la captura de Unreal sale sin la adaptación automática de exposición del viewport: se aclara aquí */
+
+/* Vista del dron: la CSI#2 es un cuadro pequeño en la esquina de la imagen principal; el mapa de los LiDAR va en la columna de la derecha */
+body[data-modo="dron"] { --wd: 330px; }
+body[data-modo="dron"] #sobre-br { width: 270px; }
+body[data-modo="dron"] #sobre-br #cam-csi0 { display: block !important; background: rgba(8, 12, 18, .8) !important; }
+body[data-modo="dron"] #sobre-br #csi0-vista { width: 100%; height: auto; max-height: none; aspect-ratio: 4 / 3; }
+body[data-modo="dron"] #sobre-br #cam-csi0 > .cuerpo { padding: 3px !important; }
+body[data-modo="dron"] #col-der #p-lid360 #lid360-lienzo { height: 250px; }
+
+/* ventana angosta (la estación al lado de Unreal en una sola pantalla): la cámara grande arriba y el mapa de los LiDAR y la custodia en una fila debajo */
+@media (max-width: 900px) {
+  body[data-modo="dron"] #col-der { top: auto; bottom: var(--abajo); left: 10px; right: 10px; width: auto; height: 232px; flex-direction: row; overflow: hidden; }
+  body[data-modo="dron"] #col-der > .pnl { flex: 1 1 0; min-width: 0; }
+  body[data-modo="dron"] #centro { right: 10px !important; bottom: calc(var(--abajo) + 242px); }
+  body[data-modo="dron"] #abajo { right: 10px !important; }
+  body[data-modo="dron"] #col-der #p-lid360 #lid360-lienzo { height: 160px; }
+  body[data-modo="dron"] #sobre-br { width: 170px; }
+  #aviso, #confirmar { max-width: 92vw; white-space: normal; }
+  #barra .marca small, #barra .ind { display: none; }
+  #selector { max-width: 150px; }
+}
+
+body[data-modo="dron"] #sobre-br #cam-csi0 > .cab { display: none; }                 /* la CSI#2 es un cuadro pequeño: sin cabecera */
+@media (max-width: 900px) { body[data-modo="dron"] #sobre-br { width: 150px; } }

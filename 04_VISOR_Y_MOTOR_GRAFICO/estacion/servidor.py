@@ -57,6 +57,25 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path.startswith("/unreal_cam/"):                  # lo que ven las cámaras del dron en Unreal (unreal/vivo_unreal.py las guarda como JPG ~10 Hz)
+            nombre = os.path.basename(self.path.split("?")[0])
+            ruta = os.path.join(AQUI, "..", "unreal", "_cache", "cam", nombre)
+            try:
+                if not (nombre in ("cam0.jpg", "cam1.jpg") and os.path.isfile(ruta)):
+                    raise OSError
+                if time.time() - os.path.getmtime(ruta) < 0.06:   # recién escrita: se espera un instante para no mandar un JPG a medias
+                    time.sleep(0.08)
+                datos = open(ruta, "rb").read()
+                edad = time.time() - os.path.getmtime(ruta)
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("X-Edad", "%.2f" % edad)
+                self.send_header("Content-Length", str(len(datos)))
+                self.end_headers()
+                self.wfile.write(datos)
+            except OSError:
+                self.send_error(404)
+            return
         if self.path.split("?")[0] == "/ruta.json":              # ruta de búsqueda de Brahian sobre los paneles y la posición inicial que manda la página
             try:
                 q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)

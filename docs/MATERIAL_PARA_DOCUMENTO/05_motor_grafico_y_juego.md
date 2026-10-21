@@ -61,8 +61,10 @@ Quitar el vuelo entre canchas (tecla T), un solo escenario seleccionable (cancha
 | Clic derecho | suelta el objetivo (`env.soltar_sospechoso`) |
 | Rueda | zoom del mapa |
 | V · flechas | cámara asistida · pan y tilt alternativo |
-| 1 · 2 · 3 · 4 | CSI#1 grande · CSI#2 grande · 3D seguir · 3D libre |
-| Tab · R · G · B · P · Esc · H | Puntos⇄Manual · ruta · la IA guía (otra vez devuelve) · grabar · pausa · salir · ocultar la chuleta |
+| Tab | alterna centinela (mundo 3D) ⇄ **Vista del dron** |
+| 1 · 2 · 3 · 4 | mapa y cámaras · Vista del dron · centinela que sigue · centinela libre |
+| X · M | CSI#2 grande · Puntos⇄Manual |
+| R · G · B · P · Esc · H | ruta · la IA guía (otra vez devuelve) · grabar · pausa · salir del juego · ocultar la chuleta |
 
 **Pruebas hechas con el flujo completo** (VIVO_UNREAL.bat recién abierto, 37 pruebas automáticas OK, y la estación manejada con eventos reales de teclado y mouse):
 - Adelante + altura: el dron avanzó y subió de 1.8 a 3.9 m en 3 s; F mantenida: `f360` activo y +131° en 2.5 s.
@@ -74,3 +76,10 @@ Quitar el vuelo entre canchas (tecla T), un solo escenario seleccionable (cancha
 **Capturas** (todas en `04_VISOR_Y_MOTOR_GRAFICO/mediciones/capturas/`): `unreal_juego_en_vivo.png` (dron plus volando en vivo con paneles y personas), `unreal_en_vivo_dron_cerca.png`, `estacion_ensenar_mapa.png` (mapa con puntos de paso), `unreal_campus_dia2_1.png` y `unreal_campus_dia2_3.png` (adoquín, losas y canaleta), `unreal_campus_fachada2_0.png` y `_1.png` (fachadas de vidrio y de ladrillo), `unreal_campus_halos_0.png` (turbina y luminaria de noche).
 
 **Limitaciones sin resolver:** MetaHuman no se instaló (necesita la cuenta de Epic de Brahian; `docs/PENDIENTES_BRAHIAN_NOCHE.md`); no se probó con un gamepad real (el gamepad es opcional); el clic sobre una persona se probó con el ladrón real a la vista, pero el resaltado de "posible objetivo" en el mapa solo se vio por datos, no en una captura.
+
+## 6. La Vista del dron con imagen real de Unreal (21 oct)
+
+- **Cámaras:** dos `SceneCapture2D` en Unreal (`unreal/vivo_unreal.py`): CSI#1 en el pan-tilt con 68.3° × 54.0° (640×480), inclinación de montaje −2.4° más el tilt y el pan; CSI#2 mirando al piso. Se redibujan a ~10 Hz (CSI#2 ~5 Hz) y se guardan como JPG en `unreal/_cache/cam/`; el servidor de la estación las entrega en `/unreal_cam/cam0.jpg` y `cam1.jpg` (prueba `pruebas/test_camara_unreal.py`). Con Unreal apagado, la estación muestra su propio render 3D.
+- **Interfaz:** en la Vista del dron la CSI#1 ocupa la mayor parte de la pantalla con YOLO y la telemetría encima, la CSI#2 es un cuadro pequeño y el mapa de los dos LiDAR va al lado (o debajo si la ventana es angosta). Con Tab se alterna centinela ⇄ Vista del dron sin soltar el dron; las teclas de vuelo valen en las dos.
+- **Una sola pantalla:** `VIVO_UNREAL.bat` (sin ventanas de consola, ver `VIVO_UNREAL.ps1`) deja Unreal en el 50 % izquierdo y la estación (Edge) en el 50 % derecho. Evidencia: `04_VISOR_Y_MOTOR_GRAFICO/mediciones/capturas/una_pantalla_juntas.png`, `una_pantalla_estacion_dron.png` y `una_pantalla_unreal.png`.
+- **Límite conocido:** la captura de Unreal sale oscura (no tiene la adaptación automática de exposición del viewport); los intentos de fijar la exposición por código no cambiaron nada, así que la estación aclara la imagen con un filtro de brillo (`estacion/modos.css`, clase `.cam-unreal`).

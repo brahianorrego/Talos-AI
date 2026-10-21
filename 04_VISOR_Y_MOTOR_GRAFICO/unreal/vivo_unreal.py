@@ -48,6 +48,7 @@ def preparar():
     tablero, marco, _ = D.mats_paneles()
     est["pool_paneles"] = [(D.caja(f"Vivo_panel_{i}", 0, 0, -50, 1, 1, 1, tablero, 0.0, "Vivo"), D.caja(f"Vivo_panel_{i}_marco", 0, 0, -50, 1, 1, 1, marco, 0.0, "Vivo")) for i in range(N_PANELES)]
     est["n_listo"], est["ticks"] = 0, 0
+    preparar_camaras()
     for c in ("r.Streaming.FullyLoadUsedTextures 1", "r.Streaming.PoolSize 3000"):       # que las texturas lleguen a su máxima resolución (sin esto se ven borrosas un buen rato)
         unreal.SystemLibrary.execute_console_command(None, c)
     for g in ("pan", "tilt"):
@@ -58,6 +59,61 @@ def preparar():
         pass
     anims()                                                  # las animaciones también se cargan ya, no a mitad de la partida
     unreal.log("DRONIA VIVO: escuchando UDP %d" % PUERTO)
+
+
+# ---------------------------------------------------------------------------------------------------------------- cámaras del dron (lo que ve el dron)
+# CSI#1: en el pan-tilt, 68.3° x 54.0° (640 x 480 da 68.3 x 53.9), inclinación -2.4° de montaje + el tilt. CSI#2: mira al piso (-90°), mismo modelo de cámara.
+# Cada una es una SceneCapture que se redibuja ~10 Hz (CSI#2 ~5 Hz) y se guarda como JPG en _cache/cam/; la estación las muestra como la imagen de la cámara.
+CAM_DIR = os.path.join(AQUI, "_cache", "cam")
+HFOV_CSI, MONTAJE_PITCH = 68.3, -2.4
+
+
+def preparar_camaras():
+    os.makedirs(CAM_DIR, exist_ok=True)
+    mundo = unreal.EditorLevelLibrary.get_editor_world()
+    est["cams"] = []
+    for nombre in ("cam0", "cam1"):
+        rt = unreal.RenderingLibrary.create_render_target2d(mundo, 640, 480, unreal.TextureRenderTargetFormat.RTF_RGBA8)
+        a = D.actores.spawn_actor_from_class(unreal.SceneCapture2D, unreal.Vector(0, 0, 0))
+        a.set_actor_label("Vivo_" + nombre)
+        a.set_folder_path("Vivo")
+        c = a.capture_component2d
+        c.set_editor_property("texture_target", rt)
+        c.set_editor_property("fov_angle", HFOV_CSI)
+        c.set_editor_property("capture_every_frame", False)
+        c.set_editor_property("capture_on_movement", False)
+        c.set_editor_property("capture_source", unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR)
+        est["cams"].append({"actor": a, "comp": c, "rt": rt, "archivo": os.path.join(CAM_DIR, nombre + ".jpg"), "t": 0.0, "cada": 0.1 if nombre == "cam0" else 0.2})
+    opt = unreal.ImageWriteOptions()
+    opt.set_editor_property("format", unreal.DesiredImageFormat.JPG)
+    opt.set_editor_property("compression_quality", 85)
+    opt.set_editor_property("overwrite_file", True)
+    opt.set_editor_property("async_", True)
+    est["img_opt"] = opt
+
+
+def capturar(c, ahora):
+    """Pone las dos cámaras donde está el dron (con pan y tilt) y, cuando toca, las redibuja y las guarda."""
+    x, y, z, psi = c["d"]
+    pan, tilt = c["pan"], c["tilt"]
+    for k, cam in enumerate(est.get("cams", [])):
+        if ahora - cam["t"] < cam["cada"]:
+            continue
+        cam["t"] = ahora
+        if k == 0:                                                       # CSI#1 al frente, en el pan-tilt
+            pos = D.ue(x + 0.12 * math.cos(psi), y + 0.12 * math.sin(psi), z - 0.05)
+            rot = unreal.Rotator(0.0, max(-90.0, min(30.0, tilt + MONTAJE_PITCH)), D.guinada(psi) - pan)
+        else:                                                            # CSI#2 fija, al piso
+            pos = D.ue(x, y, z - 0.12)
+            rot = unreal.Rotator(0.0, -90.0, D.guinada(psi))
+        cam["actor"].set_actor_location_and_rotation(pos, rot, False, False)
+        cam["comp"].capture_scene()
+        try:
+            unreal.ImageWriteBlueprintLibrary.export_to_disk(cam["rt"], cam["archivo"], est["img_opt"])
+        except Exception as e:                                           # noqa: BLE001
+            if not est.get("err_cam"):
+                est["err_cam"] = True
+                unreal.log_warning("DRONIA VIVO: no pude guardar la cámara: " + repr(e))
 
 
 def cargar_anim(nombre):
@@ -211,6 +267,7 @@ def dibujar(c):
         est["pan"].root_component.set_relative_rotation(unreal.Rotator(0.0, 0.0, -c["pan"]), False, False)
     if est["tilt"]:
         est["tilt"].root_component.set_relative_rotation(unreal.Rotator(0.0, c["tilt"], 0.0), False, False)
+    capturar(c, time.time())
     t1 = time.perf_counter()
     T["dron"] += t1 - t0
     for j, p in est["pers"].items():
