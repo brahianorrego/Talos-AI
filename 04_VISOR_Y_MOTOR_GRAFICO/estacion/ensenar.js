@@ -71,7 +71,7 @@
     }
     if (e) {
       (e.pers || []).forEach(q => { const [x, y] = aPix(q.p[0], q.p[1]);
-        if (q.vis && sub === "manual") { g.strokeStyle = "#f5c542"; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 14, 0, 7); g.stroke(); g.fillStyle = "#f5c542"; g.font = "bold 11px Inter, sans-serif"; g.fillText("posible objetivo · clic izq.", x + 18, y - 10); } g.beginPath(); g.arc(x, y, 7, 0, 7); g.fillStyle = q.rol === "ladron" ? "#ff4d4f" : "#8fa3b8"; g.fill(); g.fillStyle = "#e8eef5"; g.font = "11px Inter, sans-serif"; g.fillText(q.rol === "ladron" ? "ladrón" : "civil", x + 10, y + 4); });
+        if (sub === "manual" && candidatos().some(o => o.q === q)) { g.strokeStyle = "#f5c542"; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 14, 0, 7); g.stroke(); g.fillStyle = "#f5c542"; g.font = "bold 11px Inter, sans-serif"; g.fillText("posible objetivo · clic izq.", x + 18, y - 10); } g.beginPath(); g.arc(x, y, 7, 0, 7); g.fillStyle = q.rol === "ladron" ? "#ff4d4f" : "#8fa3b8"; g.fill(); g.fillStyle = "#e8eef5"; g.font = "11px Inter, sans-serif"; g.fillText(q.rol === "ladron" ? "ladrón" : "civil", x + 10, y + 4); });
     }
     // puntos de paso, unidos por la ruta
     g.lineWidth = 2;
@@ -199,7 +199,12 @@
     tiltAng = Math.round(Math.max(-45, Math.min(15, tiltAng - ev.movementY * 0.3)));
   });
   addEventListener("wheel", ev => { if (modoActivo() && ev.target === cv) { M = Math.max(10, Math.min(40, M * (ev.deltaY > 0 ? 1.1 : 0.9))); ev.preventDefault(); } }, { passive: false });
-  const candidatos = () => ((window.ESTADO_VISTA && window.ESTADO_VISTA.pers) || []).map((q, j) => ({ q, j })).filter(o => o.q.vis);       // personas que YOLO ve ahora
+  // personas que la cámara ve ahora: foto()["en_camara"] trae su índice j (el que pide fijar_sospechoso) y su ID de tracker; la posición sale de pers por ese ID
+  const candidatos = () => {
+    const E = window.ESTADO_VISTA, c = E && E.c;
+    if (!c || !c.en_camara) return [];
+    return c.en_camara.map(o => ({ q: (E.pers || []).find(p => p.id === o.id), j: o.i })).filter(o => o.q);
+  };
   addEventListener("mousedown", ev => {
     if (!modoActivo() || sub !== "manual" || ev.target.closest("button, select, input, .panel .cab")) return;
     if (ev.button === 0) {

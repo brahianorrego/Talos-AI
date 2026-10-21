@@ -27,15 +27,17 @@ N_PANELES = 4                       # entorno.py: hasta 4 muros
 ROLES = ["ladron", "peaton", "peaton", "peaton"]
 COLORES = {"ladron": (0.85, 0.12, 0.12), "peaton": (0.45, 0.55, 0.68)}
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.bind(("127.0.0.1", PUERTO))
-sock.setblocking(False)
+sock = None                                                 # se abre en preparar() (así el archivo se puede importar para probar la lógica de las posturas)
 
 est = {"dron": None, "pan": None, "tilt": None, "pers": {}, "prev": None, "sig": None, "t_sig": 0.0, "dur": 0.1, "paneles": [], "cam": None, "fps_t": time.time(), "fps_n": 0, "ult": 0.0}
 
 
 def preparar():
+    global sock
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("127.0.0.1", PUERTO))
+    sock.setblocking(False)
     unreal.EditorLoadingAndSavingUtils.load_map(D.CARPETA + "/Mapas/Cancha_V17")
     for a in D.actores.get_all_level_actors():                                     # lo provisional del nivel: el dron fijo y los paneles de 90°
         carpeta = str(a.get_folder_path())
@@ -65,7 +67,75 @@ def cargar_anim(nombre):
 def anims():
     if "anim" not in est:
         est["anim"] = {"idle": cargar_anim("MM_Idle"), "walk": cargar_anim("Walk/MF_Unarmed_Walk_Fwd"), "jog": cargar_anim("Jog/MF_Unarmed_Jog_Fwd")}
+        est["gal"] = unreal.load_asset(GAL)
     return est["anim"]
+
+
+# Las posturas salen de la galería (galeria_posturas.py), ya importada como animación: se "recorre" el tiempo de la animación a mano (velocidad de reproducción 0 y set_position).
+# Tramos en s dentro de esa animación (suma de GUION): agacharse 9.0-10.2, agachado caminando 10.2-13.2, levantarse 13.2-14.4, recostarse 14.4-16.9, soltar el panel 16.9-18.1,
+# gateo (arrancar) 18.1-19.6, gateando 19.6-23.1, de gateo a pie 23.1-24.6, salto 24.6-26.05.
+GAL = "/Game/DronIA/Anim/Rep_replay_v17_galeria_1"
+SEG = {"agacharse": (9.0, 10.2), "agachado": (10.2, 13.2), "levantarse": (13.2, 14.4), "recostarse": (14.4, 16.9), "soltar_panel": (16.9, 18.1),
+       "gateo_ini": (18.1, 19.6), "gateo": (19.6, 23.1), "salir_gateo": (23.1, 24.6), "salto": (24.85, 26.05)}
+ENTRADA = {1: "agacharse", 2: "recostarse", 3: "gateo_ini"}                 # de pie -> postura
+SALIDA = {1: "levantarse", 2: "soltar_panel", 3: "salir_gateo"}              # postura -> de pie
+FIJA = {1: 10.2, 2: 16.9, 3: 19.6}                                           # instante donde la postura queda quieta
+BUCLE = {1: ("agachado", 0.8), 3: ("gateo", 0.45)}                           # postura en movimiento: tramo y velocidad (m/s) con la que fue animado
+
+
+def scrub(p, t):
+    comp = p["actor"].skeletal_mesh_component
+    if p["anim"] != "gal":
+        comp.play_animation(est["gal"], False)
+        comp.set_play_rate(0.0)
+        p["anim"] = "gal"
+    comp.set_position(t, False)
+
+
+def postura(p, q, dt):
+    """Devuelve True si la persona está en una postura especial (agachado, gateo, recostado, salto) y ya puso su pose; False = de pie (caminar/trotar normal)."""
+    pos, sz, vel = int(q.get("pos", 0)), float(q.get("sz", 0.0)), math.hypot(*q["v"])
+    st = p.setdefault("st", {"pos": 0, "trans": None, "t": 0.0, "bucle": None, "salto": False})
+    if st["salto"] or sz > 0.03:                                              # salto: de la fase en el aire hasta la caída, una sola vez (1.2 s)
+        if not st["salto"]:
+            st.update(salto=True, t=SEG["salto"][0])
+        st["t"] += dt
+        if st["t"] >= SEG["salto"][1]:
+            st.update(salto=False, trans=None, bucle=None)
+            p["anim"] = None
+            return False
+        scrub(p, st["t"])
+        return True
+    if st["trans"] is None and pos != st["pos"]:                              # cambió de postura: primero la transición (de pie -> postura, o postura -> de pie)
+        nombre = ENTRADA.get(pos) if st["pos"] == 0 else SALIDA.get(st["pos"])
+        st.update(destino=pos, trans=nombre, t=SEG[nombre][0] if nombre else 0.0, bucle=None)
+        if nombre is None:
+            st["pos"] = pos
+    if st["trans"] is not None:
+        st["t"] += dt
+        if st["t"] >= SEG[st["trans"]][1]:
+            st.update(pos=st["destino"], trans=None)
+            if st["pos"] == 0:
+                p["anim"] = None                                              # vuelve a las animaciones normales de pie
+                return False
+        else:
+            scrub(p, st["t"])
+            return True
+    if st["pos"] == 0:
+        return False
+    if st["pos"] in BUCLE and vel > 0.15:                                     # agachado o gateando en movimiento: se repite el tramo al ritmo de su velocidad
+        nombre, ref = BUCLE[st["pos"]]
+        a, b = SEG[nombre]
+        if st["bucle"] != nombre:
+            st["bucle"], st["t"] = nombre, a
+        st["t"] += dt * max(0.3, min(2.5, vel / ref))
+        if st["t"] >= b:
+            st["t"] = a + (st["t"] - b)
+        scrub(p, st["t"])
+    else:
+        st["bucle"] = None
+        scrub(p, FIJA[st["pos"]])
+    return True
 
 
 def persona(j, estatura):
@@ -149,8 +219,10 @@ def dibujar(c):
     for j, q in enumerate(c["pers"][:len(ROLES)]):
         p = persona(j, q["est"])
         vel = math.hypot(*q["v"])
-        poner_anim(p, "idle" if vel < 0.3 else "walk" if vel < 2.4 else "jog", vel)
-        p["actor"].set_actor_location_and_rotation(D.ue(q["p"][0], q["p"][1], 0.0), unreal.Rotator(0.0, 0.0, D.guinada(q["mira"] if vel < 0.3 else math.atan2(q["v"][1], q["v"][0]))), False, False)
+        especial = est.get("gal") is not None and postura(p, q, est["dt_dibujo"])
+        if not especial:
+            poner_anim(p, "idle" if vel < 0.3 else "walk" if vel < 2.4 else "jog", vel)
+        p["actor"].set_actor_location_and_rotation(D.ue(q["p"][0], q["p"][1], float(q.get("sz", 0.0)) if especial else 0.0), unreal.Rotator(0.0, 0.0, D.guinada(q["mira"] if vel < 0.3 else math.atan2(q["v"][1], q["v"][0]))), False, False)
     t2 = time.perf_counter()
     camara(x, y, z, psi)
     T["pers"] += t2 - t1
@@ -191,6 +263,7 @@ def crear_persona():
 
 def tick(dt):
     ahora = time.time()
+    est["dt_dibujo"] = min(dt, 0.1)
     if est["n_listo"] < len(ROLES):                          # una persona cada 45 cuadros, empezando a los 90: nunca dos mallas con esqueleto nuevas en el mismo cuadro
         est["ticks"] += 1
         if est["ticks"] >= 90 and (est["ticks"] - 90) % 45 == 0:
@@ -227,5 +300,6 @@ def tick(dt):
         est["fps_t"], est["fps_n"] = ahora, 0
 
 
-preparar()
-est["h"] = unreal.register_slate_post_tick_callback(tick)
+if __name__ == "__main__":
+    preparar()
+    est["h"] = unreal.register_slate_post_tick_callback(tick)
