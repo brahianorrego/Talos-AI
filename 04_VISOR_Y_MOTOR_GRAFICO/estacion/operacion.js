@@ -241,6 +241,50 @@ setInterval(() => {                                                         // c
   if (margen < 3 && !S.geoAvisada) { S.geoAvisada = true; evento("Cerca de la geocerca: " + margen.toFixed(1) + " m", "alerta"); } else if (margen > 5) S.geoAvisada = false;
   spark("spAlt", S.tend.alt, col.acento); spark("spEnl", S.tend.enl, col.ok, 0, 200);
 }, 200);
+// ------------------------------------------------------------------------------------------------------------------ vista "Mundo 3D": tercera cámara de Unreal, encendida solo mientras se mira (cuesta ~5 cuadros por segundo)
+const img2 = $("cam2"); let mundoOn = false, mundoOcupado = false;
+function mundo(v) {
+  mundoOn = v; img2.style.visibility = v ? "visible" : "hidden"; $("mundoBarra").style.display = v ? "flex" : "none";
+  fetch("/mundo/" + (v ? ($("mundoBarra").querySelector(".act") || { dataset: { m: "seguir" } }).dataset.m : "off"), { method: "POST" }).catch(() => {});
+}
+$("mundoBarra").querySelectorAll("button").forEach(b => b.onclick = () => { $("mundoBarra").querySelectorAll("button").forEach(x => x.classList.toggle("act", x === b)); fetch("/mundo/" + b.dataset.m, { method: "POST" }).catch(() => {}); });
+setInterval(() => {
+  if (!mundoOn || mundoOcupado) return; mundoOcupado = true;
+  fetch(`/unreal_cam/cam2.jpg?t=${Date.now()}`).then(r => (r.ok && +r.headers.get("X-Edad") < 2.5) ? r.blob() : Promise.reject())
+    .then(b => { const u = URL.createObjectURL(b); img2.onload = () => { URL.revokeObjectURL(u); $("mundoEst").textContent = "imagen en vivo de Unreal"; }; img2.src = u; })
+    .catch(() => { $("mundoEst").textContent = "esperando a Unreal…"; }).finally(() => { mundoOcupado = false; });
+}, 200);
+window.addEventListener("beforeunload", () => navigator.sendBeacon && navigator.sendBeacon("/mundo/off", ""));
+
+// ------------------------------------------------------------------------------------------------------------------ ayuda: qué es cada dato (tooltips y sección del menú)
+const AYUDA = [
+  ["Modo", "Estado de la misión: BUSCAR (recorre la cancha), VERIFICAR, PERSECUCION (sigue al objetivo fijado), PERDIDA y FLANQUEO_PROFUNDO (lo perdió y lo busca), RECONFIRMAR (pide al operador confirmar)."],
+  ["Control", "Quién guía el dron: GUIADO (IA), MANUAL (tú con el teclado) o PUNTOS DE PASO (tú marcas el recorrido en el mapa). Tecla G alterna."],
+  ["Armado", "Motores armados (listo para volar). En la simulación siempre está armado."],
+  ["Enlace", "Retardo de los datos entre el dron y la estación en milisegundos. Más de 1.5 s sin datos = SIN ENLACE."],
+  ["GPS", "Satélites en uso. Con 10 o más y HDOP bajo la posición es fiable. Dato simulado."],
+  ["Batería", "Carga restante en % y voltaje de la LiPo 4S. Por debajo de 35 % se pone ámbar y de 20 % rojo. Dato simulado."],
+  ["Geocerca", "Distancia al borde de la arena de 25 m. Si el dron sale, la misión falla. Ámbar a menos de 8 m, rojo a menos de 3 m."],
+  ["Sensores", "Sensores a bordo funcionando: LiDAR TF03 (frente), LiDAR TF-Luna (pan-tilt) y las dos cámaras CSI."],
+  ["Objetivo", "NINGUNO, POSIBLE (hay una persona a la vista y esperas tu clic) o FIJADO (el operador confirmó al sospechoso)."],
+  ["Altitud", "Altura sobre el suelo en metros. VS = velocidad vertical en m/s (positiva = subiendo). La curva es el último minuto."],
+  ["Velocidad", "Rapidez sobre el suelo en m/s. La barra llena equivale a 5 m/s."],
+  ["Rumbo", "Hacia dónde apunta la nariz, en grados de brújula: 000° norte, 090° este, 180° sur, 270° oeste."],
+  ["Enlace con tierra", "Retardo en ms de la señal con la estación y su gráfica del último minuto. RSSI es la intensidad de la señal (simulada)."],
+  ["Modo de vuelo", "Quién guía el dron (etiqueta azul), si está armado (verde) y el estado de la misión debajo."],
+  ["Distancias LiDAR", "TF03: distancia al obstáculo al frente (alcance 30 m). TF-Luna: sensor corto montado en el pan-tilt (alcance 8 m). La barra se acorta cuando algo se acerca."],
+  ["Actitud", "Horizonte artificial: cuánto se inclina el dron de lado (ALABEO) y de nariz (CABECEO), en grados. El símbolo ámbar es el dron; el horizonte se mueve."],
+  ["Posición · geocerca", "La cancha vista desde arriba con el norte arriba: dron (flecha azul) con su cono de visión, personas (rojo = sospechoso), paneles blancos y la geocerca ámbar."],
+  ["Cámara al piso · CSI#2", "Cámara que mira hacia abajo desde el dron. K enciende una cuadrícula de 1 m para medir distancias; X la amplía a pantalla completa."],
+  ["LiDAR de 1 haz", "Los dos sensores de distancia vistos desde arriba: puntos azules (TF03) y grises (TF-Luna) acumulados; la línea es hacia donde apunta el haz."],
+  ["Telemetría", "Datos de vuelo del dron. NOMINAL, PRECAUCIÓN o ALERTA según batería, enlace y geocerca."],
+  ["Registro de eventos", "Lo último que pasó (persona detectada, objetivo fijado o perdido, alertas del árbitro de seguridad) con su hora."],
+];
+function poner_ayudas() {                                                    // cada cuadro y cada dato de la barra muestran su explicación al dejar el mouse encima
+  const por = Object.fromEntries(AYUDA.map(([k, v]) => [k, v]));
+  document.querySelectorAll(".t > label, .chip > span, .cab h4").forEach(e => { const t = por[e.textContent.trim()]; if (t) (e.closest(".t, .chip, .casilla, #log") || e).title = t; });
+}
+poner_ayudas();
 SAT.iniciar();
 setInterval(() => { try { SAT.actualizar(S.c, S); } catch (e) { console.warn("mapa", e); } }, 200);                // mapa satelital: 5 veces por segundo
 setInterval(() => { const c = S.c; if (!c) return; const t = S.tend; t.alt.push(c.d[2]); t.bat.push(bateria().pct); t.enl.push(S.fuente === "rep" ? 0 : Math.min(200, Math.round(performance.now() - S.ultimo))); for (const k of Object.keys(t)) if (t[k].length > 60) t[k].shift(); }, 1000);
@@ -332,7 +376,7 @@ function lazo() {
 
 // ------------------------------------------------------------------------------------------------------------------ vistas
 function ponerPanel(p) {
-  S.panel = p; SAT.mostrar(p === "sat"); ENT.mostrar(p === "ent"); $("cam0").style.visibility = p === "dron" ? "visible" : "hidden"; $("sinvideo").style.visibility = p === "dron" ? "visible" : "hidden";
+  S.panel = p; SAT.mostrar(p === "sat"); ENT.mostrar(p === "ent"); mundo(p === "mundo"); $("cam0").style.visibility = p === "dron" ? "visible" : "hidden"; $("sinvideo").style.visibility = p === "dron" ? "visible" : "hidden";
   $("mapa").style.display = p === "mapa" ? "block" : "none"; $("barramapa").style.display = p === "mapa" ? "flex" : "none"; $("hud").style.display = p === "dron" ? "block" : "none";
   if (p === "mapa" && S.estado === "ia") tomarControl("puntos");
 }
@@ -342,7 +386,7 @@ function devolverIA() { S.estado = "ia"; post("/modo", { modo: "auto" }); aviso(
 // ------------------------------------------------------------------------------------------------------------------ mando: teclado y mouse (ORDENES §G.1)
 const teclas = new Set(); let panAng = 0, tiltAng = -5, ultimoCam = "";
 const VUELO = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "KeyF"]);
-const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "KeyX", "KeyK", "Digit1", "Digit3", "Digit4", "Digit5", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "KeyX", "KeyK", "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const eje = (a, b) => (teclas.has(a) ? 1 : 0) - (teclas.has(b) ? 1 : 0);
 const usarCamara = () => post("/camara", { modo: S.asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
 function accion(code) {
@@ -351,6 +395,7 @@ function accion(code) {
   if (code === "Digit1") return ponerPanel("mapa");
   if (code === "Digit4") return ponerPanel("dron");
   if (code === "Digit3") return ponerPanel("sat");
+  if (code === "Digit2") return ponerPanel("mundo");
   if (code === "Digit5") return ponerPanel("ent");
   if (code === "KeyX") { const on = $("csi2").classList.toggle("grande"); $("bGrande").textContent = on ? "Volver" : "⤢"; return; }
   if (code === "KeyK") { S.grid1 = !S.grid1; $("bGrid").classList.toggle("act", S.grid1); return; }
@@ -429,14 +474,15 @@ function alternarMenu() { $("menu").classList.toggle("ver"); if (menuAbierto()) 
 function pintarMenu() {
   const reps = [["rendicion", "El ladrón se rinde"], ["reencuentro_alto", "Reencuentro desde arriba"], ["salto", "El ladrón salta al dron"], ["civil_curioso", "El civil mira o graba"], ["cambio_de_v", "El ladrón cambia de V"]];
   $("menuCaja").innerHTML = `<h3><span>Ajustes · ${NOMBRE_DRON}</span><button id="mxCerrar">Cerrar (Esc)</button></h3>
-    <h5>Vistas</h5><div class="fila"><button data-p="dron" class="${S.panel === "dron" ? "act" : ""}">Cámara del dron (4)</button><button data-p="mapa" class="${S.panel === "mapa" ? "act" : ""}">Mapa táctico · enseñar (1)</button><button data-p="sat" class="${S.panel === "sat" ? "act" : ""}">Mapa satelital (3)</button><button data-p="ent" class="${S.panel === "ent" ? "act" : ""}">Entrenamiento (5)</button><span style="color:var(--tenue)">Tab alterna las dos. El mundo en 3D (centinela) es la ventana de Unreal.</span></div>
+    <h5>Vistas</h5><div class="fila"><button data-p="dron" class="${S.panel === "dron" ? "act" : ""}">Cámara del dron (4)</button><button data-p="mapa" class="${S.panel === "mapa" ? "act" : ""}">Mapa táctico · enseñar (1)</button><button data-p="mundo" class="${S.panel === "mundo" ? "act" : ""}">Mundo 3D (2)</button><button data-p="sat" class="${S.panel === "sat" ? "act" : ""}">Mapa satelital (3)</button><button data-p="ent" class="${S.panel === "ent" ? "act" : ""}">Entrenamiento (5)</button><span style="color:var(--tenue)">Tab alterna cámara y mapa táctico. Unreal corre en segundo plano: «Mundo 3D» muestra su vista del campus sin abrir otra ventana.</span></div>
     <h5>Control del dron</h5><div class="fila"><button id="mxIA" class="${S.estado === "ia" ? "act" : ""}">La IA guía (G)</button><button id="mxMan" class="${S.estado === "manual" ? "act" : ""}">Tomar el mando · manual</button><button id="mxPts" class="${S.estado === "puntos" ? "act" : ""}">Puntos de paso (M)</button><button id="mxAsi" class="${S.asist ? "act" : ""}">Cámara asistida (V)</button></div>
     <h5>Misión</h5><div class="fila"><select id="mxMision"><option value="vivo">Simulación en vivo</option>${reps.map(([k, t]) => `<option value="repeticiones_v17_h/${k}.json" ${S.fuente === "rep" && S.rep.url === k ? "selected" : ""}>Repetición · ${t}</option>`).join("")}<option value="mision_completa.json">Misión completa · despegue, tránsito y zona</option></select><button id="mxRuta" class="${S.ruta ? "act" : ""}">Ruta de búsqueda (R)</button><button id="mxGrab" class="${S.grabando ? "rec" : ""}">${S.grabando ? "Parar y guardar" : "Grabar mi demostración (B)"}</button><button id="mxOtra">Otra partida</button></div>
     <h5>Escena</h5><div class="fila"><span style="color:var(--tenue)">Día (activa). La noche se elige al armar el nivel de Unreal (DRONIA_NOCHE=1); ver el manual.</span></div>
+    <h5>Ayuda · qué es cada dato (también al dejar el mouse sobre cada cuadro)</h5><table>${AYUDA.map(([k, v]) => `<tr><td>${k}</td><td colspan="3" style="color:var(--texto)">${v}</td></tr>`).join("")}</table>
     <h5>Teclas</h5><table>
       <tr><td>W S · A D</td><td>adelante·atrás · lado</td><td>Q E</td><td>girar</td></tr><tr><td>Espacio · C</td><td>subir · bajar</td><td>Shift · Ctrl</td><td>rápido · lento</td></tr>
       <tr><td>F (mantener)</td><td>giro de 360° buscando</td><td>Botón central</td><td>arrastrar = pan y tilt</td></tr><tr><td>Clic izquierdo</td><td>fijar al posible objetivo</td><td>Clic derecho</td><td>soltar objetivo</td></tr>
-      <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>G · M</td><td>IA guía · puntos de paso</td></tr><tr><td>Tab · 1 · 3 · 4 · 5</td><td>alterna · mapa táctico · satélite · cámara · entrenamiento</td><td>R · B · P</td><td>ruta · grabar · pausa</td></tr>
+      <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>G · M</td><td>IA guía · puntos de paso</td></tr><tr><td>Tab · 1 a 5</td><td>alterna · 1 mapa táctico · 2 mundo 3D · 3 satélite · 4 cámara · 5 entrenamiento</td><td>R · B · P</td><td>ruta · grabar · pausa</td></tr>
       <tr><td>Rueda</td><td>zoom del mapa</td><td>Esc</td><td>este menú</td></tr><tr><td>X · K</td><td>cámara al piso grande · cuadrícula</td><td></td><td></td></tr></table>`;
   $("mxCerrar").onclick = alternarMenu;
   document.querySelectorAll("#menuCaja [data-p]").forEach(b => (b.onclick = () => { ponerPanel(b.dataset.p); alternarMenu(); }));

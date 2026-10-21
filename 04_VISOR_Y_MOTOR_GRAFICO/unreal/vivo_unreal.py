@@ -68,6 +68,7 @@ def preparar():
 # CSI#1: en el pan-tilt, 68.3° x 54.0° (640 x 480 da 68.3 x 53.9), inclinación -2.4° de montaje + el tilt. CSI#2: mira al piso (-90°), mismo modelo de cámara.
 # Cada una es una SceneCapture que se redibuja ~10 Hz (CSI#2 ~5 Hz) y se guarda como JPG en _cache/cam/; la estación las muestra como la imagen de la cámara.
 CAM_DIR = os.path.join(AQUI, "_cache", "cam")
+MUNDO = os.path.join(AQUI, "_cache", "mundo.txt")
 HFOV_CSI, MONTAJE_PITCH = 68.3, -2.4
 
 
@@ -75,7 +76,7 @@ def preparar_camaras():
     os.makedirs(CAM_DIR, exist_ok=True)
     mundo = unreal.EditorLevelLibrary.get_editor_world()
     est["cams"] = []
-    for nombre, (ancho, alto) in (("cam0", (640, 480)), ("cam1", (480, 360))):                     # CSI#2 más pequeña (mismo 4:3: mismo campo de visión)
+    for nombre, (ancho, alto) in (("cam0", (640, 480)), ("cam1", (480, 360)), ("cam2", (800, 450))):                     # CSI#2 más pequeña (mismo 4:3: mismo campo de visión)
         rt = unreal.RenderingLibrary.create_render_target2d(mundo, ancho, alto, unreal.TextureRenderTargetFormat.RTF_RGBA8)
         a = D.actores.spawn_actor_from_class(unreal.SceneCapture2D, unreal.Vector(0, 0, 0))
         a.set_actor_label("Vivo_" + nombre)
@@ -86,7 +87,7 @@ def preparar_camaras():
         c.set_editor_property("capture_every_frame", False)
         c.set_editor_property("capture_on_movement", False)
         c.set_editor_property("capture_source", unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR)
-        est["cams"].append({"actor": a, "comp": c, "rt": rt, "archivo": os.path.join(CAM_DIR, nombre + ".jpg"), "t": 0.0, "cada": 0.1 if nombre == "cam0" else 0.2})
+        est["cams"].append({"actor": a, "comp": c, "rt": rt, "archivo": os.path.join(CAM_DIR, nombre + ".jpg"), "t": 0.0, "cada": {"cam0": 0.1, "cam1": 0.2, "cam2": 0.2}[nombre]})
     opt = unreal.ImageWriteOptions()
     opt.set_editor_property("format", unreal.DesiredImageFormat.JPG)
     opt.set_editor_property("compression_quality", 85)
@@ -99,11 +100,24 @@ def capturar(c, ahora):
     """Pone las dos cámaras donde está el dron (con pan y tilt) y, cuando toca, las redibuja y las guarda."""
     x, y, z, psi = c["d"]
     pan, tilt = c["pan"], c["tilt"]
+    modo_mundo = None
+    if os.path.exists(MUNDO):                                            # la estación abrió la vista "Mundo 3D": el archivo dice cuál (seguir | cenital | campus)
+        try:
+            modo_mundo = open(MUNDO, encoding="utf-8").read().strip() or "seguir"
+        except OSError:
+            modo_mundo = "seguir"
     for k, cam in enumerate(est.get("cams", [])):
-        if ahora - cam["t"] < cam["cada"]:
+        if ahora - cam["t"] < cam["cada"] or (k == 2 and modo_mundo is None):
             continue
         cam["t"] = ahora
-        if k == 0:                                                       # CSI#1 al frente, en el pan-tilt
+        if k == 2:                                                       # vista del mundo para la estación (no es una cámara del dron)
+            if modo_mundo == "cenital":
+                pos, rot = D.ue(x, y, z + 40.0), unreal.Rotator(0.0, -90.0, D.guinada(psi))
+            elif modo_mundo == "campus":
+                pos, rot = D.ue(40.0, -220.0, 110.0), unreal.Rotator(0.0, -36.0, D.guinada(math.radians(113.0)))
+            else:
+                pos, rot = D.ue(x - 8.0 * math.cos(psi), y - 8.0 * math.sin(psi), z + 4.0), unreal.Rotator(0.0, -17.0, D.guinada(psi))
+        elif k == 0:                                                       # CSI#1 al frente, en el pan-tilt
             pos = D.ue(x + 0.12 * math.cos(psi), y + 0.12 * math.sin(psi), z - 0.05)
             rot = unreal.Rotator(0.0, max(-90.0, min(30.0, tilt + MONTAJE_PITCH)), D.guinada(psi) - pan)
         else:                                                            # CSI#2 fija, al piso

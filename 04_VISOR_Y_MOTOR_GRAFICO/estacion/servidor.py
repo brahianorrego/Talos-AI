@@ -45,6 +45,19 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         """/captura/<nombre>.png: guarda en mediciones/capturas la imagen (dataURL) que manda la página; solo ahí y solo .png."""
         nombre = os.path.basename(self.path.split("?")[0])
+        if self.path.startswith("/mundo/"):                       # /mundo/<seguir|cenital|campus|off>: enciende o apaga la cámara de la vista "Mundo 3D" de Unreal
+            modo = nombre
+            archivo = os.path.join(AQUI, "..", "unreal", "_cache", "mundo.txt")
+            if modo in ("seguir", "cenital", "campus"):
+                open(archivo, "w", encoding="utf-8").write(modo)
+            elif modo == "off" and os.path.exists(archivo):
+                os.remove(archivo)
+            elif modo != "off":
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.end_headers()
+            return
         if not (self.path.startswith("/captura/") and nombre.endswith(".png") and nombre.replace("_", "").replace(".png", "").isalnum()):
             self.send_error(404)
             return
@@ -98,7 +111,7 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
             nombre = os.path.basename(self.path.split("?")[0])
             ruta = os.path.join(AQUI, "..", "unreal", "_cache", "cam", nombre)
             try:
-                if not (nombre in ("cam0.jpg", "cam1.jpg") and os.path.isfile(ruta)):
+                if not (nombre in ("cam0.jpg", "cam1.jpg", "cam2.jpg") and os.path.isfile(ruta)):
                     raise OSError
                 if time.time() - os.path.getmtime(ruta) < 0.06:   # recién escrita: se espera un instante para no mandar un JPG a medias
                     time.sleep(0.08)
