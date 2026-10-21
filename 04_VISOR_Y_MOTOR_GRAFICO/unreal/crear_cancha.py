@@ -17,8 +17,16 @@ import dronia_ue as D  # noqa: E402
 import entorno_u_ue as EU  # noqa: E402
 
 RUTA = D.CARPETA + "/Mapas/Cancha_V17"
+unreal.log("DRONIA: REHACER=%s existe=%s" % (os.environ.get("DRONIA_REHACER"), D.biblioteca.does_asset_exist(RUTA)))
 
-nivel = D.nivel_nuevo(RUTA)
+if os.environ.get("DRONIA_REHACER") == "1" and D.biblioteca.does_asset_exist(RUTA):
+    unreal.EditorLoadingAndSavingUtils.new_blank_map(False)          # salir del nivel antes de borrarlo
+    unreal.log("DRONIA: respaldo %s" % D.biblioteca.duplicate_asset(RUTA, RUTA + "_respaldo"))      # por si Brahian le puso algo a mano
+    unreal.log("DRONIA: borrado %s" % D.biblioteca.delete_asset(RUTA))
+    nivel = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    nivel.new_level(RUTA)                                            # el registro aún cree que existe: se crea sin preguntarle
+else:
+    nivel = D.nivel_nuevo(RUTA)
 if nivel:
     EU.construir()                                          # campus completo: cancha de fútbol, canchas cerradas, edificios, árboles, cerros
     mats = D.mats_paneles()

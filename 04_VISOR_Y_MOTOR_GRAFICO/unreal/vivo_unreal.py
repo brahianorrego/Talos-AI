@@ -165,6 +165,10 @@ def camara(x, y, z, psi):
         modo = open(os.path.join(AQUI, "_cache", "camara.txt")).read().strip() or CAMARA
     except OSError:
         pass
+    if "," in modo:                                        # "x,y,z,rumbo°,cabeceo°": cámara fija en un punto del campus (para las fotos de comparación); rumbo como en la simulación, cabeceo + = hacia abajo
+        fx, fy, fz, frum, fcab = [float(v) for v in modo.split(",")]
+        sub.set_level_viewport_camera_info(D.ue(fx, fy, fz), unreal.Rotator(0.0, -fcab, D.guinada(math.radians(frum))))
+        return
     if modo == "cenital":
         pos, mira = D.ue(0, 0, 52), D.ue(0, 0.01, 0)
     elif modo == "dron":

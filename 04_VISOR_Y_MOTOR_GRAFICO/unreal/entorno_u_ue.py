@@ -75,6 +75,59 @@ def mat_fachada(nombre):
     return mi
 
 
+
+# ------------------------------------------------------------------------------------------------ suelos con textura (fotos nocturnas, 20-oct)
+def material_suelo():
+    """M_Suelo: textura en mosaico con parámetros TU y TV (cuántas veces se repite en la pieza)."""
+    ruta = D.CARPETA + "/Materiales/M_Suelo"
+    if D.biblioteca.does_asset_exist(ruta):
+        return unreal.load_asset(ruta)
+    mat = D.herramientas.create_asset("M_Suelo", D.CARPETA + "/Materiales", unreal.Material, unreal.MaterialFactoryNew())
+    mel = D.mel
+    uv = mel.create_material_expression(mat, unreal.MaterialExpressionTextureCoordinate, -900, 0)
+    tu = mel.create_material_expression(mat, unreal.MaterialExpressionScalarParameter, -900, 150)
+    tu.set_editor_property("parameter_name", "TU")
+    tu.set_editor_property("default_value", 1.0)
+    tv = mel.create_material_expression(mat, unreal.MaterialExpressionScalarParameter, -900, 250)
+    tv.set_editor_property("parameter_name", "TV")
+    tv.set_editor_property("default_value", 1.0)
+    ap = mel.create_material_expression(mat, unreal.MaterialExpressionAppendVector, -700, 200)
+    mel.connect_material_expressions(tu, "", ap, "A")
+    mel.connect_material_expressions(tv, "", ap, "B")
+    mul = mel.create_material_expression(mat, unreal.MaterialExpressionMultiply, -520, 100)
+    mel.connect_material_expressions(uv, "", mul, "A")
+    mel.connect_material_expressions(ap, "", mul, "B")
+    t = mel.create_material_expression(mat, unreal.MaterialExpressionTextureSampleParameter2D, -300, 0)
+    t.set_editor_property("parameter_name", "Textura")
+    mel.connect_material_expressions(mul, "", t, "UVs")
+    r = mel.create_material_expression(mat, unreal.MaterialExpressionScalarParameter, -300, 250)
+    r.set_editor_property("parameter_name", "Rugosidad")
+    r.set_editor_property("default_value", 0.9)
+    mel.connect_material_property(t, "RGB", unreal.MaterialProperty.MP_BASE_COLOR)
+    mel.connect_material_property(r, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(mat)
+    D.biblioteca.save_loaded_asset(mat)
+    return mat
+
+
+def mat_suelo(nombre, tex, tu, tv, rug=0.9):
+    """Instancia de M_Suelo con la textura suelo_<tex> repetida tu x tv veces."""
+    ruta = D.CARPETA + "/Materiales/MI_S_" + nombre
+    if D.biblioteca.does_asset_exist(ruta):
+        D.biblioteca.delete_asset(ruta)
+    t = textura("suelo_" + tex)
+    if t is None:
+        return D.material("Suelo_" + nombre, (0.3, 0.3, 0.3), 0.9)
+    mi = D.herramientas.create_asset("MI_S_" + nombre, D.CARPETA + "/Materiales", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+    D.mel.set_material_instance_parent(mi, material_suelo())
+    D.mel.set_material_instance_texture_parameter_value(mi, "Textura", t)
+    D.mel.set_material_instance_scalar_parameter_value(mi, "TU", float(tu))
+    D.mel.set_material_instance_scalar_parameter_value(mi, "TV", float(tv))
+    D.mel.set_material_instance_scalar_parameter_value(mi, "Rugosidad", rug)
+    D.biblioteca.save_loaded_asset(mi)
+    return mi
+
+
 # ------------------------------------------------------------------------------------------------ piezas
 def linea(xa, ya, xb, yb, mat, z=0.035, ancho=0.12, carpeta="Entorno/Lineas", n="Linea"):
     L = math.hypot(xb - xa, yb - ya)
@@ -112,14 +165,20 @@ def campo(E):
 
 def canchas(E):
     cal = D.material("Cal", (0.85, 0.85, 0.82), 0.9)
-    rojo = D.material("PisoRojo", (0.22, 0.045, 0.035), 0.8)
+    rojo = D.material("PisoRojo", (0.30, 0.04, 0.03), 0.8)
     verde = D.material("PisoVerde", (0.05, 0.14, 0.09), 0.8)
     for cn in E["canchas"]:
         cx, cy = cn["centro"]; w, h = cn["tam"]
         D.caja("Cancha_" + cn["nombre"], cx, cy, 0.02, w, h, 0.04, rojo, 0.0, "Entorno/Canchas")
         if cn["tipo"] == "tenis":
             cw, ch = 10.97, 23.77
-            D.caja("Cancha_tenis_centro", cx, cy, 0.05, cw + 6, ch + 8, 0.02, verde, 0.0, "Entorno/Canchas")
+            azul = D.material("PisoAzul", (0.02, 0.12, 0.5), 0.8)
+            amarillo = D.material("PisoAmarillo", (0.62, 0.45, 0.02), 0.8)
+            D.caja("Cancha_tenis_borde", cx, cy, 0.04, cw + 6, ch + 8, 0.01, azul, 0.0, "Entorno/Canchas")                     # colores de la cancha real: borde azul,
+            D.caja("Cancha_tenis_centro", cx, cy, 0.05, cw + 1.2, ch + 1.2, 0.02, verde, 0.0, "Entorno/Canchas")              # verde alrededor, rojo adentro
+            D.caja("Cancha_tenis_rojo", cx, cy, 0.06, cw, ch, 0.01, rojo, 0.0, "Entorno/Canchas")
+            for s_ in (-1, 1):
+                D.caja("Cancha_tenis_franja", cx, cy + s_ * (ch / 2 - 1.6), 0.07, cw, 3.2, 0.01, amarillo, 0.0, "Entorno/Canchas")
             rect_lineas(cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2, cal, z=0.07)
             rect_lineas(cx - cw / 2 + 1.37, cy - ch / 2, cx + cw / 2 - 1.37, cy + ch / 2, cal, z=0.07)
             linea(cx - cw / 2 + 1.37, cy + 6.4, cx + cw / 2 - 1.37, cy + 6.4, cal, 0.07)
@@ -161,7 +220,8 @@ def suelos(E):
     amarillo = D.material("LineaAmarilla", (0.55, 0.38, 0.02), 0.6)
     for s in E["suelos"]:
         z = 0.04 if s["tipo"] == "adoquin" else 0.025
-        D.caja("Suelo_" + s["nombre"], s["centro"][0], s["centro"][1], z / 2, s["tam"][0], s["tam"][1], z, mats[s["tipo"]], 0.0, "Entorno/Suelos")
+        mat = mat_suelo("adoquin_" + s["nombre"], "adoquin", s["tam"][0] / 3.2, s["tam"][1] / 3.2) if s["tipo"] == "adoquin" else mats[s["tipo"]]     # 8 piezas = 3.2 m
+        D.caja("Suelo_" + s["nombre"], s["centro"][0], s["centro"][1], z / 2, s["tam"][0], s["tam"][1], z, mat, 0.0, "Entorno/Suelos")
         if s["nombre"] == "parqueadero":
             for f in range(4):
                 for k in range(15):
@@ -261,12 +321,52 @@ def extras(E):
                 D.material("MotorRojo", (0.45, 0.02, 0.02), 0.4), 0.0, "Entorno/Extras", rot=(0.0, 90.0, yaw))
 
 
+def poste_luz(x, y, alto, noche, n):
+    gris = D.material("PosteLuz", (0.16, 0.17, 0.18), 0.5, 0.6)
+    lamp = D.material("Lampara", (1.0, 0.95, 0.8), 0.2)
+    D.forma("Cylinder", "Luminaria_poste", D.ue(x, y, alto / 2), (0.18, 0.18, alto), gris, 0.0, "Entorno/Luminarias")
+    D.caja("Luminaria_cabeza", x, y, alto + 0.1, 0.9, 0.5, 0.18, lamp, 0.0, "Entorno/Luminarias")
+    if noche:
+        a = D.actores.spawn_actor_from_class(unreal.PointLight, D.ue(x, y, alto - 0.2))
+        a.set_actor_label(f"Luz_{n}")
+        a.set_folder_path("Entorno/Luminarias")
+        c = a.get_component_by_class(unreal.PointLightComponent)
+        c.set_editor_property("intensity", 12000.0)
+        c.set_editor_property("attenuation_radius", 3500.0)
+        c.set_editor_property("light_color", unreal.Color(255, 244, 220, 255))
+        c.set_editor_property("source_radius", 25.0)
+        c.set_editor_property("cast_shadows", n % 2 == 0)                     # media luminaria con sombra: cuida los cuadros por segundo
+
+
+def detalles(E):
+    """Lo que se ve de cerca a 2-3 m de altura (fotos nocturnas de la zona de vuelo): plaza de adoquín, camino de losas con pasto, canaleta de rejilla,
+    setos, canecas verdes, base azul de la escultura del motor y luminarias."""
+    noche = os.environ.get("DRONIA_NOCHE") == "1"
+    D.caja("Plaza_adoquin", -56.0, -8.0, 0.02, 34.0, 12.0, 0.04, mat_suelo("plaza_adoquin", "adoquin", 34.0 / 3.2, 12.0 / 3.2), 0.0, "Entorno/Suelos")
+    # camino de losas entre el motor y la zona verde, con su canaleta
+    D.caja("Camino_losas", -40.0, 2.0, 0.025, 3.0, 22.0, 0.05, mat_suelo("losas", "losas", 3.0 / 2.0, 22.0 / 2.0), 0.0, "Entorno/Suelos")
+    D.caja("Canaleta", -38.1, 2.0, 0.03, 0.35, 22.0, 0.04, mat_suelo("rejilla", "rejilla", 1.0, 22.0 / 0.8), 0.0, "Entorno/Suelos")
+    # base azul de la escultura (turbina)
+    for x in E["extras"]:
+        D.caja("Motor_base_azul", x["p"][0], x["p"][1], 0.05, 6.0, 3.6, 0.1, D.material("BaseAzul", (0.03, 0.18, 0.55), 0.7), math.radians(x["rot"]), "Entorno/Extras")
+    # setos bajos junto a las canchas y canecas verdes
+    seto = D.material("Seto", (0.18, 0.32, 0.06), 1.0)
+    for (cx, cy, w, h) in ((-62.5, -1.0, 19.0, 0.9), (-45.3, 5.6, 13.0, 0.9), (-36.0, 14.0, 0.9, 12.0)):
+        D.caja("Seto", cx, cy, 0.45, w, h, 0.9, seto, 0.0, "Entorno/Vegetacion")
+    caneca = D.material("Caneca", (0.04, 0.32, 0.12), 0.6)
+    for k, (cx, cy) in enumerate(((-47.0, 9.0), (-47.0, 10.0), (-34.0, -3.0))):
+        D.forma("Cylinder", f"Caneca_{k}", D.ue(cx, cy, 0.5), (0.5, 0.5, 1.0), caneca, 0.0, "Entorno/Mobiliario")
+    # luminarias de poste: halos muy brillantes de noche
+    for n, (lx, ly) in enumerate(((-74.5, 1.0), (-38.0, 1.0), (-56.0, -14.0), (-36.0, -12.0), (-52.0, 41.0), (-60.0, -26.0))):
+        poste_luz(lx, ly, 7.5, noche, n)
+
+
 def construir():
     E = cargar()
     D.cielo_y_luz()
     cerros(E)
-    D.forma("Plane", "Terreno", D.ue(0, 0, 0.0), (6000, 6000, 1), D.material("Terreno", (0.07, 0.12, 0.04), 1.0), 0.0, "Entorno/Campo")
-    campo(E); canchas(E); suelos(E); vallas(E); edificios(E); carros(E); extras(E)
+    D.forma("Plane", "Terreno", D.ue(0, 0, 0.0), (6000, 6000, 1), mat_suelo("terreno", "pasto", 6000 / 2.0, 6000 / 2.0, 1.0), 0.0, "Entorno/Campo")
+    campo(E); canchas(E); suelos(E); vallas(E); edificios(E); carros(E); extras(E); detalles(E)
     n = arboles(E)
     unreal.log(f"DRONIA: entorno de la universidad: {len(E['edificios'])} edificios, {n} árboles, {len(E['carros'])} autos, {len(E['cerros'])} cerros")
     return E

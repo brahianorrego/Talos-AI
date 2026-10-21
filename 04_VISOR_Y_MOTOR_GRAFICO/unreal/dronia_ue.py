@@ -254,10 +254,19 @@ def persona(etiqueta, estatura, color):
 # ------------------------------------------------------------------------------------------------ cielo y luz
 def cielo_y_luz():
     """Sol, cielo físico, luz del cielo en tiempo real, niebla y nubes (Lumen, como en el paso 9 del plan)."""
-    sol = actores.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1000), unreal.Rotator(0, -38, 215))
+    import os
+    noche = os.environ.get("DRONIA_NOCHE") == "1"                                     # modo noche: el sol bajo el horizonte, una luna tenue y las luminarias del campus encendidas
+    sol = actores.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1000), unreal.Rotator(0, 25 if noche else -38, 215))
     sol.set_actor_label("Sol")
     luz = sol.get_component_by_class(unreal.DirectionalLightComponent)
     luz.set_editor_property("intensity", 7.0)
+    if noche:
+        luna = actores.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 1000), unreal.Rotator(0, -55, 40))
+        luna.set_actor_label("Luna")
+        lc = luna.get_component_by_class(unreal.DirectionalLightComponent)
+        lc.set_editor_property("intensity", 0.35)
+        lc.set_editor_property("light_color", unreal.Color(150, 175, 255, 255))
+        lc.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
     luz.set_editor_property("atmosphere_sun_light", True)
     luz.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
     actores.spawn_actor_from_class(unreal.SkyAtmosphere, unreal.Vector(0, 0, 0)).set_actor_label("Atmosfera")
@@ -265,6 +274,8 @@ def cielo_y_luz():
     cielo.set_actor_label("Luz_del_cielo")
     c = cielo.get_component_by_class(unreal.SkyLightComponent)
     c.set_editor_property("real_time_capture", True)
+    if noche:
+        c.set_editor_property("intensity", 0.25)
     c.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
     actores.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0)).set_actor_label("Niebla")
     nubes = actores.spawn_actor_from_class(unreal.VolumetricCloud, unreal.Vector(0, 0, 0))
