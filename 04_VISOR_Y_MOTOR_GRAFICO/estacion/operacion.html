@@ -7,14 +7,28 @@
 <link rel="stylesheet" href="operacion.css">
 </head>
 <body>
+<!-- corrección de luz de las imágenes de Unreal: sube las sombras y da luz de día natural (la captura sale con la exposición fija) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="luzdia" color-interpolation-filters="sRGB">
+  <feComponentTransfer><feFuncR type="gamma" amplitude="1.12" exponent="0.55" offset="0"/><feFuncG type="gamma" amplitude="1.12" exponent="0.55" offset="0"/><feFuncB type="gamma" amplitude="1.12" exponent="0.55" offset="0"/></feComponentTransfer>
+</filter></svg>
+
 <div id="app">
   <header id="barra">
-    <div class="nombre"><span id="nombreDron">TALOS-AI</span><small>Estación de tierra</small></div>
-    <div class="dato">MODO<b id="bModo">–</b></div>
-    <div class="dato">CONTROL<b id="bControl">–</b></div>
-    <div class="dato">ENLACE<b id="bEnlace">–</b></div>
-    <div class="dato" id="bHora">–</div>
-    <div class="atajos">
+    <div class="marca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2fa4e7" stroke-width="1.8"><path d="M12 2.5 21 7.5v9L12 21.5 3 16.5v-9z"/><path d="M12 7v10M7.5 9.5 12 12l4.5-2.5" stroke-width="1.5"/></svg>
+      <div><b id="nombreDron">TALOS-AI</b><small>Estación de tierra</small></div>
+    </div>
+    <div class="chip"><span>Modo</span><b id="bModo">–</b></div>
+    <div class="chip"><span>Control</span><b id="bControl">–</b></div>
+    <div class="chip"><span>Armado</span><b id="bArmado"><i></i>ARMADO</b></div>
+    <div class="chip"><span>Enlace</span><b><span class="barras" id="bBarrasEnlace"><u></u><u></u><u></u><u></u></span><span id="bEnlace">–</span></b></div>
+    <div class="chip"><span>GPS</span><b id="bGps">–</b></div>
+    <div class="chip"><span>Batería</span><b id="bBat">–</b></div>
+    <div class="chip bajo1600"><span>Geocerca</span><b id="bGeoChip">–</b></div>
+    <div class="chip bajo1600"><span>Sensores</span><b id="bSens">–</b></div>
+    <div class="chip"><span>Objetivo</span><b id="bObj">–</b></div>
+    <div class="der">
+      <div class="reloj"><span id="bHora">–</span><small id="bT">T+0:00</small></div>
       <button id="bPausa" title="Pausa de la repetición (P)">Pausa</button>
       <button id="bRuta" title="Ruta de búsqueda sobre el mapa (R)">Ruta</button>
       <button id="bGrabar" title="Grabar mi demostración (B)">Grabar</button>
@@ -23,27 +37,47 @@
   </header>
 
   <main id="cuerpo">
-    <section id="izq">
-      <img id="cam0" alt="">
-      <div id="sinvideo">SIN SEÑAL DE VIDEO</div>
-      <canvas id="hud"></canvas>
-      <canvas id="mapa"></canvas>
-      <div id="barramapa">
-        <button id="mIr">Ir</button><button id="mParar">Parar</button><button id="mUltimo">Borrar último</button><button id="mTodos">Borrar todos</button>
-        <span class="txt" id="mTexto">Clic en el mapa: punto de paso. Arrastre el círculo para girar la flecha.</span>
+    <section id="izqCol">
+      <div id="izq">
+        <img id="cam0" alt="">
+        <div id="sinvideo"><div>SIN SEÑAL DE VIDEO</div></div>
+        <canvas id="hud"></canvas>
+        <canvas id="mapa"></canvas>
+        <div id="barramapa">
+          <button id="mIr">Ir</button><button id="mParar">Parar</button><button id="mUltimo">Borrar último</button><button id="mTodos">Borrar todos</button>
+          <span class="txt">Clic en el mapa: punto de paso · arrastre el círculo para girar la flecha</span>
+        </div>
       </div>
+      <div id="log"><div class="cab"><h4>Registro de eventos</h4><span class="est" id="logEst">0</span></div><div id="logLista"></div></div>
     </section>
+
     <aside id="der">
-      <div class="casilla"><h4>Cámara al piso · CSI#2</h4><img id="cam1" alt=""><div id="sinvideo2">SIN SEÑAL</div><canvas id="hud1"></canvas></div>
-      <div class="casilla"><h4>LiDAR de 1 haz · TF03 y TF-Luna</h4><canvas id="lidar"></canvas></div>
+      <div id="fila1">
+        <div class="casilla"><div class="cab"><h4>Cámara al piso · CSI#2</h4><span class="est" id="estCsi2">–</span></div><div class="cont"><img id="cam1" alt=""><div id="sinvideo2">SIN SEÑAL</div><canvas id="hud1"></canvas></div></div>
+        <div class="casilla"><div class="cab"><h4>LiDAR de 1 haz</h4><span class="est" id="estLidar">–</span></div><div class="cont"><canvas id="lidar"></canvas></div></div>
+      </div>
       <div class="casilla" id="tel">
-        <h4>Telemetría</h4>
-        <div id="telDatos"></div>
-        <div id="telDerecha"><div><canvas id="actitud"></canvas></div><div><canvas id="minimapa"></canvas></div></div>
+        <div class="cab"><h4>Telemetría</h4><span class="est ok" id="estTel">NOMINAL</span></div>
+        <div id="rejilla">
+          <div class="t s2"><label>Altitud</label><div class="cifra"><span id="vAlt">–</span><small>m</small></div><div class="sub" id="sAlt">VS –</div><canvas class="spark" id="spAlt"></canvas></div>
+          <div class="t s2"><label>Velocidad</label><div class="cifra"><span id="vVel">–</span><small>m/s</small></div><div class="barra-h"><u id="bVel"></u></div><div class="sub" id="sVel">sobre el suelo</div></div>
+          <div class="t s2"><label>Rumbo</label><div class="cifra"><span id="vRum">–</span><small id="uRum">°</small></div><div class="sub" id="sRum">–</div></div>
+
+          <div class="t s2"><label>Batería</label><div class="cifra"><span id="vBat">–</span><small>%</small></div><div class="barra-h"><u id="bBatBarra"></u></div><div class="sub" id="sBat">–</div></div>
+          <div class="t s2"><label>GPS</label><div class="fila"><span class="barras" id="gBarras"><u style="height:4px"></u><u style="height:7px"></u><u style="height:10px"></u><u style="height:13px"></u><u style="height:16px"></u></span><span class="etq ok">3D FIX</span></div><div class="cifra" style="font-size:clamp(20px,1.7vw,26px)"><span id="vGps">–</span><small>sat</small></div><div class="sub" id="sGps">HDOP –</div></div>
+          <div class="t s2"><label>Enlace con tierra</label><div class="cifra"><span id="vEnl">–</span><small>ms</small></div><div class="sub" id="sEnl">–</div><canvas class="spark" id="spEnl"></canvas></div>
+
+          <div class="t s2"><label>Modo de vuelo</label><div class="etiquetas"><span class="etq acento" id="eModo">–</span><span class="etq ok" id="eArm">ARMADO</span></div><div class="sub" id="sModo">–</div></div>
+          <div class="t s2"><label>Distancias LiDAR</label><div class="fila"><span>TF03</span><b id="dTf">–</b></div><div class="barra-h"><u id="bTf"></u></div><div class="fila"><span>TF-LUNA</span><b id="dLu">–</b></div><div class="barra-h"><u id="bLu" style="background:#9fc5e8"></u></div></div>
+          <div class="t s2"><label>Geocerca</label><div class="cifra"><span id="vGeo">–</span><small>m</small></div><div class="barra-h"><u id="bGeo"></u></div><div class="sub" id="sGeo">al borde</div></div>
+
+          <div class="t s3 visual"><label>Actitud</label><canvas id="actitud"></canvas></div>
+          <div class="t s3 visual"><label>Posición · geocerca</label><canvas id="minimapa"></canvas></div>
+        </div>
       </div>
     </aside>
   </main>
-  <footer id="pie"><span id="pieEstado">–</span><span>Brahian Andrés Orrego Osorio</span></footer>
+  <footer id="pie"><span id="pieEstado">–</span><span class="firma">Brahian Andrés Orrego Osorio</span></footer>
 </div>
 
 <div id="aviso"></div>

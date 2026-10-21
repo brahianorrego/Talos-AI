@@ -12,7 +12,7 @@ const lim = (v, a, b) => Math.max(a, Math.min(b, v));
 const post = (r, d) => fetch(EN_VIVO + r, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d || {}) }).catch(() => {});
 
 const S = { c: null, paneles: [], k: 0, tSim: 0, ultimo: 0, estado: "ia", panel: "dron", asist: false, ruta: false, grabando: false, pausa: false, rep: null, repTimer: null,
-  hist: [], imgEdad: 0, lidar: [], luna: [], cajas: [], wp: [], sel: -1, fps: 0, demo: "", fuente: "vivo", vista: [0, 0, 0, 0] };
+  hist: [], eventos: [], tend: { alt: [], bat: [], enl: [] }, imgEdad: 0, latencia: 0, prevC: null, lidar: [], luna: [], cajas: [], wp: [], sel: -1, fps: 0, demo: "", fuente: "vivo", vista: [0, 0, 0, 0] };
 window.__S = S;
 document.querySelector("#nombreDron").textContent = NOMBRE_DRON;
 document.title = NOMBRE_DRON + " · Estación de tierra";
@@ -30,6 +30,7 @@ function conectar() {
   };
 }
 function recibir(c) {
+  registrarEventos(S.prevC, c); S.prevC = c;
   S.c = c; S.ultimo = performance.now(); S.tSim += 0.1; S.hist.push([S.ultimo, c]); if (S.hist.length > 80) S.hist.shift();
   if (c.lh && c.lid !== undefined && c.lid < 29.5) { S.lidar.push([c.lh[0], c.lh[1]]); if (S.lidar.length > 2500) S.lidar.shift(); }
   if (c.luna && (c.luna[0] || c.luna[1])) { S.luna.push([c.luna[0], c.luna[1]]); if (S.luna.length > 2500) S.luna.shift(); }
@@ -51,7 +52,7 @@ function ajustar(cv) {
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   return [g, w, h];
 }
-const col = { texto: "#e7e3d9", tenue: "#8a94a2", linea: "#262e39", acento: "#7d9bbd", alerta: "#d9a441", peligro: "#cf5c57" };
+const col = { texto: "#e9eef7", tenue: "#93a6c2", tenue2: "#62768f", linea: "#243653", acento: "#2fa4e7", alerta: "#f5a623", peligro: "#e5484d", ok: "#2ecc71" };
 const fuente = (g, tam, peso = 400, mono = false) => { g.font = `${peso} ${tam}px ${mono ? "'IBM Plex Mono','Roboto Mono','Cascadia Mono',Consolas,monospace" : "Inter,'Segoe UI',Roboto,sans-serif"}`; };
 function texto(g, t, x, y, al = "left", c = col.texto, tam = 11, peso = 500, mono = true) { fuente(g, tam, peso, mono); g.textAlign = al; g.fillStyle = "rgba(0,0,0,.6)"; g.fillText(t, x + 1, y + 1); g.fillStyle = c; g.fillText(t, x, y); }
 
@@ -85,7 +86,7 @@ S.video = [false, false];
   }, 110);
 });
 
-// ------------------------------------------------------------------------------------------------------------------ cámara principal con HUD
+// ------------------------------------------------------------------------------------------------------------------ cámara principal con HUD completo (estilo PFD)
 function rectImagen(W, H) { const w = Math.min(W, H * 4 / 3), h = w * 3 / 4; return { x: (W - w) / 2, y: (H - h) / 2, w, h }; }
 // la imagen de Unreal llega con ~0.2-0.3 s de retraso: el horizonte y las cajas se calculan con el cuadro de la simulación del instante en que se tomó la imagen
 function cuadroDeLaImagen() {
@@ -94,107 +95,170 @@ function cuadroDeLaImagen() {
   for (const h of S.hist) if (Math.abs(h[0] - objetivo) < Math.abs(mejor[0] - objetivo)) mejor = h;
   return mejor[1];
 }
-function dibujarHUD() {
-  const [g, W, H] = ajustar($("hud")), cv = S.c, c = cuadroDeLaImagen();
-  if (S.panel !== "dron" || !c) { S.cajas = []; return; }
-  const R = rectImagen(W, H), cx = R.x + R.w / 2, cy = R.y + R.h / 2, ppd = R.h / VFOV;
-  if (!S.video[0]) { g.fillStyle = "#0a0c0f"; g.fillRect(R.x, R.y, R.w, R.h); }
-  g.save(); g.beginPath(); g.rect(R.x, R.y, R.w, R.h); g.clip();
-  // horizonte artificial
-  const cam = camara(c), pit = (c.gmb ?? -5) + MONTAJE, roll = rad(c.cr || 0);
-  g.save(); g.translate(cx, cy); g.rotate(-roll); g.strokeStyle = "rgba(231,227,217,.55)"; g.lineWidth = 1;
-  const hy = pit * ppd; g.beginPath(); g.moveTo(-R.w * 0.46, hy); g.lineTo(-40, hy); g.moveTo(40, hy); g.lineTo(R.w * 0.46, hy); g.stroke();
-  [-20, -10, 10, 20].forEach(p => { const y = hy - p * ppd; g.setLineDash(p < 0 ? [3, 3] : []); g.beginPath(); g.moveTo(-30, y); g.lineTo(-12, y); g.moveTo(12, y); g.lineTo(30, y); g.stroke(); texto(g, Math.abs(p) + "", 38, y + 3, "left", "rgba(231,227,217,.5)", 9); });
-  g.setLineDash([]); g.restore();
-  // cinta de rumbo
-  const hdg = (deg(c.d[3]) + 360) % 360; g.strokeStyle = "rgba(231,227,217,.55)";
-  for (let a = Math.floor(hdg / 5) * 5 - 40; a <= hdg + 40; a += 5) {
-    const x = cx + (a - hdg) * 3.2, n = ((a % 360) + 360) % 360; g.beginPath(); g.moveTo(x, R.y + 26); g.lineTo(x, R.y + 26 - (n % 15 === 0 ? 7 : 3)); g.stroke();
-    if (n % 30 === 0) texto(g, { 0: "E", 90: "N", 180: "O", 270: "S" }[n] ?? String(n).padStart(3, "0"), x, R.y + 13, "center", "rgba(231,227,217,.6)", 9);
+const FIJADOS = ["PERSECUCION", "PERDIDA", "RECONFIRMAR", "FIJADO"];
+const ALERTAS = { reflejo_ataque: "REFLEJO · EVASIÓN", evadiendo: "EVASIÓN", amenaza: "AMENAZA CERCANA", punto_ciego: "PUNTO CIEGO", perimetro: "PERÍMETRO" };
+function cinta(g, x, y, w, h, valor, paso, px, rotulo, fmt, lado) {          // cinta vertical (altitud o velocidad): ticks que corren, caja con el valor actual
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = "rgba(11,18,32,.62)"; g.fillRect(x, y, w, h);
+  const cyy = y + h / 2; g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.4;
+  for (let v = Math.floor((valor - h / 2 / px) / paso) * paso; v <= valor + h / 2 / px; v += paso) {
+    const yy = cyy - (v - valor) * px, mayor = Math.abs(v % 1) < 1e-6;
+    g.beginPath(); g.moveTo(lado === "der" ? x : x + w, yy); g.lineTo(lado === "der" ? x + (mayor ? 14 : 8) : x + w - (mayor ? 14 : 8), yy); g.stroke();
+    if (mayor && v >= 0) texto(g, String(Math.round(v)), lado === "der" ? x + 20 : x + w - 20, yy + 5, lado === "der" ? "left" : "right", col.texto, 14, 600);
   }
-  g.fillStyle = "rgba(13,16,20,.8)"; g.fillRect(cx - 20, R.y + 29, 40, 14); texto(g, String(Math.round(hdg) % 360).padStart(3, "0") + "°", cx, R.y + 40, "center", col.texto, 10, 600);
-  // retícula
-  g.strokeStyle = "rgba(231,227,217,.7)"; g.lineWidth = 1.1; g.beginPath(); g.moveTo(cx - 12, cy); g.lineTo(cx - 4, cy); g.moveTo(cx + 4, cy); g.lineTo(cx + 12, cy); g.moveTo(cx, cy - 12); g.lineTo(cx, cy - 4); g.moveTo(cx, cy + 4); g.lineTo(cx, cy + 12); g.stroke();
+  g.restore(); g.fillStyle = "#0b1220"; g.fillRect(x - 2, cyy - 15, w + 4, 30); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(x - 2, cyy - 15, w + 4, 30);
+  texto(g, fmt(valor), x + w / 2, cyy + 8, "center", "#fff", 20, 700); texto(g, rotulo, x + w / 2, y - 6, "center", col.acento, 13, 700, false);
+}
+function dibujarHUD() {
+  const [g, W, H] = ajustar($("hud")), c = cuadroDeLaImagen(), cv = S.c;
+  if (S.panel !== "dron" || !c || !cv) { S.cajas = []; return; }
+  const R = rectImagen(W, H), cx = R.x + R.w / 2, cy = R.y + R.h / 2, ppd = R.h / VFOV, u = Math.max(0.85, R.h / 720);
+  if (!S.video[0]) { g.fillStyle = "#0a0f1a"; g.fillRect(R.x, R.y, R.w, R.h); }
+  g.save(); g.beginPath(); g.rect(R.x, R.y, R.w, R.h - 46); g.clip();
+  const cam = camara(c), pit = (c.gmb ?? -5) + MONTAJE, roll = rad(c.cr || 0);
+  // horizonte artificial con escala de cabeceo (se mueve con el pitch de la cámara y rota con el alabeo)
+  g.save(); g.translate(cx, cy); g.rotate(-roll); const hy = pit * ppd, ancho = Math.min(R.w * 0.22, 200 * u);
+  const linea = (x0, y0, x1, y1, an = 1.6) => { g.lineWidth = an + 2; g.strokeStyle = "rgba(0,0,0,.55)"; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.lineWidth = an; g.strokeStyle = "rgba(255,255,255,.92)"; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); };
+  linea(-R.w * 0.46, hy, -ancho * 0.55, hy, 2); linea(ancho * 0.55, hy, R.w * 0.46, hy, 2);
+  for (let p = -30; p <= 30; p += 5) { if (!p) continue; const yy = hy - p * ppd, l = p % 10 === 0 ? ancho * 0.5 : ancho * 0.28; g.setLineDash(p < 0 ? [5, 4] : []);
+    linea(-l, yy, -ancho * 0.12, yy); linea(ancho * 0.12, yy, l, yy); g.setLineDash([]); if (p % 10 === 0) { texto(g, String(Math.abs(p)), -l - 6, yy + 5, "right", "#fff", 14, 700); texto(g, String(Math.abs(p)), l + 6, yy + 5, "left", "#fff", 14, 700); } }
+  g.restore();
+  // retícula central
+  linea(cx - 22 * u, cy, cx - 7 * u, cy, 2); linea(cx + 7 * u, cy, cx + 22 * u, cy, 2); linea(cx, cy - 22 * u, cx, cy - 7 * u, 2); linea(cx, cy + 7 * u, cx, cy + 22 * u, 2);
   // cajas de YOLO: las personas que la simulación ve en cámara, proyectadas a la imagen (no inventadas)
-  S.cajas = [];
-  const fijado = ["PERSECUCION", "PERDIDA", "RECONFIRMAR", "FIJADO"].includes(c.eb);
+  S.cajas = []; const fijado = FIJADOS.includes(c.eb);
   (c.en_camara || []).forEach(o => {
-    const q = (c.pers || []).find(p => p.id === o.id); if (!q) return;
+    const q = (c.pers || []).find(pp => pp.id === o.id); if (!q) return;
     const alto = q.alto || q.est || 1.7, a = proyectar(cam, [q.p[0], q.p[1], 0.05], R), b = proyectar(cam, [q.p[0], q.p[1], alto], R); if (!a || !b) return;
-    const h = Math.abs(a[1] - b[1]), w = h * 0.38, x0 = b[0] - w / 2, y0 = Math.min(a[1], b[1]), objetivo = fijado && q.rol === "ladron";
+    const h = Math.abs(a[1] - b[1]), w = h * 0.4, x0 = b[0] - w / 2, y0 = Math.min(a[1], b[1]), objetivo = fijado && q.rol === "ladron", cc = objetivo ? col.peligro : col.ok;
     S.cajas.push({ j: o.i, id: o.id, x0, y0, x1: x0 + w, y1: y0 + h, rol: q.rol });
-    g.strokeStyle = objetivo ? col.peligro : "rgba(231,227,217,.85)"; g.lineWidth = objetivo ? 1.8 : 1.2; g.strokeRect(x0, y0, w, h);
-    const et = objetivo ? `ID ${o.id} · OBJETIVO · ${o.d.toFixed(1)} m` : `ID ${o.id} · PERSONA · ${o.d.toFixed(1)} m`; fuente(g, 10, 600, true);
-    const tw = g.measureText(et).width + 8; g.fillStyle = objetivo ? col.peligro : "rgba(40,48,58,.92)"; g.fillRect(x0, Math.max(R.y, y0 - 14), tw, 14); texto(g, et, x0 + 4, Math.max(R.y, y0 - 14) + 10.5, "left", "#fff", 10, 600);
+    g.strokeStyle = cc; g.lineWidth = 2.4; const e = Math.min(14, w / 3, h / 3);
+    [[x0, y0, 1, 1], [x0 + w, y0, -1, 1], [x0, y0 + h, 1, -1], [x0 + w, y0 + h, -1, -1]].forEach(([x, y, sx, sy]) => { g.beginPath(); g.moveTo(x, y + sy * e); g.lineTo(x, y); g.lineTo(x + sx * e, y); g.stroke(); });
+    g.lineWidth = 1; g.globalAlpha = .55; g.strokeRect(x0, y0, w, h); g.globalAlpha = 1;
+    const et = objetivo ? `OBJETIVO · ID ${o.id} · ${o.d.toFixed(1)} m` : `PERSONA · ID ${o.id} · ${o.d.toFixed(1)} m`; fuente(g, 14, 700, true);
+    const tw = g.measureText(et).width + 14, ly = Math.max(R.y + 2, y0 - 23); g.fillStyle = cc; g.fillRect(x0, ly, tw, 21); texto(g, et, x0 + 7, ly + 16, "left", "#06101c", 14, 700);
   });
   g.restore();
-  // bloque superior izquierdo: modo, objetivo y tiempo a la vista
-  const obj = fijado ? "FIJADO" : ((c.en_camara || []).length ? "posible objetivo" : "ninguno");
-  g.fillStyle = "rgba(13,16,20,.55)"; g.fillRect(R.x + 8, R.y + 8, 190, 50);
-  texto(g, "MODO  " + (c.eb ?? "–"), R.x + 14, R.y + 23, "left", col.texto, 11, 600);
-  texto(g, "OBJETIVO  " + obj, R.x + 14, R.y + 37, "left", fijado ? "#e8a19d" : col.tenue, 10);
-  texto(g, "A LA VISTA  " + (c.tf ?? 0).toFixed(1) + " s", R.x + 14, R.y + 51, "left", col.tenue, 10);
-  // pie de la imagen: pan/tilt y campo de visión
-  texto(g, `PAN ${(c.pan || 0) >= 0 ? "+" : ""}${(c.pan || 0).toFixed(0)}°  TILT ${(c.gmb ?? 0).toFixed(0)}°  ·  HFOV ${HFOV}°`, R.x + 10, R.y + R.h - 8, "left", col.tenue, 10);
-  if (c.ens && c.ens.f360) texto(g, "BÚSQUEDA 360°", cx, R.y + R.h - 8, "center", col.texto, 11, 600);
-  const alerta = { reflejo_ataque: "REFLEJO · EVASIÓN", evadiendo: "EVASIÓN", amenaza: "AMENAZA CERCANA", punto_ciego: "PUNTO CIEGO", perimetro: "PERÍMETRO" }[c.arb];
-  if (alerta) { fuente(g, 12, 700); const tw = g.measureText(alerta).width + 24; g.fillStyle = "rgba(60,44,12,.9)"; g.fillRect(cx - tw / 2, R.y + R.h - 60, tw, 24); g.strokeStyle = col.alerta; g.strokeRect(cx - tw / 2, R.y + R.h - 60, tw, 24); texto(g, alerta, cx, R.y + R.h - 43, "center", col.alerta, 12, 700); }
+  // cinta de rumbo (arriba)
+  const hdg = (deg(c.d[3]) + 360) % 360, tw = Math.min(R.w * 0.46, 480), tx = cx - tw / 2, tyy = R.y + 10;
+  g.save(); g.beginPath(); g.rect(tx, tyy, tw, 36); g.clip(); g.fillStyle = "rgba(11,18,32,.62)"; g.fillRect(tx, tyy, tw, 36); g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.4;
+  const pxg = tw / 90;
+  for (let a = Math.floor((hdg - 50) / 5) * 5; a <= hdg + 50; a += 5) { const x = cx + (a - hdg) * pxg, n = ((a % 360) + 360) % 360; g.beginPath(); g.moveTo(x, tyy + 36); g.lineTo(x, tyy + 36 - (n % 15 === 0 ? 11 : 6)); g.stroke();
+    if (n % 15 === 0) texto(g, { 0: "E", 90: "N", 180: "O", 270: "S" }[n] ?? String(Math.round(((90 - n) + 360) % 360)).padStart(3, "0"), x, tyy + 16, "center", n % 90 === 0 ? col.acento : col.texto, 14, 700); }
+  g.restore(); g.fillStyle = "#0b1220"; g.fillRect(cx - 30, tyy + 38, 60, 24); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(cx - 30, tyy + 38, 60, 24);
+  const rumbo = ((90 - hdg) + 360) % 360; texto(g, String(Math.round(rumbo) % 360).padStart(3, "0") + "°", cx, tyy + 56, "center", "#fff", 18, 700);
+  // cintas de velocidad (izquierda) y altitud (derecha)
+  const mh = Math.max(46, Math.round(44 * u)), cinH = Math.min(R.h * 0.5, 330), cinY = cy - cinH / 2 + 4, v = Math.hypot((c.dv || [0, 0])[0], (c.dv || [0, 0])[1]);
+  cinta(g, R.x + 14, cinY, 70, cinH, v, 0.5, 52, "VEL m/s", x => x.toFixed(1), "izq"); cinta(g, R.x + R.w - 84, cinY, 70, cinH, c.d[2], 0.5, 40, "ALT m", x => x.toFixed(1), "der");
+  // indicador de alabeo (arco bajo) y de pan / tilt
+  g.save(); g.translate(cx, R.y + R.h - mh - 52); g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 0, 40 * u, rad(-150), rad(-30)); g.stroke();
+  [-45, -30, -20, -10, 0, 10, 20, 30, 45].forEach(r => { const an = rad(r - 90); g.beginPath(); g.moveTo(Math.cos(an) * 40 * u, Math.sin(an) * 40 * u); g.lineTo(Math.cos(an) * (r % 30 === 0 ? 31 : 35) * u, Math.sin(an) * (r % 30 === 0 ? 31 : 35) * u); g.stroke(); });
+  g.rotate(roll); g.fillStyle = col.acento; g.beginPath(); g.moveTo(0, -37 * u); g.lineTo(-6, -27 * u); g.lineTo(6, -27 * u); g.closePath(); g.fill(); g.restore();
+  const pan = c.pan || 0, tilt = c.gmb ?? -5, gx = R.x + 16, gy = R.y + R.h - mh - 70;
+  g.fillStyle = "rgba(11,18,32,.7)"; g.fillRect(gx, gy, 178, 60); g.strokeStyle = "rgba(233,238,247,.35)"; g.lineWidth = 1; g.strokeRect(gx, gy, 178, 60);
+  texto(g, "PAN", gx + 8, gy + 17, "left", col.tenue, 13, 700, false); g.strokeStyle = "rgba(233,238,247,.6)"; g.beginPath(); g.moveTo(gx + 44, gy + 12); g.lineTo(gx + 166, gy + 12); g.stroke(); g.fillStyle = col.acento; g.fillRect(gx + 105 + pan / 90 * 61 - 3, gy + 6, 6, 12);
+  texto(g, "TILT", gx + 8, gy + 41, "left", col.tenue, 13, 700, false); g.beginPath(); g.moveTo(gx + 44, gy + 36); g.lineTo(gx + 166, gy + 36); g.stroke(); g.fillStyle = col.acento; g.fillRect(gx + 44 + (tilt + 45) / 60 * 122 - 3, gy + 30, 6, 12);
+  texto(g, `${pan >= 0 ? "+" : ""}${pan.toFixed(0)}°`, gx + 168, gy + 55, "right", col.texto, 13, 700); texto(g, `${tilt.toFixed(0)}°`, gx + 98, gy + 55, "right", col.texto, 13, 700);
+  // alerta y barra de misión
+  const alerta = ALERTAS[c.arb], my = R.y + R.h - mh;
+  if (alerta) { fuente(g, 16, 700); const tw2 = g.measureText(alerta).width + 34; g.fillStyle = "rgba(61,40,6,.94)"; g.fillRect(cx - tw2 / 2, my - 40, tw2, 30); g.strokeStyle = col.alerta; g.lineWidth = 2; g.strokeRect(cx - tw2 / 2, my - 40, tw2, 30); texto(g, alerta, cx, my - 19, "center", col.alerta, 16, 700); }
+  g.fillStyle = "rgba(11,18,32,.88)"; g.fillRect(R.x, my, R.w, mh); g.fillStyle = col.linea; g.fillRect(R.x, my, R.w, 1);
+  const hay = (cv.en_camara || []).length > 0, obj = fijado ? "FIJADO" : hay ? "POSIBLE OBJETIVO" : "NINGUNO", segs = [["MODO", cv.eb ?? "–", col.acento], ["OBJETIVO", obj, fijado ? col.peligro : hay ? col.alerta : col.tenue], ["A LA VISTA", (cv.tf ?? 0).toFixed(1) + " s", col.texto], ["AMENAZA", alerta ? alerta : "NINGUNA", alerta ? col.alerta : col.ok], ["HFOV", HFOV + "° · −2.4°", col.tenue]];
+  const sw = R.w / segs.length; segs.forEach(([k, val, cc], i) => { texto(g, k, R.x + i * sw + 12, my + 17, "left", col.tenue2, 12, 700, false); texto(g, val, R.x + i * sw + 12, my + mh - 9, "left", cc, Math.round(16 * Math.min(1.2, Math.max(u, .9))), 700); });
   S.vista = [R.x, R.y, R.w, R.h];
 }
 
 // ------------------------------------------------------------------------------------------------------------------ CSI#2 (rótulo)
 function dibujarCsi2() {
   const [g, W, H] = ajustar($("hud1")); if (!S.c) return;
-  texto(g, `HFOV ${HFOV}° · −90°`, W - 8, H - 8, "right", col.tenue, 10);
+  texto(g, `HFOV ${HFOV}° · −90°`, W - 8, H - 9, "right", "#fff", 13, 600);
 }
 
 // ------------------------------------------------------------------------------------------------------------------ mapa de los dos LiDAR
 function dibujarLidar() {
   const [g, W, H] = ajustar($("lidar")), c = S.c; if (!c || W < 60 || H < 60) return;
-  const cx = W / 2, cy = H * 0.56, alc = 14, k = Math.min(W / 2 - 14, cy - 22, H - cy - 8) / alc, [x, y, , psi] = c.d;
+  const cx = W / 2, cy = H / 2 + 6, alc = 14, k = Math.min(W / 2 - 10, cy - 18, H - cy - 22) / alc, [x, y, , psi] = c.d;
   const P = (wx, wy) => [cx + (wx - x) * k, cy - (wy - y) * k];
-  g.strokeStyle = "#232b35"; g.lineWidth = 1; [5, 10].forEach(r => { g.beginPath(); g.arc(cx, cy, r * k, 0, 7); g.stroke(); texto(g, r + " m", cx + r * k * 0.71 + 3, cy - r * k * 0.71, "left", "#4b5560", 9); });
-  g.beginPath(); g.moveTo(cx, cy - alc * k); g.lineTo(cx, cy + alc * k); g.moveTo(cx - alc * k, cy); g.lineTo(cx + alc * k, cy); g.stroke(); texto(g, "N", cx, cy - alc * k - 3, "center", col.tenue, 10);
-  (S.paneles || []).forEach(p => { const a = P(p[0], p[1]), b = P(p[2], p[3]); g.strokeStyle = "#3b4551"; g.lineWidth = 2; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); });
-  g.fillStyle = col.acento; S.lidar.forEach(q => { const [px, py] = P(q[0], q[1]); if (Math.abs(px - cx) < W && Math.abs(py - cy) < H) g.fillRect(px - 1, py - 1, 2, 2); });
-  g.fillStyle = "#c9d3de"; S.luna.forEach(q => { const [px, py] = P(q[0], q[1]); if (Math.abs(px - cx) < W && Math.abs(py - cy) < H) g.fillRect(px - 1, py - 1, 2, 2); });
-  const tf = Math.min(c.lid ?? 30, 30); g.strokeStyle = col.acento; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(psi) * tf * k, cy - Math.sin(psi) * tf * k); g.stroke();
-  if (c.luna && (c.luna[0] || c.luna[1])) { const [lx, ly] = P(c.luna[0], c.luna[1]); g.strokeStyle = "#c9d3de"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(cx, cy); g.lineTo(lx, ly); g.stroke(); g.setLineDash([]); }
-  g.save(); g.translate(cx, cy); g.rotate(-psi); g.fillStyle = col.texto; g.beginPath(); g.moveTo(9, 0); g.lineTo(-6, 5.5); g.lineTo(-3, 0); g.lineTo(-6, -5.5); g.closePath(); g.fill(); g.restore();
-  texto(g, "● TF03 (fijo, al frente)", 10, H - 8, "left", col.acento, 9); texto(g, "● TF-Luna (en el pan-tilt)", W - 10, H - 8, "right", "#c9d3de", 9);
+  g.strokeStyle = "#243653"; g.lineWidth = 1; [5, 10].forEach(r => { g.beginPath(); g.arc(cx, cy, r * k, 0, 7); g.stroke(); texto(g, r + " m", cx + r * k * 0.71 + 3, cy - r * k * 0.71 - 2, "left", col.tenue2, 12); });
+  g.beginPath(); g.moveTo(cx, cy - alc * k); g.lineTo(cx, cy + alc * k); g.moveTo(cx - alc * k, cy); g.lineTo(cx + alc * k, cy); g.stroke(); texto(g, "N", cx, cy - alc * k - 3, "center", col.tenue, 13, 700);
+  (S.paneles || []).forEach(p => { const a = P(p[0], p[1]), b = P(p[2], p[3]); g.strokeStyle = "#8fa3bf"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); });
+  g.fillStyle = col.acento; S.lidar.forEach(q => { const [px, py] = P(q[0], q[1]); if (Math.abs(px - cx) < W && Math.abs(py - cy) < H) g.fillRect(px - 1.2, py - 1.2, 2.4, 2.4); });
+  g.fillStyle = "#9fc5e8"; S.luna.forEach(q => { const [px, py] = P(q[0], q[1]); if (Math.abs(px - cx) < W && Math.abs(py - cy) < H) g.fillRect(px - 1.2, py - 1.2, 2.4, 2.4); });
+  const tf = Math.min(c.lid ?? 30, 30); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(psi) * tf * k, cy - Math.sin(psi) * tf * k); g.stroke();
+  if (c.luna && (c.luna[0] || c.luna[1])) { const [lx, ly] = P(c.luna[0], c.luna[1]); g.strokeStyle = "#9fc5e8"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(cx, cy); g.lineTo(lx, ly); g.stroke(); g.setLineDash([]); }
+  g.save(); g.translate(cx, cy); g.rotate(-psi); g.fillStyle = "#fff"; g.beginPath(); g.moveTo(11, 0); g.lineTo(-7, 6.5); g.lineTo(-3, 0); g.lineTo(-7, -6.5); g.closePath(); g.fill(); g.restore();
+  texto(g, "● TF03 fijo", 10, H - 8, "left", col.acento, 12, 600, false); texto(g, "● TF-Luna en el pan-tilt", W - 10, H - 8, "right", "#9fc5e8", 12, 600, false);
 }
 
-// ------------------------------------------------------------------------------------------------------------------ telemetría: datos, actitud y minimapa
+// ------------------------------------------------------------------------------------------------------------------ telemetría en tarjetas, actitud y minimapa
 function bateria() { const pct = lim(100 - S.tSim / 9, 0, 100); return { pct, v: 14.0 + 2.8 * pct / 100 }; }
 const MODO_VUELO = { ia: "GUIADO (IA)", manual: "MANUAL", puntos: "PUNTOS DE PASO" };
+function spark(id, datos, color = col.acento, lo, hi) {
+  const cv = $(id); if (!cv) return; const [g, W, H] = ajustar(cv); if (datos.length < 2) return;
+  const mn = lo ?? Math.min(...datos), mx = hi ?? Math.max(...datos), rg = Math.max(mx - mn, 1e-6);
+  g.strokeStyle = "#243653"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, H - 0.5); g.lineTo(W, H - 0.5); g.stroke();
+  g.strokeStyle = color; g.lineWidth = 1.8; g.beginPath(); datos.forEach((d, i) => { const x = i / 59 * W, y = H - 3 - (d - mn) / rg * (H - 6); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+}
+function barrasSenal(id, n) { document.querySelectorAll(`#${id} u`).forEach((u, i) => u.classList.toggle("on", i < n)); }
+const set = (id, t) => { const e = $(id); if (e && e.textContent !== String(t)) e.textContent = t; };
+const ancho = (id, pct, color) => { const e = $(id); if (e) { e.style.width = lim(pct, 0, 100) + "%"; if (color) e.style.background = color; } };
+const ptos = (az) => ["E", "NE", "N", "NO", "O", "SO", "S", "SE"][Math.round((((az % 360) + 360) % 360) / 45) % 8];
+setInterval(() => {                                                         // cuadros de datos: 5 veces por segundo (las gráficas de tendencia, una vez por segundo)
+  const c = S.c; if (!c) return;
+  const [x, y, z, psi] = c.d, vel = Math.hypot((c.dv || [0, 0])[0], (c.dv || [0, 0])[1]), b = bateria(), edad = performance.now() - S.ultimo, enl = S.fuente === "rep" ? 0 : Math.round(edad);
+  const sinEnlace = S.fuente !== "rep" && edad > 1500, margen = ARENA - Math.max(Math.abs(x), Math.abs(y)), corr = 9 + 3 * vel, resta = Math.max(0, Math.round(b.pct / 100 * 5.2 / corr * 60));
+  const h0 = S.hist.length > 12 ? S.hist[S.hist.length - 11] : null, vs = h0 ? (z - h0[1].d[2]) / Math.max(0.1, (S.hist[S.hist.length - 1][0] - h0[0]) / 1000) : 0;
+  const rumbo = ((90 - deg(psi)) % 360 + 360) % 360, lunaD = c.luna && (c.luna[0] || c.luna[1]) ? Math.hypot(c.luna[0] - x, c.luna[1] - y, (c.luna[2] ?? 0) - z) : null, tf = c.lid ?? 30;
+  const bars = sinEnlace ? 0 : enl < 120 ? 4 : enl < 300 ? 3 : enl < 700 ? 2 : 1;
+  // barra superior
+  set("bModo", c.eb ?? "–"); set("bControl", MODO_VUELO[S.estado]); set("bEnlace", sinEnlace ? "SIN ENLACE" : S.fuente === "rep" ? "REPETICIÓN" : enl + " ms"); $("bEnlace").className = sinEnlace ? "peligro" : "";
+  barrasSenal("bBarrasEnlace", bars); set("bGps", "14 sat"); set("bBat", `${b.pct.toFixed(0)} % · ${b.v.toFixed(1)} V`); $("bBat").className = b.pct < 20 ? "peligro" : b.pct < 35 ? "alerta" : "ok";
+  set("bGeoChip", "OK · " + margen.toFixed(0) + " m"); $("bGeoChip").className = margen < 3 ? "peligro" : margen < 8 ? "alerta" : "ok";
+  set("bSens", "TF03 · LUNA · 2 CSI"); $("bSens").className = "ok"; const hayP = (c.en_camara || []).length > 0; set("bObj", FIJADOS.includes(c.eb) ? "FIJADO" : hayP ? "POSIBLE" : "NINGUNO"); $("bObj").className = FIJADOS.includes(c.eb) ? "peligro" : hayP ? "alerta" : "";
+  set("bHora", new Date().toLocaleTimeString("es-CO", { hour12: false })); set("bT", "T+" + Math.floor(S.tSim / 60) + ":" + String(Math.floor(S.tSim % 60)).padStart(2, "0"));
+  $("bModo").className = FIJADOS.includes(c.eb) ? "acento" : ALERTAS[c.arb] ? "alerta" : "";
+  // tarjetas
+  set("vAlt", z.toFixed(1)); set("sAlt", `VS ${vs >= 0 ? "+" : ""}${vs.toFixed(1)} m/s`); set("vVel", vel.toFixed(1)); ancho("bVel", vel / 5 * 100); set("sVel", "sobre el suelo");
+  set("vRum", String(Math.round(rumbo)).padStart(3, "0")); set("sRum", "hacia el " + ptos(deg(psi)) + (c.ens && c.ens.f360 ? " · 360° activo" : ""));
+  set("vBat", b.pct.toFixed(0)); ancho("bBatBarra", b.pct, b.pct < 20 ? col.peligro : b.pct < 35 ? col.alerta : col.ok); set("sBat", `${b.v.toFixed(1)}V · ${corr.toFixed(1)}A · ${resta}m`);
+  set("vGps", "14"); set("sGps", "HDOP 0.8 · 3D fijo"); document.querySelectorAll("#gBarras u").forEach(u => u.classList.add("on"));
+  set("vEnl", sinEnlace ? "—" : enl); set("sEnl", sinEnlace ? "SIN ENLACE" : S.fuente === "rep" ? "repetición" : "RSSI −52 dBm (sim.)"); $("vEnl").className = sinEnlace ? "peligro" : "";
+  set("eModo", MODO_VUELO[S.estado]); set("sModo", c.eb ?? "–"); set("dTf", tf < 29.5 ? tf.toFixed(1) + " m" : "> 30 m"); ancho("bTf", tf / 30 * 100); set("dLu", lunaD === null ? "sin eco" : lunaD.toFixed(1) + " m"); ancho("bLu", lunaD === null ? 0 : lunaD / 8 * 100);
+  set("vGeo", margen.toFixed(1)); ancho("bGeo", margen / ARENA * 100, margen < 3 ? col.peligro : margen < 8 ? col.alerta : col.acento); $("vGeo").className = margen < 3 ? "peligro" : margen < 8 ? "alerta" : "";
+  const nivel = sinEnlace || margen < 3 ? "peligro" : margen < 8 || b.pct < 20 ? "alerta" : "ok", est = $("estTel"); est.className = "est " + nivel; est.textContent = nivel === "ok" ? "NOMINAL" : nivel === "alerta" ? "PRECAUCIÓN" : "ALERTA";
+  set("estLidar", `TF03 ${tf < 29.5 ? tf.toFixed(1) : "> 30"} m`); const e2 = $("estCsi2"); e2.textContent = S.video[1] ? "VIDEO" : "SIN SEÑAL"; e2.className = "est " + (S.video[1] ? "ok" : "");
+  set("pieEstado", `● ${S.fuente === "rep" ? "REPETICIÓN" : "SIMULACIÓN EN VIVO"} · DATOS SIMULADOS · ${S.fps.toFixed(0)} fps · enlace ${enl} ms · TALOS-AI estación v1.0`);
+  $("bGrabar").className = S.grabando ? "rec" : ""; $("bGrabar").textContent = S.grabando ? "Grabando" : "Grabar"; $("bRuta").className = S.ruta ? "act" : ""; $("bPausa").className = S.pausa ? "act" : "";
+  if (sinEnlace && !S.sinEnlaceAvisado) { S.sinEnlaceAvisado = true; evento("Sin enlace con la simulación", "peligro"); } else if (!sinEnlace) S.sinEnlaceAvisado = false;
+  if (margen < 3 && !S.geoAvisada) { S.geoAvisada = true; evento("Cerca de la geocerca: " + margen.toFixed(1) + " m", "alerta"); } else if (margen > 5) S.geoAvisada = false;
+  spark("spAlt", S.tend.alt, col.acento); spark("spEnl", S.tend.enl, col.ok, 0, 200);
+}, 200);
+setInterval(() => { const c = S.c; if (!c) return; const t = S.tend; t.alt.push(c.d[2]); t.bat.push(bateria().pct); t.enl.push(S.fuente === "rep" ? 0 : Math.min(200, Math.round(performance.now() - S.ultimo))); for (const k of Object.keys(t)) if (t[k].length > 60) t[k].shift(); }, 1000);
 function dibujarTel() {
-  const c = S.c, el = $("telDatos"); if (!c) { el.innerHTML = ""; return; }
-  const [x, y, z] = c.d, v = Math.hypot((c.dv || [0, 0])[0], (c.dv || [0, 0])[1]), b = bateria(), edad = performance.now() - S.ultimo;
-  const enlace = S.fuente === "rep" ? "REPETICIÓN" : (edad > 1500 ? "SIN ENLACE" : Math.round(edad) + " ms"), margen = ARENA - Math.max(Math.abs(x), Math.abs(y));
-  const luna = c.luna && (c.luna[0] || c.luna[1]) ? Math.hypot(c.luna[0] - x, c.luna[1] - y, (c.luna[2] ?? 0) - z).toFixed(1) + " m" : "sin eco";
-  const filas = [["ALTURA", z.toFixed(1) + " m", ""], ["VELOCIDAD", v.toFixed(1) + " m/s", ""], ["BATERÍA", `${b.v.toFixed(1)} V · ${b.pct.toFixed(0)} %`, b.pct < 20 ? "peligro" : b.pct < 35 ? "alerta" : ""],
-    ["GPS", "14 sat · HDOP 0.8", ""], ["ENLACE", enlace, enlace === "SIN ENLACE" ? "peligro" : ""], ["MODO DE VUELO", MODO_VUELO[S.estado], ""], ["TF03", (c.lid ?? 30) < 29.5 ? c.lid.toFixed(1) + " m" : "> 30 m", ""],
-    ["TF-LUNA", luna, ""], ["GEOCERCA", margen.toFixed(1) + " m", margen < 3 ? "peligro" : margen < 8 ? "alerta" : ""]];
-  el.innerHTML = filas.map(([k, val, cl]) => `<div class="f"><span>${k}</span><b class="${cl}">${val}</b></div>`).join("");
-  // actitud: horizonte artificial con el dron visto desde atrás que se inclina con el alabeo
-  const [g, W, H] = ajustar($("actitud")), r = Math.min(W, H) / 2 - 8, mx = W / 2, my = H / 2, roll = rad(c.cr || 0), pit = c.cp || 0;
-  g.save(); g.beginPath(); g.arc(mx, my, r, 0, 7); g.clip(); g.translate(mx, my); g.rotate(-roll);
-  const oy = pit * r / 35; g.fillStyle = "#2d3b4c"; g.fillRect(-r * 2, -r * 2 + oy, r * 4, r * 2); g.fillStyle = "#3b352d"; g.fillRect(-r * 2, oy, r * 4, r * 2);
-  g.strokeStyle = "rgba(231,227,217,.7)"; g.beginPath(); g.moveTo(-r, oy); g.lineTo(r, oy); g.stroke();
-  [-20, -10, 10, 20].forEach(p => { const yy = oy - p * r / 35; g.beginPath(); g.moveTo(-r * 0.22, yy); g.lineTo(r * 0.22, yy); g.stroke(); });
-  g.restore(); g.strokeStyle = col.linea; g.lineWidth = 1.5; g.beginPath(); g.arc(mx, my, r, 0, 7); g.stroke();
-  g.save(); g.translate(mx, my); g.rotate(-roll * 0); g.strokeStyle = col.texto; g.fillStyle = col.texto; g.lineWidth = 2;     // el dron visto desde atrás: brazos y cuerpo
-  g.rotate(-roll); g.beginPath(); g.moveTo(-r * 0.55, 0); g.lineTo(r * 0.55, 0); g.stroke(); g.fillRect(-r * 0.12, -r * 0.08, r * 0.24, r * 0.16); [-0.55, 0.55].forEach(s => { g.beginPath(); g.arc(r * s, -r * 0.05, r * 0.09, 0, 7); g.stroke(); }); g.restore();
-  texto(g, `ALAB. ${(c.cr || 0) >= 0 ? "+" : ""}${(c.cr || 0).toFixed(1)}°  CAB. ${pit >= 0 ? "+" : ""}${pit.toFixed(1)}°`, mx, H - 4, "center", col.tenue, 9);
-  // minimapa: la cancha, la geocerca, los paneles y el dron con su rumbo
-  const [m, MW, MH] = ajustar($("minimapa")), ext = 30, kk = Math.min(MW, MH) / (2 * ext), ox = MW / 2, oy2 = MH / 2, Q = (wx, wy) => [ox + wx * kk, oy2 - wy * kk];
-  m.fillStyle = "#1c2a22"; m.fillRect(0, 0, MW, MH);
-  for (let i = -ext; i < ext; i += 5) { if (((i / 5) | 0) % 2 === 0) { m.fillStyle = "rgba(255,255,255,.035)"; const a = Q(i, ext), bb = Q(i + 5, -ext); m.fillRect(a[0], a[1], bb[0] - a[0], bb[1] - a[1]); } }
-  m.setLineDash([4, 3]); m.strokeStyle = "rgba(217,164,65,.7)"; const g1 = Q(-ARENA, ARENA), g2 = Q(ARENA, -ARENA); m.strokeRect(g1[0], g1[1], g2[0] - g1[0], g2[1] - g1[1]); m.setLineDash([]); texto(m, "GEOCERCA", g1[0] + 4, g1[1] + 11, "left", "rgba(217,164,65,.8)", 8, 600, false);
-  (S.paneles || []).forEach(p => { const a = Q(p[0], p[1]), bb = Q(p[2], p[3]); m.strokeStyle = "#d8d4c8"; m.lineWidth = 2; m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); });
-  (c.pers || []).forEach(q => { const [px, py] = Q(q.p[0], q.p[1]); m.fillStyle = q.rol === "ladron" ? "#cf5c57" : "#b9c0c9"; m.beginPath(); m.arc(px, py, 3, 0, 7); m.fill(); });
-  const [dx, dy] = Q(x, y); m.save(); m.translate(dx, dy); m.rotate(-c.d[3]); m.fillStyle = col.acento; m.strokeStyle = "#fff"; m.lineWidth = 1; m.beginPath(); m.moveTo(8, 0); m.lineTo(-6, 5); m.lineTo(-3, 0); m.lineTo(-6, -5); m.closePath(); m.fill(); m.stroke(); m.restore();
-  texto(m, "N", MW - 10, 12, "right", col.tenue, 10, 700, false); texto(m, `${Math.round(((deg(c.d[3]) + 360) % 360))}°`, 6, MH - 6, "left", col.texto, 10, 600);
+  const c = S.c; if (!c) return;
+  // actitud: horizonte artificial con escala y el dron visto desde atrás que se inclina con el alabeo
+  const [g, W, H] = ajustar($("actitud")), roll = rad(c.cr || 0), pit = c.cp || 0, mx = W / 2, my = H / 2 + 6, esc = (H - 26) / 70;
+  g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip(); g.translate(mx, my); g.rotate(-roll); const oy = pit * esc * 1.4;
+  g.fillStyle = "#1b6aa5"; g.fillRect(-W * 2, -H * 2 + oy, W * 4, H * 2); g.fillStyle = "#7a5530"; g.fillRect(-W * 2, oy, W * 4, H * 2);
+  g.strokeStyle = "#fff"; g.lineWidth = 2; g.beginPath(); g.moveTo(-W, oy); g.lineTo(W, oy); g.stroke();
+  for (let p = -20; p <= 20; p += 5) { if (!p) continue; const yy = oy - p * esc * 1.4, l = p % 10 === 0 ? 38 : 20; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-l, yy); g.lineTo(l, yy); g.stroke(); if (p % 10 === 0) { texto(g, String(Math.abs(p)), l + 6, yy + 5, "left", "#fff", 13, 700); texto(g, String(Math.abs(p)), -l - 6, yy + 5, "right", "#fff", 13, 700); } }
+  g.restore();
+  g.save(); g.translate(mx, 26 + 4); g.strokeStyle = "#fff"; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 56, 56, rad(-140), rad(-40)); g.stroke(); g.rotate(-roll); g.fillStyle = "#fff"; g.beginPath(); g.moveTo(0, 6); g.lineTo(-7, -4); g.lineTo(7, -4); g.closePath(); g.fill(); g.restore();
+  g.save(); g.translate(mx, my); g.strokeStyle = "#fff"; g.fillStyle = "#0b1220"; g.lineWidth = 2.6; const r = Math.min(W, H) * 0.3;                                   // el dron visto desde atrás
+  g.rotate(-roll); g.beginPath(); g.moveTo(-r, 0); g.lineTo(r, 0); g.stroke(); g.fillRect(-r * 0.2, -r * 0.14, r * 0.4, r * 0.28); g.strokeRect(-r * 0.2, -r * 0.14, r * 0.4, r * 0.28); [-1, 1].forEach(s => { g.beginPath(); g.arc(r * s, -r * 0.08, r * 0.17, 0, 7); g.stroke(); g.beginPath(); g.moveTo(r * s, -r * 0.1); g.lineTo(r * s, 0); g.stroke(); }); g.restore();
+  texto(g, `ALABEO ${(c.cr || 0) >= 0 ? "+" : ""}${(c.cr || 0).toFixed(1)}°`, 10, H - 28, "left", "#fff", 13, 700); texto(g, `CABECEO ${pit >= 0 ? "+" : ""}${pit.toFixed(1)}°`, 10, H - 10, "left", "#fff", 13, 700);
+  // minimapa: la cancha, la geocerca, los paneles, las personas y el dron con su rumbo
+  const [m, MW, MH] = ajustar($("minimapa")), ext = 29, kk = Math.min(MW, MH) / (2 * ext), ox = MW / 2, oy2 = MH / 2 + 4, Q = (wx, wy) => [ox + wx * kk, oy2 - wy * kk], [x, y, , psi] = c.d;
+  m.fillStyle = "#17382a"; m.fillRect(0, 0, MW, MH);
+  for (let i = -ext; i < ext; i += 5) { if ((Math.round(i / 5)) % 2 === 0) { m.fillStyle = "rgba(255,255,255,.045)"; const a = Q(i, ext), bb = Q(i + 5, -ext); m.fillRect(a[0], a[1], bb[0] - a[0], bb[1] - a[1]); } }
+  m.strokeStyle = "rgba(255,255,255,.18)"; m.lineWidth = 1; for (let i = -20; i <= 20; i += 10) { let a = Q(i, -ext), bb = Q(i, ext); m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); a = Q(-ext, i); bb = Q(ext, i); m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); }
+  m.setLineDash([6, 4]); m.strokeStyle = col.alerta; m.lineWidth = 1.6; const g1 = Q(-ARENA, ARENA), g2 = Q(ARENA, -ARENA); m.strokeRect(g1[0], g1[1], g2[0] - g1[0], g2[1] - g1[1]); m.setLineDash([]);
+  texto(m, "GEOCERCA 25 m", g1[0] + 6, g1[1] + 16, "left", col.alerta, 12, 700, false);
+  (S.paneles || []).forEach(p => { const a = Q(p[0], p[1]), bb = Q(p[2], p[3]); m.strokeStyle = "#f2f4f8"; m.lineWidth = 3; m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); });
+  if (S.ruta && c.ruta) { m.fillStyle = col.acento; c.ruta.forEach(q => { const [rx, ry] = Q(q[0], q[1]); m.beginPath(); m.arc(rx, ry, 2.5, 0, 7); m.fill(); }); }
+  (c.pers || []).forEach(q => { const [px, py] = Q(q.p[0], q.p[1]); m.fillStyle = q.rol === "ladron" ? col.peligro : "#d5dce8"; m.beginPath(); m.arc(px, py, 4.5, 0, 7); m.fill(); m.strokeStyle = "#0b1220"; m.lineWidth = 1; m.stroke(); });
+  const [dx, dy] = Q(x, y); m.fillStyle = "rgba(47,164,231,.2)"; m.beginPath(); m.moveTo(dx, dy); m.arc(dx, dy, 46, -(psi + rad(c.pan || 0)) - 0.6, -(psi + rad(c.pan || 0)) + 0.6); m.closePath(); m.fill();
+  m.save(); m.translate(dx, dy); m.rotate(-psi); m.fillStyle = col.acento; m.strokeStyle = "#fff"; m.lineWidth = 1.5; m.beginPath(); m.moveTo(11, 0); m.lineTo(-8, 7); m.lineTo(-4, 0); m.lineTo(-8, -7); m.closePath(); m.fill(); m.stroke(); m.restore();
+  texto(m, "N ↑", MW - 8, 18, "right", "#fff", 14, 700, false); texto(m, `RUMBO ${String(Math.round(((90 - deg(psi)) % 360 + 360) % 360)).padStart(3, "0")}°`, 8, MH - 10, "left", "#fff", 13, 700);
 }
 
 // ------------------------------------------------------------------------------------------------------------------ mapa táctico (Enseñar por puntos de paso)
@@ -226,20 +290,25 @@ function dibujarMapa() {
 
 // ------------------------------------------------------------------------------------------------------------------ barra superior, avisos y bucle
 let avisoT = 0;
-function aviso(t, alerta = false) { const a = $("aviso"); a.textContent = t; a.className = alerta ? "alerta" : ""; a.style.display = "block"; clearTimeout(avisoT); avisoT = setTimeout(() => (a.style.display = "none"), 3200); }
-function barra() {
-  const c = S.c; if (!c) return;
-  $("bModo").textContent = c.eb ?? "–"; $("bControl").textContent = MODO_VUELO[S.estado];
-  const edad = performance.now() - S.ultimo, e = $("bEnlace"); e.textContent = S.fuente === "rep" ? "REPETICIÓN" : edad > 1500 ? "SIN ENLACE" : "ENLAZADO"; e.className = edad > 1500 && S.fuente !== "rep" ? "peligro" : "";
-  $("bHora").textContent = new Date().toLocaleTimeString("es-CO", { hour12: false }) + "  ·  T+" + Math.floor(S.tSim / 60) + ":" + String(Math.floor(S.tSim % 60)).padStart(2, "0");
-  $("bGrabar").className = S.grabando ? "rec" : ""; $("bGrabar").textContent = S.grabando ? "Grabando" : "Grabar"; $("bRuta").className = S.ruta ? "act" : ""; $("bPausa").className = S.pausa ? "act" : "";
-  $("pieEstado").textContent = (S.fuente === "rep" ? "Repetición" : "Simulación en vivo") + " · datos simulados · " + S.fps.toFixed(0) + " fps";
+function aviso(t, alerta = false) { evento(t, alerta ? "alerta" : ""); const a = $("aviso"); a.textContent = t; a.className = alerta ? "alerta" : ""; a.style.display = "block"; clearTimeout(avisoT); avisoT = setTimeout(() => (a.style.display = "none"), 3200); }
+const hora = () => new Date().toLocaleTimeString("es-CO", { hour12: false });
+function evento(txt, nivel = "") {
+  const u = S.eventos[0]; if (u && u.txt === txt && performance.now() - u.t < 1500) return;
+  S.eventos.unshift({ txt, nivel, h: hora(), t: performance.now() }); if (S.eventos.length > 40) S.eventos.pop();
+  const lista = $("logLista"); lista.innerHTML = S.eventos.slice(0, 6).map(e => `<div class="ev ${e.nivel}"><time>${e.h}</time><i></i><span>${e.txt}</span></div>`).join(""); set("logEst", S.eventos.length + " eventos");
+}
+function registrarEventos(a, c) {
+  if (!a) return; const fa = FIJADOS.includes(a.eb), fc = FIJADOS.includes(c.eb);
+  if (a.eb !== c.eb) evento("Modo: " + c.eb, fc && !fa ? "ok" : ""); if (fc && !fa) evento("Objetivo fijado", "ok"); if (fa && !fc) evento("Objetivo perdido: búsqueda", "alerta");
+  if (c.arb && c.arb !== a.arb) evento("Árbitro: " + (ALERTAS[c.arb] || c.arb).toLowerCase(), c.arb === "punto_ciego" || c.arb === "perimetro" ? "alerta" : "peligro");
+  if ((c.en_camara || []).length && !(a.en_camara || []).length) evento("Persona detectada · ID " + c.en_camara[0].id, "");
+  if (c.ens && a.ens && c.ens.f360 && !a.ens.f360) evento("Giro de 360° en curso", "");
 }
 let _n = 0, _t = performance.now();
 function lazo() {
   const ahora = performance.now(); _n++; if (ahora - _t > 1000) { S.fps = _n * 1000 / (ahora - _t); _n = 0; _t = ahora; }
   requestAnimationFrame(lazo);                                           // primero el siguiente cuadro: un error al dibujar no debe detener la pantalla
-  for (const f of [dibujarHUD, dibujarCsi2, dibujarLidar, dibujarTel, dibujarMapa, barra]) { try { f(); } catch (e) { if (!S.errDib) { S.errDib = true; console.warn("dibujo:", f.name, e); } } }
+  for (const f of [dibujarHUD, dibujarCsi2, dibujarLidar, dibujarTel, dibujarMapa]) { try { f(); } catch (e) { if (!S.errDib) { S.errDib = true; console.warn("dibujo:", f.name, e); } } }
 }
 
 // ------------------------------------------------------------------------------------------------------------------ vistas
