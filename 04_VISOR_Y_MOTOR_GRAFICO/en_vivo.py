@@ -164,6 +164,8 @@ def simular():
                 estado["cuadros"].append(f)
                 cambio.notify_all()
             if done[0] or reiniciar:
+                if os.environ.get("EN_VIVO_DEPURAR"):
+                    print("fin de partida: paso", paso, "done", bool(done[0]), "reset", reiniciar, "estado", int(env.estado[0]), "res", getattr(env, "resultado", None), flush=True)
                 break
             time.sleep(max(0.0, E.DT / A.velocidad - (time.perf_counter() - t0)))
         if ens["reg"]:

@@ -23,6 +23,8 @@ import maniquies_unreal as MQ  # noqa: E402
 PUERTO = int(os.environ.get("DRONIA_UDP", "8770"))
 CAMARA = os.environ.get("DRONIA_CAMARA", "seguir")
 ANIM = "/Game/Characters/Mannequins/Anims/Unarmed/"
+N_PANELES = 4                       # entorno.py: hasta 4 muros
+ROLES = ["ladron", "peaton", "peaton", "peaton"]
 COLORES = {"ladron": (0.85, 0.12, 0.12), "peaton": (0.45, 0.55, 0.68)}
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,12 +42,19 @@ def preparar():
         if a.get_actor_label().startswith("Dron") or carpeta in ("Paneles",) or carpeta.startswith(("Repeticion", "Dron", "Vivo")):
             D.actores.destroy_actor(a)
     est["dron"] = D.dron("Dron_vivo", 2.0)
+    # Todo se crea UNA vez aquí; después solo se mueven transformaciones (crear o destruir mallas con el render en marcha tumbó el editor: Assertion VertexFactory...IsReadyForStaticMeshCaching)
+    tablero, marco, _ = D.mats_paneles()
+    est["pool_paneles"] = [(D.caja(f"Vivo_panel_{i}", 0, 0, -50, 1, 1, 1, tablero, 0.0, "Vivo"), D.caja(f"Vivo_panel_{i}_marco", 0, 0, -50, 1, 1, 1, marco, 0.0, "Vivo")) for i in range(N_PANELES)]
+    for j, rol in enumerate(ROLES):
+        est["pers"][j] = {"actor": MQ.figura(f"Vivo_{rol}_{j}", rol, COLORES[rol], 1.75, "Vivo"), "anim": None, "est": 1.75}
+        est["pers"][j]["actor"].set_actor_location(D.ue(0, 0, -50), False, False)
     for g in ("pan", "tilt"):
         est[g] = next((a for a in D.actores.get_all_level_actors() if a.get_actor_label() == f"Dron_vivo_{g}"), None)
     try:
         unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).editor_set_game_view(True)      # sin iconos ni rejilla del editor
     except Exception:                                                                              # noqa: BLE001
         pass
+    anims()                                                  # las animaciones también se cargan ya, no a mitad de la partida
     unreal.log("DRONIA VIVO: escuchando UDP %d" % PUERTO)
 
 
@@ -59,12 +68,13 @@ def anims():
     return est["anim"]
 
 
-def persona(i, rol, estatura):
-    clave = (i, rol)
-    if clave not in est["pers"]:
-        a = MQ.figura(f"Vivo_{rol}_{i}", rol, COLORES.get(rol, COLORES["peaton"]), estatura, "Vivo")
-        est["pers"][clave] = {"actor": a, "anim": None}
-    return est["pers"][clave]
+def persona(j, estatura):
+    p = est["pers"][j]
+    if abs(p["est"] - estatura) > 0.02:                     # la estatura de cada persona puede cambiar de una partida a otra
+        k = estatura * 100.0 / MQ.ALTO_MANIQUI
+        p["actor"].set_actor_scale3d(unreal.Vector(k, k, k))
+        p["est"] = estatura
+    return p
 
 
 def poner_anim(p, nombre, vel):
@@ -78,10 +88,19 @@ def poner_anim(p, nombre, vel):
 
 
 def paneles(lista):
-    for a in D.actores.get_all_level_actors():
-        if str(a.get_folder_path()) == "Paneles":
-            D.actores.destroy_actor(a)
-    D.paneles_de_foto(lista, D.mats_paneles())
+    lista = lista[:N_PANELES]
+    for i, (tab, mar) in enumerate(est["pool_paneles"]):
+        if i >= len(lista):                                  # los que sobran se guardan bajo el piso
+            tab.set_actor_location(D.ue(0, 0, -50), False, False)
+            mar.set_actor_location(D.ue(0, 0, -50), False, False)
+            continue
+        x1, y1, x2, y2, h = lista[i]
+        L, psi = math.hypot(x2 - x1, y2 - y1), math.atan2(y2 - y1, x2 - x1)
+        cx, cy, rot = (x1 + x2) / 2, (y1 + y2) / 2, unreal.Rotator(0.0, 0.0, D.guinada(psi))
+        tab.set_actor_scale3d(unreal.Vector(L, D.GROSOR_PANEL, h))
+        tab.set_actor_location_and_rotation(D.ue(cx, cy, h / 2), rot, False, False)
+        mar.set_actor_scale3d(unreal.Vector(L, D.GROSOR_PANEL + 0.01, 0.04))
+        mar.set_actor_location_and_rotation(D.ue(cx, cy, h - 0.02), rot, False, False)
     est["paneles"] = lista
 
 
@@ -124,8 +143,11 @@ def dibujar(c):
         est["tilt"].root_component.set_relative_rotation(unreal.Rotator(0.0, c["tilt"], 0.0), False, False)
     t1 = time.perf_counter()
     T["dron"] += t1 - t0
-    for j, q in enumerate(c["pers"]):
-        p = persona(j, q["r"], q["est"])
+    for j, p in est["pers"].items():
+        if j >= len(c["pers"]):                              # persona que no está en esta partida: bajo el piso
+            p["actor"].set_actor_location(D.ue(0, 0, -50), False, False)
+    for j, q in enumerate(c["pers"][:len(ROLES)]):
+        p = persona(j, q["est"])
         vel = math.hypot(*q["v"])
         poner_anim(p, "idle" if vel < 0.3 else "walk" if vel < 2.4 else "jog", vel)
         p["actor"].set_actor_location_and_rotation(D.ue(q["p"][0], q["p"][1], 0.0), unreal.Rotator(0.0, 0.0, D.guinada(q["mira"] if vel < 0.3 else math.atan2(q["v"][1], q["v"][0]))), False, False)

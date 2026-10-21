@@ -46,15 +46,17 @@ class TestEnsenar(unittest.TestCase):
                     break
                 except OSError:
                     time.sleep(1)
+            c0 = cuadro_nuevo(s, lambda c: True)
+            x0, y0 = c0["d"][0] + 2.0, c0["d"][1] + 1.0          # un punto cercano y libre: un vuelo largo puede chocar con un panel y terminar la partida
             post("/modo", {"modo": "ensenar", "sub": "mapa"})
             post("/grabar", {"on": True})
-            post("/waypoint", {"x": 5.0, "y": -4.0, "yaw": 90.0, "pan": 40.0, "tilt": -20.0})
+            post("/waypoint", {"x": x0, "y": y0, "yaw": 90.0, "pan": 40.0, "tilt": -20.0})
             post("/waypoint", {"x": -3.0, "y": 6.0, "yaw": 0.0, "pan": 0.0, "tilt": -5.0})
             post("/waypoint", {"borrar": "ultimo"})
             post("/waypoint", {"ir": True})
             c = cuadro_nuevo(s, lambda c: "ens" in c and c["ens"]["ir"] is False and c["ens"]["i"] == 1)
             self.assertIsNotNone(c, "no llegó al punto")
-            self.assertLess(math.hypot(c["d"][0] - 5.0, c["d"][1] + 4.0), 0.6)
+            self.assertLess(math.hypot(c["d"][0] - x0, c["d"][1] - y0), 0.6)
             self.assertAlmostEqual(math.degrees(c["d"][3]), 90.0, delta=4.0)
             self.assertAlmostEqual(c["pan"], 40.0, delta=3.0)
             self.assertTrue(-45.0 <= c["gmb"] <= 15.0)
