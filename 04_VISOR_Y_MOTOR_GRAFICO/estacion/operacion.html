@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estación de tierra</title>
+<link rel="stylesheet" href="operacion.css">
+</head>
+<body>
+<div id="app">
+  <header id="barra">
+    <div class="nombre"><span id="nombreDron">Dron-IA-Vigilancia</span><small>Estación de tierra</small></div>
+    <div class="dato">MODO<b id="bModo">–</b></div>
+    <div class="dato">CONTROL<b id="bControl">–</b></div>
+    <div class="dato">ENLACE<b id="bEnlace">–</b></div>
+    <div class="dato" id="bHora">–</div>
+    <div class="atajos">
+      <button id="bPausa" title="Pausa de la repetición (P)">Pausa</button>
+      <button id="bRuta" title="Ruta de búsqueda sobre el mapa (R)">Ruta</button>
+      <button id="bGrabar" title="Grabar mi demostración (B)">Grabar</button>
+      <button id="bMenu" title="Ajustes y ayuda (Esc)">Ajustes</button>
+    </div>
+  </header>
+
+  <main id="cuerpo">
+    <section id="izq">
+      <img id="cam0" alt="">
+      <div id="sinvideo">SIN SEÑAL DE VIDEO</div>
+      <canvas id="hud"></canvas>
+      <canvas id="mapa"></canvas>
+      <div id="barramapa">
+        <button id="mIr">Ir</button><button id="mParar">Parar</button><button id="mUltimo">Borrar último</button><button id="mTodos">Borrar todos</button>
+        <span class="txt" id="mTexto">Clic en el mapa: punto de paso. Arrastre el círculo para girar la flecha.</span>
+      </div>
+    </section>
+    <aside id="der">
+      <div class="casilla"><h4>Cámara al piso · CSI#2</h4><img id="cam1" alt=""><div id="sinvideo2">SIN SEÑAL</div><canvas id="hud1"></canvas></div>
+      <div class="casilla"><h4>LiDAR de 1 haz · TF03 y TF-Luna</h4><canvas id="lidar"></canvas></div>
+      <div class="casilla" id="tel">
+        <h4>Telemetría</h4>
+        <div id="telDatos"></div>
+        <div id="telDerecha"><div><canvas id="actitud"></canvas></div><div><canvas id="minimapa"></canvas></div></div>
+      </div>
+    </aside>
+  </main>
+  <footer id="pie"><span id="pieEstado">–</span><span>Brahian Andrés Orrego Osorio</span></footer>
+</div>
+
+<div id="aviso"></div>
+<div id="menu"><div id="menuCaja"></div></div>
+<script src="operacion.js"></script>
+</body>
+</html>
