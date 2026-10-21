@@ -6,6 +6,8 @@ rem Ej.:  ejecutar_en_unreal.bat renderizar.py /Game/DronIA/Secuencias/Rep_repla
 setlocal
 if "%DRONIA_RX%"=="" set DRONIA_RX=1280
 if "%DRONIA_RY%"=="" set DRONIA_RY=720
+if "%DRONIA_WX%"=="" set DRONIA_WX=50
+if "%DRONIA_WY%"=="" set DRONIA_WY=50
 set "ORDEN=%~f1"
 shift
 :sig
@@ -16,5 +18,5 @@ goto sig
 :fin
 set "ORDEN=%ORDEN:\=/%"
 set "DRONIA_ORDEN=%ORDEN%"
-start "" /wait "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "%USERPROFILE%\Documents\Unreal Projects\DronIA_Cancha\DronIA_Cancha.uproject" -nosplash -windowed -unattended -NoVSync -ResX=%DRONIA_RX% -ResY=%DRONIA_RY%
+start "" /wait "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "%USERPROFILE%\Documents\Unreal Projects\DronIA_Cancha\DronIA_Cancha.uproject" -nosplash -windowed -unattended -NoVSync -ResX=%DRONIA_RX% -ResY=%DRONIA_RY% -WinX=%DRONIA_WX% -WinY=%DRONIA_WY%
 endlocal
