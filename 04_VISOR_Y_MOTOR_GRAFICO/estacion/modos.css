@@ -112,3 +112,14 @@ body[data-modo="vuelo"] #centro, body[data-modo="ens"] #centro { top: 52px; }
 body.ens-manual[data-modo="ens"] #col-der #fpv #fpv-vista { max-height: 62vh; }
 #col-der > #cam-csi0 { display: flex; flex-direction: column; }
 #col-der > #cam-csi0 > .cuerpo { flex: 1; min-height: 0; }
+
+/* chuleta del Modo Enseñar (ensenar.js): solo en manual */
+#ens-chuleta { display: none; position: absolute; left: 14px; bottom: 34px; z-index: 5; background: rgba(8, 12, 18, .86); border: 1px solid var(--borde); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--suave); pointer-events: none; }
+body.ens-manual #ens-chuleta:not(.oculta) { display: block; }
+#ens-chuleta table { border-collapse: collapse; margin-top: 3px; }
+#ens-chuleta td { padding: 1px 7px 1px 0; white-space: nowrap; }
+#ens-chuleta td:nth-child(odd) { color: #7dd3fc; font-family: 'Roboto Mono', monospace; }
+#p-ens > .cuerpo { position: relative; }
+/* tecla 2: la CSI#2 pasa a ser la grande */
+body.ens-vista-2[data-modo="ens"] #col-der #cam-csi0 { order: -1; height: 46vh; }
+body.ens-vista-2[data-modo="ens"] #col-der #fpv #fpv-vista { max-height: 22vh; }

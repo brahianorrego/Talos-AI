@@ -1277,7 +1277,7 @@ async function llenarSelector() {
 sel.addEventListener("change", () => cargarPartida(sel.value));
 function alternarPausa() { pausa = !pausa; $("pausa").textContent = pausa ? "▶" : "❚❚"; $("pausa").classList.toggle("activo", pausa); }
 $("pausa").addEventListener("click", alternarPausa);
-addEventListener("keydown", e => { if (e.code === "Space" && e.target.tagName !== "SELECT") { e.preventDefault(); alternarPausa(); } });
+addEventListener("keydown", e => { if (e.code === "Space" && e.target.tagName !== "SELECT" && !(document.body.dataset.modo === "ens" && window.ENSENAR_MANUAL)) { e.preventDefault(); alternarPausa(); } });
 $("velocidad").addEventListener("change", e => vel = +e.target.value);
 $("pista-t").addEventListener("click", e => {
   if (!partida) return;

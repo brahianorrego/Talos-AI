@@ -14,6 +14,7 @@ MODO ENSEÑAR (la estación manda por POST a 127.0.0.1:8767): Brahian dirige al 
             {"borrar": "ultimo" | "todos"}    {"ir": true | false}    (ir = seguir los puntos; false = parar)
   /manual   {vx, vy, wz, pan, tilt, vz}  de -1 a 1: adelante, a la izquierda, giro, velocidad del pan y del tilt, y subir/bajar (la regla de seguridad manda)
   /camara   {"modo": "asistida" | "manual"}   asistida = el pan-tilt sigue al ladrón mientras se vuela a mano
+  /fijar    {"j": 0}   el operador humano fija a la persona j (clic izquierdo); /camara también acepta pan y tilt en ° (mouse); /manual acepta f360 (F mantenida)
   /reset    empieza otra partida (si se estaba grabando, guarda la demostración)
   /grabar   {"on": true | false}     al apagar guarda 03_SIMULACION_RL/demos_brahian/demo_<fecha>.json (fuera de Git)
 El dron lo lleva el autopiloto del entorno con el control del operador de la Simulación (set_manual, set_objetivo, objetivo_llego, liberar):
@@ -60,7 +61,7 @@ estado = {"partida": 0, "cabecera": None, "cuadros": []}
 cambio = threading.Condition()
 
 # ---------------------------------------------------------------------------------------------------------------- modo enseñar
-ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": "", "cam": "manual", "cam_enviada": ""}
+ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": "", "cam": "manual", "cam_enviada": "", "cam_pan": 0.0, "cam_tilt": -5.0, "fijar": -1, "f360": False}
 lock = threading.Lock()
 DEMOS = os.path.join(SIM, "demos_brahian")
 
@@ -77,14 +78,24 @@ def mandar(env):
         i = ens["i"]
     if manual:
         enviado["i"] = -1
-        asistida = ens["cam"] == "asistida"                 # cámara asistida: el pan-tilt sigue solo al ladrón mientras Brahian vuela
         v = [float(man.get(k, 0.0)) for k in ("vx", "vy", "wz", "pan", "tilt", "vz")]
-        if asistida:
+        f360 = bool(man.get("f360", 0.0))                   # F mantenida: giro de 360° de búsqueda (el dron gira solo a la izquierda a 60°/s)
+        if f360:
+            v[2] = 1.0
+        ens["f360"] = f360
+        if ens["cam"] == "asistida":                        # V: el pan-tilt sigue solo al ladrón mientras Brahian vuela
             v[3] = v[4] = 0.0
-        env.set_manual(0, *v)
-        if asistida and ens["cam_enviada"] != "asistida":
-            env.set_camara(0, "asistida")
+            env.set_manual(0, *v)
+            if ens["cam_enviada"] != "asistida":
+                env.set_camara(0, "asistida")
+        else:                                                # mouse (o flechas): ángulos absolutos del pan-tilt
+            v[3] = v[4] = 0.0
+            env.set_manual(0, *v)
+            env.set_camara(0, "manual", ens["cam_pan"], ens["cam_tilt"])
         ens["cam_enviada"] = ens["cam"]
+        if ens["fijar"] >= 0:                                # clic izquierdo sobre la persona resaltada: el operador humano la fija (regla dura 4)
+            env.fijar_sospechoso(0, ens["fijar"])
+            ens["fijar"] = -1
     elif c is not None:
         if enviado["i"] != i:
             env.set_objetivo(0, c["x"], c["y"], c["yaw"], c["pan"], c["tilt"])
@@ -154,7 +165,7 @@ def simular():
                     grab.paso()
                     ens["reg"].append({"d": f["d"], "pan": f["pan"], "gmb": f["gmb"], "i": ens["i"], "cola": [dict(q) for q in ens["cola"]] if paso % 10 == 0 else None,
                                        "man": dict(ens["man"]) if ens["sub"] == "manual" else None, "pers": f["pers"], "vis": f["vis"], "lid": f["lid"], "dm": f["dm"]})
-                f["ens"] = {"modo": ens["modo"], "sub": ens["sub"], "cola": ens["cola"], "i": ens["i"], "ir": ens["ir"], "graba": ens["graba"], "n": len(ens["reg"]), "demo": ens["demo"]}
+                f["ens"] = {"modo": ens["modo"], "sub": ens["sub"], "cola": ens["cola"], "i": ens["i"], "ir": ens["ir"], "graba": ens["graba"], "n": len(ens["reg"]), "demo": ens["demo"], "f360": ens["f360"], "cam": ens["cam"]}
                 reiniciar, ens["reset"] = ens["reset"], False
                 guardar = ens["fin"]
             if guardar:
@@ -210,9 +221,15 @@ class Manejador(BaseHTTPRequestHandler):
                     ens["cola"].append({"x": float(m["x"]), "y": float(m["y"]), "yaw": float(m.get("yaw", 0.0)),
                                         "pan": float(np.clip(m.get("pan", 0.0), -90.0, 90.0)), "tilt": float(np.clip(m.get("tilt", -5.0), -45.0, 15.0))})
             elif ruta == "/manual":
-                ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt", "vz")}, time.time()
+                ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt", "vz", "f360")}, time.time()
             elif ruta == "/camara":
                 ens["cam"] = "asistida" if m.get("modo") == "asistida" else "manual"
+                if "pan" in m:
+                    ens["cam_pan"] = float(np.clip(m["pan"], -90.0, 90.0))
+                if "tilt" in m:
+                    ens["cam_tilt"] = float(np.clip(m["tilt"], -45.0, 15.0))
+            elif ruta == "/fijar":
+                ens["fijar"] = int(m.get("j", -1))
             elif ruta == "/reset":
                 ens["reset"] = True
             elif ruta == "/grabar":

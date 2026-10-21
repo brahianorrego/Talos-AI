@@ -22,6 +22,19 @@
       </div>
       <div class="ens-punto" id="ens-punto">Haga clic en el mapa para poner el primer punto.</div>
       <canvas id="ens-lienzo"></canvas>
+      <div id="ens-chuleta" title="H oculta o muestra esta ayuda"><b>Controles</b> <span>(H oculta)</span>
+        <table>
+          <tr><td>W S</td><td>adelante · atrás</td><td>A D</td><td>de lado</td></tr>
+          <tr><td>Q E</td><td>girar</td><td>Espacio · C</td><td>subir · bajar</td></tr>
+          <tr><td>Shift · Ctrl</td><td>rápido · lento</td><td>F (mantener)</td><td>giro 360° buscando</td></tr>
+          <tr><td>Mouse</td><td>mover = pan y tilt</td><td>Rueda</td><td>zoom del mapa</td></tr>
+          <tr><td>Clic izq.</td><td>fijar al posible objetivo</td><td>Clic der.</td><td>soltar objetivo</td></tr>
+          <tr><td>V</td><td>cámara asistida</td><td>flechas</td><td>pan / tilt</td></tr>
+          <tr><td>1 · 2</td><td>CSI#1 · CSI#2 grande</td><td>3 · 4</td><td>3D seguir · libre</td></tr>
+          <tr><td>Tab</td><td>Puntos ⇄ Manual</td><td>R</td><td>ruta</td></tr>
+          <tr><td>G</td><td>la IA guía / devolver</td><td>B</td><td>grabar</td></tr>
+          <tr><td>P</td><td>pausa</td><td>Esc</td><td>salir al 3D</td></tr>
+        </table></div>
       <div class="ens-ayuda" id="ens-ayuda"></div>
     </div>`;
   document.body.appendChild(s);
@@ -30,7 +43,7 @@
   const L = [];                                   // puntos de paso del lado de la estación (x, y, yaw, pan, tilt)
   let sel = -1, arrastre = null, sub = "mapa", conectado = false, ultimoE = null, cmdManual = { vx: 0, vy: 0, wz: 0, pan: 0, tilt: 0, vz: 0 };
   window.ENSENAR_MANUAL = false;
-  const M = 28;                                   // semi-lado del mapa en metros (la arena mide 25)
+  let M = 28;                                     // semi-lado del mapa en metros (la arena mide 25); la rueda del mouse lo acerca o lo aleja
   const dim = () => { const r = cv.getBoundingClientRect(); return { w: r.width, h: r.height, k: Math.min(r.width, r.height) / (2 * M) }; };
   const aPix = (x, y) => { const d = dim(); return [d.w / 2 + x * d.k, d.h / 2 - y * d.k]; };
   const aMundo = (px, py) => { const d = dim(); return [(px - d.w / 2) / d.k, (d.h / 2 - py) / d.k]; };
@@ -57,7 +70,8 @@
       pt.paneles.forEach(p => { const [x0, y0] = aPix(p[0], p[1]), [x1, y1] = aPix(p[2], p[3]); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); });
     }
     if (e) {
-      (e.pers || []).forEach(q => { const [x, y] = aPix(q.p[0], q.p[1]); g.beginPath(); g.arc(x, y, 7, 0, 7); g.fillStyle = q.rol === "ladron" ? "#ff4d4f" : "#8fa3b8"; g.fill(); g.fillStyle = "#e8eef5"; g.font = "11px Inter, sans-serif"; g.fillText(q.rol === "ladron" ? "ladrón" : "civil", x + 10, y + 4); });
+      (e.pers || []).forEach(q => { const [x, y] = aPix(q.p[0], q.p[1]);
+        if (q.vis && sub === "manual") { g.strokeStyle = "#f5c542"; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 14, 0, 7); g.stroke(); g.fillStyle = "#f5c542"; g.font = "bold 11px Inter, sans-serif"; g.fillText("posible objetivo · clic izq.", x + 18, y - 10); } g.beginPath(); g.arc(x, y, 7, 0, 7); g.fillStyle = q.rol === "ladron" ? "#ff4d4f" : "#8fa3b8"; g.fill(); g.fillStyle = "#e8eef5"; g.font = "11px Inter, sans-serif"; g.fillText(q.rol === "ladron" ? "ladrón" : "civil", x + 10, y + 4); });
     }
     // puntos de paso, unidos por la ruta
     g.lineWidth = 2;
@@ -73,6 +87,7 @@
       g.fillStyle = "#06090d"; g.font = "bold 9px Inter, sans-serif"; g.fillText(i + 1, x - 2.5, y + 3.2);
       if (p.pan || p.tilt !== -5) { g.fillStyle = col; g.font = "10px 'Roboto Mono', monospace"; g.fillText(`pan ${p.pan | 0}° tilt ${p.tilt | 0}°`, x + rad + 4, y + 4); }
     });
+    if (ultimoE && ultimoE.f360 && sub === "manual") { g.fillStyle = "#f5c542"; g.font = "bold 14px Inter, sans-serif"; g.fillText("360° buscando… (suelte F para parar)", 14, d.h - 14); }
     if (e) {                                                                 // el dron: flecha hacia su frente, y el cono de la cámara con el pan
       const [x, y] = aPix(e.x, e.y), psi = e.psi, pan = ((e.c && e.c.pan) || 0) * Math.PI / 180;
       g.fillStyle = "rgba(45,183,255,.12)"; g.beginPath(); g.moveTo(x, y); g.arc(x, y, 90, -(psi + pan) - 0.6, -(psi + pan) + 0.6); g.closePath(); g.fill();
@@ -127,7 +142,7 @@
     sub = x; window.ENSENAR_MANUAL = x === "manual";
     document.querySelectorAll("#p-ens [data-sub]").forEach(b => b.classList.toggle("activo", b.dataset.sub === x));
     document.body.classList.toggle("ens-manual", x === "manual");
-    $("ens-ayuda").textContent = x === "manual" ? "W/S adelante y atrás · A/D de lado · Q/E giran · X/Z suben y bajan · flechas: pan (← →) y tilt (↑ ↓) · gamepad: palancas, LB/RB pan, gatillos altura" : "Clic: punto de paso · arrastre el círculo para girar la flecha · clic sobre un punto: pan y tilt · \"Ir\" lo ejecuta";
+    $("ens-ayuda").textContent = x === "manual" ? "Teclado y mouse: ver la chuleta (H la oculta). Mantenga F para el giro de 360°; cuando aparezca un posible objetivo, clic izquierdo sobre él para fijarlo." : "Clic: punto de paso · arrastre el círculo para girar la flecha · clic sobre un punto: pan y tilt · \"Ir\" lo ejecuta";
     post("/modo", { modo: "ensenar", sub: x });
   };
   document.querySelectorAll("#p-ens [data-sub]").forEach(b => b.onclick = () => fijarSub(b.dataset.sub));
@@ -136,26 +151,76 @@
   $("ens-ultimo").onclick = () => { L.pop(); sel = L.length - 1; mostrarPunto(); post("/waypoint", { borrar: "ultimo" }); };
   $("ens-todos").onclick = () => { L.length = 0; sel = -1; mostrarPunto(); post("/waypoint", { borrar: "todos" }); };
   $("ens-grabar").onclick = () => post("/grabar", { on: !(ultimoE && ultimoE.graba) });
-  let asist = false;
-  $("ens-cam").onclick = () => { asist = !asist; $("ens-cam").classList.toggle("activo", asist); post("/camara", { modo: asist ? "asistida" : "manual" }); };
+  $("ens-cam").onclick = () => accion("KeyV");
   $("ens-reset").onclick = () => { L.length = 0; sel = -1; mostrarPunto(); post("/reset"); };
 
-  // ----------------------------------------------------------------------------------------------------------- manual (teclado y gamepad)
+  // ----------------------------------------------------------------------------------------------------------- manual: teclado y mouse (ORDENES §G.1)
+  // Mano izquierda: W/S A/D Q/E, Espacio/C (altura), Shift rápido, Ctrl lento, F mantenida = 360°. Mano derecha: el mouse mueve el pan y el tilt, clic izquierdo
+  // fija al posible objetivo, clic derecho lo suelta, la rueda acerca el mapa. Resto: V, 1-4, Tab, R, G, B, P, Esc, H y las flechas (pan/tilt alternativo).
   const teclas = new Set();
-  addEventListener("keydown", ev => { if (modoActivo() && sub === "manual" && !/SELECT|INPUT|TEXTAREA/.test(ev.target.tagName)) { teclas.add(ev.code); if (/^(Arrow)/.test(ev.code)) ev.preventDefault(); } });
-  addEventListener("keyup", ev => teclas.delete(ev.code));
+  let panAng = 0, tiltAng = -5, asist = false, iaGuia = false, ultimoCam = "";
+  const MIAS = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyF", "KeyV", "Digit1", "Digit2",
+    "Digit3", "Digit4", "Tab", "KeyR", "KeyG", "KeyB", "KeyP", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyH"]);
+  const clic = id => { const b = document.getElementById(id); if (b) b.click(); };
+  const vista = n => { document.body.classList.toggle("ens-vista-2", n === 2); };
+  const usarCamara = () => post("/camara", { modo: asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
+  const accion = code => {
+    if (code === "Tab") fijarSub(sub === "manual" ? "mapa" : "manual");
+    else if (code === "Escape") { document.querySelector('[data-modo="3d"]').click(); }
+    else if (sub !== "manual") return;
+    else if (code === "KeyV") { asist = !asist; $("ens-cam").classList.toggle("activo", asist); usarCamara(); }
+    else if (code === "Digit1") vista(1);
+    else if (code === "Digit2") vista(2);
+    else if (code === "Digit3") ponerCamara("seguir");
+    else if (code === "Digit4") ponerCamara("orbita");
+    else if (code === "KeyR") clic("b-ruta");
+    else if (code === "KeyG") { iaGuia = !iaGuia; post("/modo", { modo: iaGuia ? "auto" : "ensenar", sub: "manual" }); $("ens-tag").textContent = iaGuia ? "la IA guía (G devuelve el control)" : "listo"; }
+    else if (code === "KeyB") clic("ens-grabar");
+    else if (code === "KeyP") clic("pausa");
+    else if (code === "KeyH") $("ens-chuleta").classList.toggle("oculta");
+  };
+  addEventListener("keydown", ev => {
+    if (!modoActivo() || /SELECT|INPUT|TEXTAREA/.test(ev.target.tagName) || !MIAS.has(ev.code)) return;
+    if (sub !== "manual" && ev.code !== "Tab" && ev.code !== "Escape") return;          // en "Puntos" solo Tab y Esc son de este modo
+    ev.stopImmediatePropagation(); ev.preventDefault();                                  // que no las tomen los atajos de la estación (1-5, E, P, G, L, R, Espacio)
+    if (!ev.repeat && !teclas.has(ev.code)) accion(ev.code);
+    teclas.add(ev.code);
+  }, true);
+  addEventListener("keyup", ev => teclas.delete(ev.code), true);
+  addEventListener("blur", () => teclas.clear());
   const eje = (m, p) => (teclas.has(m) ? 1 : 0) - (teclas.has(p) ? 1 : 0);
+  // mouse: la posición en la ventana es el ángulo (izquierda = pan a la izquierda; arriba = mirar al frente/arriba, abajo = mirar al piso)
+  addEventListener("mousemove", ev => {
+    if (!modoActivo() || sub !== "manual" || asist) return;
+    panAng = Math.round(Math.max(-90, Math.min(90, (0.5 - ev.clientX / innerWidth) * 180)));
+    tiltAng = Math.round(Math.max(-45, Math.min(15, 15 - (ev.clientY / innerHeight) * 60)));
+  });
+  addEventListener("wheel", ev => { if (modoActivo() && ev.target === cv) { M = Math.max(10, Math.min(40, M * (ev.deltaY > 0 ? 1.1 : 0.9))); ev.preventDefault(); } }, { passive: false });
+  const candidatos = () => ((window.ESTADO_VISTA && window.ESTADO_VISTA.pers) || []).map((q, j) => ({ q, j })).filter(o => o.q.vis);       // personas que YOLO ve ahora
+  addEventListener("mousedown", ev => {
+    if (!modoActivo() || sub !== "manual" || ev.target.closest("button, select, input, .panel .cab")) return;
+    if (ev.button === 0) {
+      const lista = candidatos();
+      if (!lista.length) { $("ens-punto").textContent = "No hay un posible objetivo a la vista: mantenga F para el giro de 360°."; return; }
+      const e = window.ESTADO_VISTA;
+      let mejor = lista[0], d0 = 1e9;
+      if (ev.target === cv) { const [mx, my] = aMundo(...pos(ev)); lista.forEach(o => { const d = Math.hypot(o.q.p[0] - mx, o.q.p[1] - my); if (d < d0) { d0 = d; mejor = o; } }); }
+      else lista.forEach(o => { const d = Math.hypot(o.q.p[0] - e.x, o.q.p[1] - e.y); if (d < d0) { d0 = d; mejor = o; } });                  // clic en una cámara: la persona más cercana al dron
+      post("/fijar", { j: mejor.j });
+      $("ens-punto").textContent = `Objetivo fijado: ${mejor.q.rol === "ladron" ? "el sospechoso" : "una persona (no es él: se descarta)"}. El 360° termina y usted lleva el dron.`;
+      teclas.delete("KeyF");
+    } else if (ev.button === 2) { post("/fijar", { j: -1 }); $("ens-punto").textContent = "Objetivo soltado."; }
+  });
+  addEventListener("contextmenu", ev => { if (modoActivo() && sub === "manual") ev.preventDefault(); });
   setInterval(() => {
     if (!modoActivo() || sub !== "manual") return;
-    const gp = (navigator.getGamepads ? [...navigator.getGamepads()].find(x => x) : null), z = v => (Math.abs(v) < 0.15 ? 0 : v);
-    cmdManual = {
-      // gamepad: palanca izquierda = avanzar y lado; derecha = giro (←→) y tilt (↑↓); botones superiores LB/RB (4 y 5) o la cruceta ← → = pan
-      vx: eje("KeyW", "KeyS") || (gp ? -z(gp.axes[1]) : 0), vy: eje("KeyA", "KeyD") || (gp ? -z(gp.axes[0]) : 0), wz: eje("KeyQ", "KeyE") || (gp ? -z(gp.axes[2]) : 0),
-      pan: eje("ArrowLeft", "ArrowRight") || (gp ? ["4", "14"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) - ["5", "15"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) : 0),
-      tilt: eje("ArrowUp", "ArrowDown") || (gp ? -z(gp.axes[3] || 0) : 0),
-      vz: eje("KeyX", "KeyZ") || (gp ? ((gp.buttons[7] && gp.buttons[7].value) || 0) - ((gp.buttons[6] && gp.buttons[6].value) || 0) : 0),      // X/Z o gatillos RT/LT: subir y bajar
-    };
+    const f = teclas.has("ControlLeft") || teclas.has("ControlRight") ? 0.25 : (teclas.has("ShiftLeft") || teclas.has("ShiftRight") ? 1.0 : 0.6);
+    if (teclas.has("ArrowLeft") || teclas.has("ArrowRight")) panAng = Math.max(-90, Math.min(90, panAng + 9 * eje("ArrowLeft", "ArrowRight")));
+    if (teclas.has("ArrowUp") || teclas.has("ArrowDown")) tiltAng = Math.max(-45, Math.min(15, tiltAng + 6 * eje("ArrowUp", "ArrowDown")));
+    cmdManual = { vx: f * eje("KeyW", "KeyS"), vy: f * eje("KeyA", "KeyD"), wz: f * eje("KeyQ", "KeyE"), pan: 0, tilt: 0, vz: f * eje("Space", "KeyC"), f360: teclas.has("KeyF") ? 1 : 0 };
     post("/manual", cmdManual);
+    const c = `${asist}|${panAng}|${tiltAng}`;
+    if (c !== ultimoCam) { ultimoCam = c; usarCamara(); }
   }, 100);
 
   // ----------------------------------------------------------------------------------------------------------- vida del panel

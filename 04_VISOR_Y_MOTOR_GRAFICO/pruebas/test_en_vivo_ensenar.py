@@ -71,6 +71,36 @@ class TestEnsenar(unittest.TestCase):
         finally:
             p.kill()
 
+    def test_teclado_y_mouse(self):
+        """§G.1: mouse = pan/tilt absolutos, Espacio/C = altura (vz), F mantenida = giro 360°, clic = fijar sospechoso."""
+        p = subprocess.Popen([PY, os.path.join(AQUI, "..", "en_vivo.py"), "--puerto", str(PUERTO), "--velocidad", "6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            for _ in range(60):
+                try:
+                    s = urllib.request.urlopen("http://127.0.0.1:%d/vivo" % PUERTO, timeout=20)
+                    break
+                except OSError:
+                    time.sleep(1)
+            c0 = cuadro_nuevo(s, lambda c: True)
+            z0, psi0 = c0["d"][2], c0["d"][3]
+            post("/modo", {"modo": "ensenar", "sub": "manual"})
+            post("/camara", {"modo": "manual", "pan": 35.0, "tilt": -20.0})
+            t0 = time.time()
+            c = None
+            while time.time() - t0 < 30:
+                post("/manual", {"vz": 1.0, "f360": 1.0})        # se repite cada 0.1 s como la estación (el mando vence a los 0.4 s)
+                c = cuadro_nuevo(s, lambda c: "ens" in c)
+                if c and c["ens"]["f360"] and abs(math.degrees(c["d"][3] - psi0)) > 25 and c["d"][2] > z0 + 0.3:
+                    break
+            self.assertTrue(c["ens"]["f360"], "F mantenida no activó el 360")
+            self.assertGreater(c["d"][2], z0 + 0.3, "no subió con vz")
+            self.assertAlmostEqual(c["pan"], 35.0, delta=4.0)
+            self.assertTrue(-45.0 <= c["gmb"] <= 15.0)
+            post("/fijar", {"j": 0})                           # no debe romper aunque no esté a la vista (el clic se pierde)
+            self.assertIsNotNone(cuadro_nuevo(s, lambda c: "ens" in c))
+        finally:
+            p.kill()
+
 
 if __name__ == "__main__":
     unittest.main()
