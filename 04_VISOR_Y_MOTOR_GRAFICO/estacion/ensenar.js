@@ -28,7 +28,7 @@
 
   const cv = $("ens-lienzo"), g = cv.getContext("2d");
   const L = [];                                   // puntos de paso del lado de la estación (x, y, yaw, pan, tilt)
-  let sel = -1, arrastre = null, sub = "mapa", conectado = false, ultimoE = null, cmdManual = { vx: 0, vy: 0, wz: 0, pan: 0, tilt: 0 };
+  let sel = -1, arrastre = null, sub = "mapa", conectado = false, ultimoE = null, cmdManual = { vx: 0, vy: 0, wz: 0, pan: 0, tilt: 0, vz: 0 };
   window.ENSENAR_MANUAL = false;
   const M = 28;                                   // semi-lado del mapa en metros (la arena mide 25)
   const dim = () => { const r = cv.getBoundingClientRect(); return { w: r.width, h: r.height, k: Math.min(r.width, r.height) / (2 * M) }; };
@@ -127,7 +127,7 @@
     sub = x; window.ENSENAR_MANUAL = x === "manual";
     document.querySelectorAll("#p-ens [data-sub]").forEach(b => b.classList.toggle("activo", b.dataset.sub === x));
     document.body.classList.toggle("ens-manual", x === "manual");
-    $("ens-ayuda").textContent = x === "manual" ? "W/S adelante y atrás · A/D de lado · Q/E giran · flechas: pan (← →) y tilt (↑ ↓) · también sirve un gamepad" : "Clic: punto de paso · arrastre el círculo para girar la flecha · clic sobre un punto: pan y tilt · \"Ir\" lo ejecuta";
+    $("ens-ayuda").textContent = x === "manual" ? "W/S adelante y atrás · A/D de lado · Q/E giran · X/Z suben y bajan · flechas: pan (← →) y tilt (↑ ↓) · gamepad: palancas, LB/RB pan, gatillos altura" : "Clic: punto de paso · arrastre el círculo para girar la flecha · clic sobre un punto: pan y tilt · \"Ir\" lo ejecuta";
     post("/modo", { modo: "ensenar", sub: x });
   };
   document.querySelectorAll("#p-ens [data-sub]").forEach(b => b.onclick = () => fijarSub(b.dataset.sub));
@@ -153,6 +153,7 @@
       vx: eje("KeyW", "KeyS") || (gp ? -z(gp.axes[1]) : 0), vy: eje("KeyA", "KeyD") || (gp ? -z(gp.axes[0]) : 0), wz: eje("KeyQ", "KeyE") || (gp ? -z(gp.axes[2]) : 0),
       pan: eje("ArrowLeft", "ArrowRight") || (gp ? ["4", "14"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) - ["5", "15"].reduce((a, i) => a + (gp.buttons[i] && gp.buttons[i].pressed ? 1 : 0), 0) : 0),
       tilt: eje("ArrowUp", "ArrowDown") || (gp ? -z(gp.axes[3] || 0) : 0),
+      vz: eje("KeyX", "KeyZ") || (gp ? ((gp.buttons[7] && gp.buttons[7].value) || 0) - ((gp.buttons[6] && gp.buttons[6].value) || 0) : 0),      // X/Z o gatillos RT/LT: subir y bajar
     };
     post("/manual", cmdManual);
   }, 100);

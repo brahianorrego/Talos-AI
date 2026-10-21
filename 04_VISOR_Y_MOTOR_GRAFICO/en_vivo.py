@@ -12,7 +12,7 @@ MODO ENSEÑAR (la estación manda por POST a 127.0.0.1:8767): Brahian dirige al 
   /modo     {"modo": "auto" | "ensenar", "sub": "mapa" | "manual"}        quién lleva al dron
   /waypoint {x, y, yaw, pan, tilt}   agrega un punto de paso (yaw y pan en °, + = izquierda; tilt en °, -45..+15)
             {"borrar": "ultimo" | "todos"}    {"ir": true | false}    (ir = seguir los puntos; false = parar)
-  /manual   {vx, vy, wz, pan, tilt}  de -1 a 1: adelante, a la izquierda, giro y velocidad del pan y del tilt
+  /manual   {vx, vy, wz, pan, tilt, vz}  de -1 a 1: adelante, a la izquierda, giro, velocidad del pan y del tilt, y subir/bajar (la regla de seguridad manda)
   /camara   {"modo": "asistida" | "manual"}   asistida = el pan-tilt sigue al ladrón mientras se vuela a mano
   /reset    empieza otra partida (si se estaba grabando, guarda la demostración)
   /grabar   {"on": true | false}     al apagar guarda 03_SIMULACION_RL/demos_brahian/demo_<fecha>.json (fuera de Git)
@@ -78,7 +78,7 @@ def mandar(env):
     if manual:
         enviado["i"] = -1
         asistida = ens["cam"] == "asistida"                 # cámara asistida: el pan-tilt sigue solo al ladrón mientras Brahian vuela
-        v = [float(man.get(k, 0.0)) for k in ("vx", "vy", "wz", "pan", "tilt")]
+        v = [float(man.get(k, 0.0)) for k in ("vx", "vy", "wz", "pan", "tilt", "vz")]
         if asistida:
             v[3] = v[4] = 0.0
         env.set_manual(0, *v)
@@ -208,7 +208,7 @@ class Manejador(BaseHTTPRequestHandler):
                     ens["cola"].append({"x": float(m["x"]), "y": float(m["y"]), "yaw": float(m.get("yaw", 0.0)),
                                         "pan": float(np.clip(m.get("pan", 0.0), -90.0, 90.0)), "tilt": float(np.clip(m.get("tilt", -5.0), -45.0, 15.0))})
             elif ruta == "/manual":
-                ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt")}, time.time()
+                ens["man"], ens["t_man"] = {k: float(np.clip(m.get(k, 0), -1, 1)) for k in ("vx", "vy", "wz", "pan", "tilt", "vz")}, time.time()
             elif ruta == "/camara":
                 ens["cam"] = "asistida" if m.get("modo") == "asistida" else "manual"
             elif ruta == "/reset":
