@@ -528,6 +528,13 @@ BARO_ERROR = (0.3, 0.5)        # m
 TAU_BARO = 20.0                # s
 MARGEN_CERCA_V16 = MARGEN_CERCA + GPS_DERIVA[1]
 RUIDO_NAV = True               # False: sin deriva del GPS ni error del barómetro (para comparar)
+# V17.9 · FÍSICAS del vuelo, cada una apagable con --set (por defecto no cambian lo medido hasta hoy: ráfagas, arrastre,
+# límite de inclinación de 30°, inercia angular, deriva del GPS/EKF y servos del pan-tilt ya estaban; lo demás es nuevo y apagado)
+FISICA_RAFAGAS = True          # ráfagas de viento (Ornstein-Uhlenbeck) de intensidad aleatoria por partida
+FISICA_VIENTO_MEDIO = 0.0      # m/s²: viento medio máximo por partida (módulo y dirección al azar); 0 = apagado
+FISICA_ARRASTRE = 1.0          # factor sobre el arrastre lineal del dron (0 = sin arrastre)
+FISICA_MOTOR_TAU = 0.0         # s: respuesta de primer orden de los motores (retardo e inercia); 0 = instantánea
+FISICA_BAT_CAIDA = 0.0         # fracción de empuje perdido por minuto (voltaje de la LiPo): baja el límite de inclinación y la subida
 RUIDO_GPS, RUIDO_BARO = True, True   # cada uno por separado (para comparar)
 # Altímetro: "baro" (hoy: la Pixhawk con su barómetro) o "luna" (alternativa de la sección 6: un segundo TF-Luna mirando al
 # piso como telémetro de altura; ArduPilot lo usa por debajo de su alcance, con un error de ~ERROR_LUNA_ALT)
@@ -558,9 +565,24 @@ NIVEL_V17 = 6
 NOMBRE_V17 = "Misión V17 (cancha, 2 V)"
 ARENA_V17 = 15.0               # medio lado de la zona (geocerca)
 ANCHO_PANEL_V17 = 1.5          # m de cada ala (D-066: medido por Brahian; hasta la V17.2 fue 1.0)
-ALTO_PANEL_V17 = (2.2, 2.3)    # m (D-066: medido por Brahian; hasta la V17.2 fue 1.9-2.2, de la foto)
+ALTO_PANEL_V17 = (2.3, 2.3)    # m (Brahian, 20-oct: 2.30 m; D-066 fue 2.2-2.3; hasta la V17.2, 1.9-2.2)
 SEP_V17 = 10.0                 # m entre los vértices de las dos V
 AZAR_POS_V17, AZAR_ANG_V17 = 2.0, 20.0
+# V17.9 (correcciones de Brahian, 20-oct): paneles de 5 cm, apertura de cada V al azar, la disposición de las dos V gira
+# al azar alrededor del centro en cada partida, y la altura fija en la cancha (sin SUBIR / BAJAR)
+GROSOR_PANEL_V17 = 0.05        # m (hasta la V17.8: GROSOR_MURO, 0.2)
+ANG_V_V17 = (120.0, 175.0)     # ° de apertura de cada V (Arquitecto, 20-oct; por omisión 160°; hasta la V17.8: 90° fijos)
+GIRO_CANCHA_V17 = True         # hasta la V17.8: V1 al sur abierta al sur, V2 al norte abierta al norte
+ALTURA_FIJA_V17 = True         # sin SUBIR / BAJAR: la altura la fija la regla (no la red)
+# Control por el operador (Modo Enseñar del visor): manual o por punto. Va por el mismo autopiloto, los mismos topes y las mismas
+# guardas (geocerca, personas, mapa); el árbitro y el reflejo de punto ciego siguen mandando; el tilt, dentro de -45..+15
+V_MAN, A_OBJ_MAN, W_MAN, PAN_V_MAN, TILT_V_MAN = 3.0, 2.5, 60.0, 90.0, 30.0   # m/s, m/s², °/s, °/s, °/s
+VZ_MAN = 1.5                   # m/s: subida y bajada con el mando manual (vz = 1); la regla de no bajar con alguien cerca sigue
+T_MAN = 0.4                    # s: un mando manual vence si no se repite
+D_LLEGO_MAN, YAW_LLEGO_MAN = 0.25, 3.0   # m y ° para dar por llegado un punto
+R_DESPEJE_V17 = 3.0              # m: a esta distancia de un panel detectado (o punto de la nube) sube a Z_TRANSITO, antes de rozarlo
+Z_BASE_V17 = 2.0               # m (Brahian, 20-oct); se prueba 1.7 y 2.6 con --set. Sube a Z_SEGURA solo con una persona cerca
+R_SUBE_V17, R_BAJA_V17 = 4.0, 5.5   # m: sube a la altura segura con una persona a <= R_SUBE; vuelve a Z_BASE a > R_BAJA
 # E5 · LA PARTIDA EMPIEZA EN LA ACTIVACIÓN (D-053): el piloto ya trajo el dron hasta el borde sur de la zona (donde se
 # activa la IA con CH7), mirando hacia las V
 Y_ACTIVA_V17 = -12.5
@@ -627,6 +649,9 @@ D_RUTA_B5, MARGEN_RUTA_B5 = 3.0, 2.0          # D_RUTA_B5 ajustado (3.0 / 4.5 / 
 T_BARRIDO_B5, AMP_BARRIDO_B5 = 3.0, 30.0
 PASO_RUTA_B5 = 4                 # valor de paso_muro mientras dura la ruta
 T_RUTA_B5_MAX = 30.0             # s máximos para recorrer la ruta de una V
+# B5' (Brahian, 20-oct): la V más cercana a donde se lo vio, detrás de ella primero por la esquina hacia donde se fue (la
+# nube de partículas), luego la otra esquina (por si la rodea) y de ahí a la otra V, sin pararse de frente a la boca
+RUTA_V2_B5 = True
 K_RACHA_V17 = 3.0
 # D-064: en la V17 el TF03 va inclinado -3° (mapea las V de 2 m; medido en E7: 25 % -> 52 % de las V)
 TF03_PITCH_V17 = -3.0
@@ -764,7 +789,7 @@ def stand_off_fov():
 # D-072 · HARDWARE ACTUAL (20-oct): ya no hay gimbal. Cámara CSI IMX219 fija al chasis, inclinada CAM_FIJA_PITCH; TF03
 # paralelo en la misma base; sin TF-Luna (irá en el pan-tilt de después, D-056); cámara al piso planeada (CAM_PISO_ACTIVA).
 # aplicar_hw("ACTUAL") cambia las constantes del módulo ANTES de crear el entorno; aplicar_hw("BASE") vuelve atrás.
-CAM_FIJA_PITCH = -5.0
+CAM_FIJA_PITCH = -2.4              # medido por Brahian (20-oct, D-078); el TF03 va a -6.7°
 ANG_CIEGO = 45.0                 # ° bajo el horizonte del borde inferior de la cámara (gimbal en su tope); ACTUAL: 5
 LUNA_ACTIVA = True
 CAM_PISO_ACTIVA = True
@@ -789,13 +814,13 @@ def aplicar_hw(nombre):
     if not _HW_BASE:
         _HW_BASE.update({k: g[k] for k in claves})
     g.update(_HW_BASE)
-    if nombre == "H":                      # D-075: el plus (pan-tilt de servos, CSI 62.2° x 48.8°, TF-Luna, CSI al piso)
-        g.update(HFOV=62.2, VFOV=48.8, GIMBAL_TIPO="servo", TF03_PITCH_V17=-5.0, ANG_CIEGO=45.0, LUNA_ACTIVA=True,
+    if nombre == "H":                      # D-075: el plus (pan-tilt de servos, CSI medida 68.3° x 54.0°, TF-Luna, CSI al piso)
+        g.update(HFOV=68.3, VFOV=54.0, GIMBAL_TIPO="servo", TF03_PITCH_V17=-6.7, ANG_CIEGO=45.0, LUNA_ACTIVA=True,
                  CAM_PISO_ACTIVA=True, PAN_ACTIVO=True)
         g.update(BANDA_MUERTA=0.10 * g["HFOV"], BANDA_RECENTRA=0.04 * g["HFOV"], GIMBAL_BANDA=0.10 * g["VFOV"],
                  GIMBAL_RECENTRA=0.04 * g["VFOV"])
     elif nombre in ("ACTUAL", "G"):        # D-072: G, el dron del MÍNIMO (cámara fija)
-        g.update(HFOV=62.2, VFOV=48.8, GIMBAL_TIPO="fijo", TF03_PITCH_V17=CAM_FIJA_PITCH, ANG_CIEGO=-CAM_FIJA_PITCH,
+        g.update(HFOV=68.3, VFOV=54.0, GIMBAL_TIPO="fijo", TF03_PITCH_V17=-6.7, ANG_CIEGO=-CAM_FIJA_PITCH,
                  LUNA_ACTIVA=False, CAM_PISO_ACTIVA=False)
         g.update(BANDA_MUERTA=0.10 * g["HFOV"], BANDA_RECENTRA=0.04 * g["HFOV"], GIMBAL_BANDA=0.10 * g["VFOV"],
                  GIMBAL_RECENTRA=0.04 * g["VFOV"])
@@ -1014,6 +1039,18 @@ class EntornoDronPersona(object):
         # paneles: extremos A y B y su altura (en la misión se agregan como segmentos los obstáculos del camino)
         self.pa, self.pb = z(N_PANELES, 2), z(N_PANELES, 2)
         self.ph = np.full((n, N_PANELES), ALTO_PANEL)
+        self.man_t = np.zeros(n)                          # s que le quedan al mando manual
+        self.man = np.zeros((n, 5))                       # vx, vy (cuerpo), wz, pan, tilt en [-1, 1]
+        self.clic_op = np.full(n, -1)                     # clic del operador humano sobre la persona j (-1 = ninguno)
+        self.z_op = np.full(n, np.nan)                    # altura que pide el operador (nan = la llevan las reglas)
+        self.cam_modo = np.zeros(n, int)                  # cámara: 0 reglas, 1 asistida (sigue al ladrón), 2 manual (pan y tilt pedidos)
+        self.cam_pan_obj, self.cam_tilt_obj = np.zeros(n), np.zeros(n)
+        self.ruta_op = [[] for _ in range(n)]             # 'Enseñar por ruta': puntos (x, y, yaw, pan, tilt) por recorrer
+        self.ruta_op_i = np.zeros(n, int)
+        self.obj_on = np.zeros(n, bool)                   # ¿va a un punto?
+        self.obj = np.full((n, 5), np.nan)                # x, y, yaw (°), pan (°), tilt (°); nan = sin meta
+        self.alto17 = np.zeros(n, bool)                   # V17.9: ¿volando a la altura segura por una persona cerca?
+        self.grosor = np.full(n, GROSOR_MURO)             # V17.9: grosor de los paneles de cada partida
         # sensores
         self.vis_prev = zb(N_PERS)
         self.dist_prev, self.ang_prev, self.vac, self.vlat = z(N_PERS), z(N_PERS), z(N_PERS), z(N_PERS)
@@ -1024,6 +1061,8 @@ class EntornoDronPersona(object):
         self.phi = z()
         # controladores de bajo nivel del hardware (control.py): la política solo da consignas
         self.ap = AutopilotoArduPilot(n, self.rng)
+        self.ap.RAFAGAS, self.ap.VIENTO_MEDIO, self.ap.FACTOR_ARRASTRE = FISICA_RAFAGAS, FISICA_VIENTO_MEDIO, FISICA_ARRASTRE
+        self.ap.MOTOR_TAU, self.ap.BAT_CAIDA = FISICA_MOTOR_TAU, FISICA_BAT_CAIDA
         self.gb = GimbalMixto(n, rng=self.rng)          # V16: BaseCam o servo por partida (GIMBAL_TIPO)
         if FACTOR_SERVO_H != 1.0:                        # robustez: tilt más lento y con más retardo
             self.gb.RETARDO = tuple(x * FACTOR_SERVO_H for x in GimbalMixto.RETARDO)
@@ -1147,18 +1186,29 @@ class EntornoDronPersona(object):
         # niveles 1 y 2: UN muro (los demás paneles se superponen al primero; el ladrón no tiene otra cubierta), cerca
         # del centro de la zona; nivel 0: sin muros (fuera de la arena, donde el LiDAR no llega)
         self.ph[m] = ALTO_PANEL
+        self.grosor[m] = np.where(lv == NIVEL_V17, GROSOR_PANEL_V17, GROSOR_MURO)
+        self.alto17[m] = False
+        self.man_t[m], self.obj_on[m] = 0.0, False
+        self.cam_modo[m] = 0
+        self.clic_op[m] = -1
+        self.z_op[m] = np.nan
+        for q in np.where(m)[0]:
+            self.ruta_op[q], self.ruta_op_i[q] = [], 0
         for a, i in enumerate(idx):
             if lv[a] == NIVEL_V17:
                 # V17 · E5: la partida empieza en la activación, con el dron en el borde sur de la zona mirando a las V
                 self.dx[i], self.dy[i] = r.uniform(-4.0, 4.0), Y_ACTIVA_V17 + r.uniform(-1.0, 1.0)
                 self.psi[i] = np.pi / 2 + np.radians(r.uniform(-20.0, 20.0))
                 # V17 · E6: dos V de 90° (paneles 0-1 la del sur, abierta al sur; 2-3 la del norte, abierta al norte)
+                gc = r.uniform(0, 2 * np.pi) if GIRO_CANCHA_V17 else 0.0
+                Rg = np.array([[np.cos(gc), -np.sin(gc)], [np.sin(gc), np.cos(gc)]])
                 for v, (y_v, boca) in enumerate(((-SEP_V17 / 2, -np.pi / 2), (SEP_V17 / 2, np.pi / 2))):
-                    vert = np.array([0.0, y_v]) + r.uniform(-AZAR_POS_V17, AZAR_POS_V17, 2)
-                    b = boca + np.radians(r.uniform(-AZAR_ANG_V17, AZAR_ANG_V17))
+                    vert = Rg @ (np.array([0.0, y_v]) + r.uniform(-AZAR_POS_V17, AZAR_POS_V17, 2))
+                    b = boca + gc + np.radians(r.uniform(-AZAR_ANG_V17, AZAR_ANG_V17))
                     alto = r.uniform(*ALTO_PANEL_V17)
+                    abre = np.radians(r.uniform(*ANG_V_V17)) / 2
                     for w, s_ in enumerate((-1.0, 1.0)):
-                        ala = b + s_ * np.pi / 4
+                        ala = b + s_ * abre
                         self.pa[i, 2 * v + w] = vert
                         self.pb[i, 2 * v + w] = vert + ANCHO_PANEL_V17 * np.array([np.cos(ala), np.sin(ala)])
                         self.ph[i, 2 * v + w] = alto
@@ -1385,7 +1435,8 @@ class EntornoDronPersona(object):
         v16_ = np.where(m)[0][lv >= NIVEL_V16]
         self.dz[v16_] = Z_V16_ENTRADA
         # (llega a la altura de entrada según SU barómetro: la real es la que corresponda con el error)
-        self.dz[v16_] = np.clip(np.where(lv[lv >= NIVEL_V16] == NIVEL_V17, Z_V17_ENTRADA, Z_V16_ENTRADA) - self.e_baro[v16_],
+        z_e17 = Z_BASE_V17 if ALTURA_FIJA_V17 else Z_V17_ENTRADA
+        self.dz[v16_] = np.clip(np.where(lv[lv >= NIVEL_V16] == NIVEL_V17, z_e17, Z_V16_ENTRADA) - self.e_baro[v16_],
                                 Z_MIN, Z_MAX)
         self.dz_est[m] = self.dz[m] + self.e_baro[m]
         self.alt_obj[m] = self.dz_est[m]
@@ -1577,7 +1628,7 @@ class EntornoDronPersona(object):
         """V15: las 4 caras del muro j como segmentos (los dos lados a +-GROSOR_MURO/2 y las dos puntas). (n, 2) cada uno."""
         a, b = self.pa[:, j], self.pb[:, j]
         u = (b - a) / np.maximum(np.hypot(*(b - a).T), 1e-6)[:, None]
-        g = np.stack([-u[:, 1], u[:, 0]], -1) * (GROSOR_MURO / 2)
+        g = np.stack([-u[:, 1], u[:, 0]], -1) * (self.grosor / 2)[:, None]
         return [(a + g, b + g), (a - g, b - g), (a + g, a - g), (b + g, b - g)]
 
     def _vista_bloqueada_alturas(self, hs, qx=None, qy=None):
@@ -2345,8 +2396,8 @@ class EntornoDronPersona(object):
         mk[:, RODEAR_IZQ] = mk[:, RODEAR_DER] = d
         mk[:, ACERCARSE] = d & (d_obj > D_ACERCA_V17 + 0.2)
         mk[:, ALEJARSE] = d & (d_obj < D_ALEJA_V17 - 0.2)
-        mk[:, SUBIR] = d & (self.z_v17 < Z_MAX_V17 - 1e-6)
-        mk[:, BAJAR] = d & (self.z_v17 > Z_SEGURA + 1e-6)
+        mk[:, SUBIR] = d & (self.z_v17 < Z_MAX_V17 - 1e-6) & (not ALTURA_FIJA_V17)
+        mk[:, BAJAR] = d & (self.z_v17 > Z_SEGURA + 1e-6) & (not ALTURA_FIJA_V17)
         return mk
 
     # ------------------------------------------------------------------ mapa de obstáculos con el LiDAR
@@ -2602,15 +2653,16 @@ class EntornoDronPersona(object):
         u = C - D
         u = u / max(np.hypot(*u), 1e-6)                      # hacia el lado oculto (más allá de la V, visto desde el dron)
         perp = np.array([-u[1], u[0]])
-        s = ANCHO_PANEL_V17 * np.sqrt(2) / 2 + MARGEN_RUTA_B5
+        s = np.hypot(*(self.pb[i, 2 * v] - self.pb[i, 2 * v + 1])) / 2 + MARGEN_RUTA_B5   # media boca (V de 90°: 1.06 m)
         H = C + D_RUTA_B5 * u
         c1, c2 = H + s * perp, H - s * perp
-        if np.hypot(*(c2 - D)) < np.hypot(*(c1 - D)):
+        X = np.array([self.pf_mx[i], self.pf_my[i]]) if (RUTA_V2_B5 and self.pf_on[i]) else (U if RUTA_V2_B5 else D)
+        if np.hypot(*(c2 - X)) < np.hypot(*(c1 - X)):
             c1, c2 = c2, c1
         boca = (self.pb[i, 2 * v] + self.pb[i, 2 * v + 1]) / 2 - vert
         F = vert + D_RUTA_B5 * boca / max(np.hypot(*boca), 1e-6)
         lim = self.A - 1.5
-        puntos = [np.clip(p, -lim, lim) for p in (c1, H, c2, F)]
+        puntos = [np.clip(p, -lim, lim) for p in ((c1, H, c2) if RUTA_V2_B5 else (c1, H, c2, F))]
         self._poner_ruta(i, puntos, u, True)
         self.inv_x[i], self.inv_y[i] = puntos[-1]
         self.mira_x[i], self.mira_y[i] = vert
@@ -2834,8 +2886,115 @@ class EntornoDronPersona(object):
         """Error de rumbo (rad, + = a la izquierda) y distancia horizontal a un punto."""
         return envolver(np.arctan2(ty - self.dy, tx - self.dx) - self.psi), np.hypot(tx - self.dx, ty - self.dy)
 
+    # ------------------------------------------------------------------ control del operador (Modo Enseñar)
+    def set_manual(self, i, vx=0.0, vy=0.0, wz=0.0, pan=0.0, tilt=0.0, vz=0.0):
+        """Mando manual de la partida i, de -1 a 1: adelante, a la izquierda, giro a la izquierda, velocidad del pan (+ =
+        izquierda), del tilt (+ = arriba) y vz (+ = sube, m/s = vz·VZ_MAN, para los gatillos). Con vz = 0 mantiene la altura. Vence a los T_MAN s si no se repite. Cancela el punto."""
+        self.man[i] = np.clip([vx, vy, wz, pan, tilt], -1.0, 1.0)
+        if np.isnan(self.z_op[i]):
+            self.z_op[i] = self.dz[i]
+        self.z_op[i] = float(np.clip(self.z_op[i] + np.clip(vz, -1.0, 1.0) * VZ_MAN * DT, Z_MIN, Z_MAX))
+        self.man_t[i], self.obj_on[i] = T_MAN, False
+
+    def fijar_sospechoso(self, i, j):
+        """El OPERADOR HUMANO hace clic sobre la persona j de la cámara principal (regla dura 4: la IA nunca decide quién es). Si
+        es el sospechoso, el dron lo fija en el acto (corta el giro 360 / la búsqueda); si no, queda descartado ('no es él') y
+        la búsqueda sigue. Solo vale con la persona a la vista en ese paso; si no, el clic se pierde."""
+        self.clic_op[i] = int(j)
+
+    def soltar_sospechoso(self, i):
+        """El operador humano suelta el objetivo: el dron deja de seguirlo y vuelve a la búsqueda (el sospechoso no se descarta: el
+        humano puede volver a fijarlo con fijar_sospechoso). Las reglas duras siguen igual. Sin objetivo fijado no hace nada."""
+        self.clic_op[i] = -2
+
+    def set_altura(self, i, z):
+        """Pide la altura z (m, entre Z_MIN y Z_MAX) mientras el operador lleva al dron; liberar() la suelta."""
+        self.z_op[i] = float(np.clip(z, Z_MIN, Z_MAX))
+
+    def set_objetivo(self, i, x, y, yaw=None, pan=None, tilt=None):
+        """Lleva a la partida i al punto (x, y) m, luego gira a `yaw` (°, + = izquierda) y apunta pan y tilt (°); lo que sea None
+        no se toca. Sigue hasta llegar (objetivo_llego) o hasta liberar()."""
+        self.obj[i] = [x, y, np.nan if yaw is None else yaw, np.nan if pan is None else pan, np.nan if tilt is None else tilt]
+        self.obj_on[i], self.man_t[i] = True, 0.0
+
+    def liberar(self, i):
+        """Devuelve el dron a las reglas (y la cámara, y cancela la ruta)."""
+        self.man_t[i], self.obj_on[i], self.cam_modo[i] = 0.0, False, 0
+        self.z_op[i] = np.nan
+        self.ruta_op[i], self.ruta_op_i[i] = [], 0
+
+    def set_camara(self, i, modo="reglas", pan=None, tilt=None):
+        """Cámara del pan-tilt: "reglas" (las de siempre), "asistida" (apunta sola hacia donde se vio al ladrón por última vez)
+        o "manual" (pan y tilt en °, + = izquierda / arriba; el tilt siempre dentro de -45..+15). Va aparte del vuelo."""
+        self.cam_modo[i] = {"reglas": 0, "asistida": 1, "manual": 2}[modo]
+        if pan is not None:
+            self.cam_pan_obj[i] = float(np.clip(pan, -PAN_MAX, PAN_MAX))
+        if tilt is not None:
+            self.cam_tilt_obj[i] = float(np.clip(tilt, GIMBAL_MIN, GIMBAL_MAX))
+
+    def set_ruta(self, i, puntos):
+        """'Enseñar por ruta': recorre los puntos (x, y, yaw°, pan°, tilt°; yaw, pan y tilt pueden ser None) uno tras otro con el
+        autopiloto. ruta_terminada(i) avisa al final."""
+        self.ruta_op[i], self.ruta_op_i[i] = [tuple(q) + (None,) * (5 - len(q)) for q in puntos], 0
+        if self.ruta_op[i]:
+            self.set_objetivo(i, *self.ruta_op[i][0])
+            self.ruta_op_i[i] = 0
+
+    def ruta_terminada(self, i):
+        return bool(len(self.ruta_op[i]) > 0 and self.ruta_op_i[i] >= len(self.ruta_op[i]))
+
+    def _avanzar_rutas(self):
+        for i in np.where(self.obj_on)[0]:
+            ruta = self.ruta_op[i]
+            if ruta and self.ruta_op_i[i] < len(ruta) and self.objetivo_llego(i):
+                self.ruta_op_i[i] += 1
+                if self.ruta_op_i[i] < len(ruta):
+                    self.set_objetivo(i, *ruta[self.ruta_op_i[i]])
+                else:
+                    self.obj_on[i] = False
+
+    def objetivo_llego(self, i):
+        o = self.obj[i]
+        ok = np.hypot(o[0] - self.dx[i], o[1] - self.dy[i]) <= D_LLEGO_MAN
+        if not np.isnan(o[2]):
+            ok &= abs(np.degrees(envolver(np.radians(o[2]) - self.psi[i]))) <= YAW_LLEGO_MAN
+        if not np.isnan(o[3]):
+            ok &= abs(o[3] - self.pan[i]) <= 2.0
+        if not np.isnan(o[4]):
+            ok &= abs(o[4] - self.gimbal[i]) <= 2.0
+        return bool(ok)
+
+    def _control_operador(self):
+        """Consignas del operador por partida: (activo, vx, vy mundo m/s, guiñada °/s [+ = derecha, como yaw_cmd], pan_meta °,
+        pan_vel °/s, tilt_vel °/s o nan si no manda el tilt). Manual y punto comparten el autopiloto."""
+        n = self.n
+        man = self.man_t > 0
+        act = man | self.obj_on
+        vx_b, vy_b = self.man[:, 0] * V_MAN, self.man[:, 1] * V_MAN
+        c, sn = np.cos(self.psi), np.sin(self.psi)
+        vx, vy = vx_b * c - vy_b * sn, vx_b * sn + vy_b * c
+        wz = -self.man[:, 2] * W_MAN
+        pan_v, tilt_v = self.man[:, 3] * PAN_V_MAN, self.man[:, 4] * TILT_V_MAN
+        pan_m = np.full(n, np.nan)
+        if self.obj_on.any():
+            o = self.obj
+            ex, ey = np.nan_to_num(o[:, 0] - self.dx), np.nan_to_num(o[:, 1] - self.dy)
+            d = np.hypot(ex, ey)
+            v = np.minimum(V_MAN, np.sqrt(2 * A_OBJ_MAN * d))
+            lejos = d > D_LLEGO_MAN
+            ob = self.obj_on
+            vx = np.where(ob, np.where(lejos, v * ex / np.maximum(d, 1e-6), 0.0), vx)
+            vy = np.where(ob, np.where(lejos, v * ey / np.maximum(d, 1e-6), 0.0), vy)
+            e_yaw = np.degrees(envolver(np.where(np.isnan(o[:, 2]), np.arctan2(ey, ex), np.radians(o[:, 2])) - self.psi))
+            e_yaw = np.where(np.isnan(o[:, 2]) & ~lejos, 0.0, e_yaw)           # sin rumbo pedido: mira hacia donde va
+            wz = np.where(ob, -np.clip(np.where(lejos, 1.0, 2.0) * e_yaw, -W_MAN, W_MAN), wz)
+            pan_m = np.where(ob & ~np.isnan(o[:, 3]), o[:, 3], pan_m)
+            tilt_v = np.where(ob & ~np.isnan(o[:, 4]), np.clip(3.0 * (o[:, 4] - self.gimbal), -TILT_V_MAN, TILT_V_MAN), tilt_v)
+        return act, vx, vy, wz, pan_m, pan_v, tilt_v
+
     def step(self, acc_dron, acc_persona, auto_reset=True):
         n = self.n
+        self._avanzar_rutas()
         r = self.rng
         rc = {k: np.zeros(n) for k in R_COMP}            # V12: recompensa por componente
         # V17 · E2: en la cancha la red manda uno de los 7 botones; la lógica de antes ve MANTENER (los botones se aplican
@@ -2900,6 +3059,40 @@ class EntornoDronPersona(object):
         self.ult_rumbo = np.where(lock_on, self.cand_rumbo, self.ult_rumbo)
         self.visto_alguna |= lock_on
         self.giro_mem = np.where(lock_on, 0.0, self.giro_mem)
+        # CLIC DEL OPERADOR HUMANO (fijar_sospechoso): sobre alguien a la vista; el sospechoso (índice 0) se fija de inmediato
+        suelta = (self.clic_op == -2) & (self.modo >= FIJADO)
+        if suelta.any():                                   # soltar_sospechoso: de vuelta a BUSCAR con el rastreo en cero
+            self.lock = np.where(suelta, False, self.lock)
+            self.modo = np.where(suelta, BUSCAR, self.modo)
+            self.t_modo = np.where(suelta, 0.0, self.t_modo)
+            self.cand = np.where(suelta, -1, self.cand)
+            self.n_conf = np.where(suelta, 0, self.n_conf)
+            self.giro_mem = np.where(suelta, 0.0, self.giro_mem)
+            self.aso_gira = np.where(suelta, False, self.aso_gira)
+            self.clic_op = np.where(suelta, -1, self.clic_op)
+        self.clic_op = np.where(self.clic_op == -2, -1, self.clic_op)
+        hay = self.clic_op >= 0
+        if hay.any():
+            jc = np.clip(self.clic_op, 0, N_PERS - 1)
+            ok = hay & np.take_along_axis(vis, jc[:, None], 1)[:, 0] & (self.estado == VIGILANDO)
+            si_h, no_h = ok & (jc == 0), ok & (jc != 0)
+            k = np.where(no_h)[0]
+            if len(k):
+                self.ignorado[k, jc[k]] = True
+            self.trk = np.where(si_h, 0, self.trk)
+            self.t_clic = np.where(si_h, 0.0, self.t_clic)
+            self.lock = np.where(si_h, True, self.lock)
+            self.n_conf = np.where(si_h, N_REID, self.n_conf)
+            self.t_sin_ver = np.where(si_h, 0.0, self.t_sin_ver)
+            self.modo = np.where(si_h, FIJADO, self.modo)
+            self.t_modo = np.where(si_h, 0.0, self.t_modo)
+            self.cand = np.where(si_h | (no_h & (self.cand == jc)), -1, self.cand)
+            self.t_fijado = np.where(si_h, 0.0, self.t_fijado)
+            self.visto_alguna |= si_h
+            self.giro_mem = np.where(si_h, 0.0, self.giro_mem)
+            self.aso_gira = np.where(si_h, False, self.aso_gira)
+            self.evento_op = np.where(si_h, 1, np.where(no_h, 2, self.evento_op))
+            self.clic_op = np.where(hay, -1, self.clic_op)
         # V15 · FASE C · RECONFIRMAR: tras un cruce (ya separados), si la apariencia no cuadra, si se cruzó con alguien
         # parecido o si el Kalman rechaza mediciones, el dron se queda en hover con el objetivo en cuadro y pregunta al
         # operador. El operador hace clic sobre el ladrón si lo ve; si no lo ve y el dron seguía a otro, "no es él": el dron
@@ -3082,7 +3275,8 @@ class EntornoDronPersona(object):
                 self._marcar_revisado(i)
             nuevo[i] = SIGUIENTE_OBSTACULO if self._planear_siguiente(i) else VENTAJA_ALTURA
         # D-071: terminado el vaivén de frente a la boca, la ruta de la otra V
-        fin_b5 = (self.modo == ASOMO) & (self.paso_muro == PASO_RUTA_B5) & ~self.aso_gira & (self.t_modo >= T_BARRIDO_B5)
+        fin_b5 = ((self.modo == ASOMO) & (self.paso_muro == PASO_RUTA_B5) & ~self.aso_gira
+                  & (self.t_modo >= (0.0 if RUTA_V2_B5 else T_BARRIDO_B5)))
         for i in np.where(fin_b5)[0]:
             self._planear_ruta_b5(i, otra=True)
             nuevo[i] = INVESTIGAR
@@ -3296,6 +3490,11 @@ class EntornoDronPersona(object):
         z_obj = np.where(v16, z_v16, z_obj)
         z_obj = np.where(v17 & sigue17, np.maximum(z_obj, self.z_v17), z_obj)   # V17: SUBIR / BAJAR
         z_obj = np.where(np.minimum(d_pan, d_nube) < R_DESPEJE, np.maximum(z_obj, Z_TRANSITO), z_obj)
+        if ALTURA_FIJA_V17:       # V17.9: altura base Z_BASE_V17; sube a la segura con una persona cerca (la posición real: shortcut)
+            dmin = np.where(self.activa, np.hypot(self.px - self.dx[:, None], self.py - self.dy[:, None]), np.inf).min(1)
+            self.alto17 = np.where(dmin <= R_SUBE_V17, True, np.where(dmin > R_BAJA_V17, False, self.alto17))
+            z_obj = np.where(v17, np.where(self.alto17, Z_SEGURA + MARGEN_BARO_V17, np.where(np.minimum(d_pan, d_nube) < R_DESPEJE_V17, Z_TRANSITO, Z_BASE_V17)), z_obj)   # junto a un panel detectado, por encima
+        z_obj = np.where(((self.man_t > 0) | self.obj_on) & ~eva & ~np.isnan(self.z_op), self.z_op, z_obj)   # el operador pide altura
         alguien_cerca = (vis & (dist_s < 6.0)).any(1)
         # V15 · fase D: en los vuelos de búsqueda la altura se toma con más ganancia (sube 1 m en ~0.7 s, no en ~1.7 s)
         sube_rapido = alt | bia | (giro_ent & self.entrada_alta) | self.anticenit | self.ciego | inv | aso
@@ -3414,6 +3613,9 @@ class EntornoDronPersona(object):
             vy_c = np.where(mueve, vr_ * uy_p - vl_ * ux_p, vy_c)
         vx_c = np.where(self.ciego, vcx, vx_c)
         vy_c = np.where(self.ciego, vcy, vy_c)
+        op, op_vx, op_vy, op_wz, op_pan_m, op_pan_v, op_tilt_v = self._control_operador()
+        op = op & ~eva & ~self.reflejo                       # el árbitro y el reflejo de punto ciego mandan sobre el operador
+        vx_c, vy_c = np.where(op, op_vx, vx_c), np.where(op, op_vy, vy_c)
         vx_c, vy_c, self.guarda = self._guarda_mapa(vx_c, vy_c)
         vx_c, vy_c = self._guarda_personas_y_cerca(vx_c, vy_c)
         # ================= consignas -> MAVLink (GUIDED) -> ArduPilot: cascada de PID del autopiloto =================
@@ -3503,6 +3705,8 @@ class EntornoDronPersona(object):
         ex_, ey_ = self.kf_x[:, 0, 0] + self.tvx * t_out, self.kf_x[:, 1, 0] + self.tvy * t_out
         err_s, _ = self._ir_a(ex_, ey_)
         yaw_cmd = np.where(self.anticenit, np.clip(-2.5 * np.degrees(err_s), -YAW_MAX_PRED, YAW_MAX_PRED), yaw_cmd)
+        yaw_cmd = np.where(op, op_wz, yaw_cmd)
+        self.man_t = np.maximum(self.man_t - DT, 0.0)
         self.ap.guinada(self, yaw_cmd, DT)                 # tasa de guiñada (ATC_RAT_YAW, aceleración limitada)
         self.psi = envolver(self.psi - np.radians(self.yaw_dps) * DT)
         self.giro_acum = np.where(barre, self.giro_acum + np.abs(self.yaw_dps) * DT, self.giro_acum)
@@ -3522,6 +3726,9 @@ class EntornoDronPersona(object):
             busca_p = pred | inv | cnt | (aso & ~self.aso_gira)
             rel_p = np.degrees(envolver(np.arctan2(my_ - self.dy, mx_ - self.dx) - self.psi))
             pan_meta = np.where(tiene, self.pan - a_f, np.where(busca_p, rel_p, 0.0) + self.pan_red)   # V17.8: + lo de la red
+            pan_meta = np.where(op, np.where(np.isnan(op_pan_m), self.pan + op_pan_v * DT * 3.0, op_pan_m), pan_meta)   # operador
+            ub = np.degrees(envolver(np.arctan2(self.ult_y - self.dy, self.ult_x - self.dx) - self.psi))
+            pan_meta = np.where(self.cam_modo == 1, ub, np.where(self.cam_modo == 2, self.cam_pan_obj, pan_meta))   # cámara aparte
             self.pan_meta = np.clip(pan_meta, -PAN_MAX, PAN_MAX)
             err_p = self.pan_meta - self.pan
             v_p = PAN_VEL / FACTOR_SERVO_H
@@ -3553,6 +3760,11 @@ class EntornoDronPersona(object):
         meta = np.where((self.modo == MURO_CANTO) & (self.canto_t >= 0) & ~tiene, self.canto_gmb, meta)   # V15: de canto
         meta = np.where(giro_ent & ~tiene, np.where(self.entrada_alta, GIMBAL_GIRO, GIMBAL_ENTRADA), meta)    # V15
         tasa_g = np.where(tiene, tasa_g, np.clip(3.0 * (meta - self.gimbal_cmd), -GIMBAL_VEL, GIMBAL_VEL))
+        t_asi = np.clip(-np.degrees(np.arctan2(self.dz - 0.9, np.maximum(np.hypot(self.ult_x - self.dx, self.ult_y - self.dy), 0.5))),
+                        GIMBAL_MIN, GIMBAL_MAX)
+        t_cam = np.where(self.cam_modo == 1, t_asi, np.where(self.cam_modo == 2, self.cam_tilt_obj, np.nan))
+        tasa_g = np.where(~np.isnan(t_cam), np.clip(3.0 * (t_cam - self.gimbal_cmd), -GIMBAL_VEL, GIMBAL_VEL), tasa_g)
+        tasa_g = np.where(op & (self.man_t > 0) | (op & self.obj_on & (op_tilt_v != 0)), np.clip(op_tilt_v, -GIMBAL_VEL, GIMBAL_VEL), tasa_g)
         self.gimbal_cmd = np.clip(self.gimbal_cmd + tasa_g * DT, np.maximum(GIMBAL_MIN, self.gimbal - G_ADELANTO),
                                   np.minimum(GIMBAL_MAX, self.gimbal + G_ADELANTO))
         # ================= Jetson -> PWM (AUX1) -> gimbal BaseCam =================
@@ -3643,7 +3855,7 @@ class EntornoDronPersona(object):
         choca_panel = np.zeros(n, bool)
         for j in range(self.pa.shape[1]):
             d, _ = dist_punto_segmento(np.stack([self.dx, self.dy], -1), self.pa[:, j], self.pb[:, j])
-            choca_panel |= (d < RADIO_DRON + GROSOR_MURO / 2) & (self.dz < self.ph[:, j] + 0.2)
+            choca_panel |= (d < RADIO_DRON + self.grosor / 2) & (self.dz < self.ph[:, j] + 0.2)
         fuera = (np.abs(self.dx) > self.A) | (np.abs(self.dy) > self.A)
         self.t += 1
         designado = self.modo >= FIJADO
@@ -4453,6 +4665,20 @@ class EntornoDronPersona(object):
             # V16 · contrato con el visor
             "v16": bool(self.lvl_ep[i] >= NIVEL_V16),
             "v17": bool(self.lvl_ep[i] == NIVEL_V17), "z_v17": round(float(self.z_v17[i]), 2),   # V17: cancha; altura que pide la red
+            # personas que YOLO ve en la cámara principal (para resaltarlas como "posible objetivo"; no dice quién es el
+            # sospechoso): índice, distancia (m), ángulo (°, + = izquierda del eje de la cámara) y el ID del tracker
+            "en_camara": [{"i": int(j), "d": round(float(s["dist"][i, j]), 2), "ang": round(float(-s["ang"][i, j]), 1),
+                           "id": int(self.ids[i, j])} for j in range(N_PERS) if self.activa[i, j] and s["visible"][i, j]],
+            "operador": bool(self.man_t[i] > 0 or self.obj_on[i]), "z_op": None if np.isnan(self.z_op[i]) else round(float(self.z_op[i]), 2),
+            "tilt": round(float(self.cam_pitch[i]), 1), "cam_modo": ["reglas", "asistida", "manual"][int(self.cam_modo[i])],
+            "grosor": round(float(self.grosor[i]), 3),
+            "v_ang": [round(float(np.degrees(np.arccos(np.clip(np.dot(*(self.pb[i, 2 * v + w] - self.pa[i, 2 * v + w] for w in (0, 1)))
+                                                                / max(np.hypot(*(self.pb[i, 2 * v] - self.pa[i, 2 * v]))
+                                                                      * np.hypot(*(self.pb[i, 2 * v + 1] - self.pa[i, 2 * v + 1])), 1e-9), -1, 1)))), 1)
+                      for v in range(2)] if self.lvl_ep[i] == NIVEL_V17 else [],
+            "ruta_op": {"i": int(self.ruta_op_i[i]), "n": len(self.ruta_op[i]), "fin": self.ruta_terminada(i)},
+            "b5": {"on": bool(self.modo[i] in (INVESTIGAR, ASOMO) and self.paso_muro[i] == PASO_RUTA_B5), "v": int(self.b5_v[i])},
+            "viento": [round(float(self.ap.viento_x[i] + self.ap.med_x[i]), 2), round(float(self.ap.viento_y[i] + self.ap.med_y[i]), 2)],
             "pan": round(float(self.pan[i]), 2), "pan_meta": round(float(self.pan_meta[i]), 2),   # D-075 (°, + = izquierda)
             "fase": "zona",                                                                      # V17: la partida empieza en la activación
             # V17 · cmd = [vx, vy, vz (m/s, mundo), guiñada (°/s), gimbal (°), modo, quién manda]; arb = motivo del árbitro

@@ -46,6 +46,13 @@ class AutopilotoArduPilot(object):
     RATE_Y_MAX = 120.0             # °/s: tope de la tasa de guiñada que acepta la Pixhawk (V13; más rápido, la imagen de
                                    # YOLO se desenfoca por movimiento)
     ARRASTRE = 0.12                # 1/s: arrastre lineal del cuadricóptero
+    # Físicas opcionales (V17.9; entorno.py las fija con FISICA_*; por defecto apagadas = igual que antes)
+    VIENTO_MEDIO = 0.0             # m/s²: viento medio máximo; cada partida sortea módulo (0..máx) y dirección
+    MOTOR_TAU = 0.0                # s: respuesta de primer orden de los motores a la inclinación pedida (0 = instantánea)
+    BAT_CAIDA = 0.0                # fracción de empuje que se pierde por minuto de vuelo (caída del voltaje de la LiPo)
+    BAT_MIN = 0.7                  # el empuje disponible no baja de esta fracción
+    FACTOR_ARRASTRE = 1.0
+    RAFAGAS = True
 
     def __init__(self, n, rng):
         self.n, self.rng = n, rng
@@ -58,6 +65,8 @@ class AutopilotoArduPilot(object):
         self.viento_x, self.viento_y = z(), z()               # ráfaga actual (m/s²)
         self.k_planta = np.ones(n)                            # dispersión de la planta (masa, hélices): aleatoria
         self.sigma_viento = z()
+        self.med_x, self.med_y = z(), z()                     # viento medio de la partida (m/s²)
+        self.p_f, self.r_f = z(), z()                         # inclinación pedida tras la respuesta de los motores
 
     def reset(self, m, nivel=0.0):
         k = int(np.sum(m))
@@ -68,7 +77,13 @@ class AutopilotoArduPilot(object):
             a[m] = 0.0
         # aleatorización del dominio: cada partida un dron un poco distinto y otro viento (generalización)
         self.k_planta[m] = self.rng.uniform(0.85, 1.15, k)
-        self.sigma_viento[m] = self.rng.uniform(0.0, 0.25 + 0.35 * nivel, k)
+        self.sigma_viento[m] = self.rng.uniform(0.0, 0.25 + 0.35 * nivel, k) * self.RAFAGAS
+        if self.VIENTO_MEDIO > 0:
+            mod, az = self.rng.uniform(0.0, self.VIENTO_MEDIO, k), self.rng.uniform(0, 2 * np.pi, k)
+            self.med_x[m], self.med_y[m] = mod * np.cos(az), mod * np.sin(az)
+        else:
+            self.med_x[m] = self.med_y[m] = 0.0
+        self.p_f[m] = self.r_f[m] = 0.0
 
     def sincronizar(self, e, m):
         """Cuando la velocidad la impuso alguien más (el piloto en la fase 1), la referencia arranca desde ella."""
@@ -87,6 +102,8 @@ class AutopilotoArduPilot(object):
         self.viento_x = a_ou * self.viento_x + ruido * self.rng.normal(size=self.n)
         self.viento_y = a_ou * self.viento_y + ruido * self.rng.normal(size=self.n)
         cab_pedido = None
+        bat = np.maximum(self.BAT_MIN, 1.0 - self.BAT_CAIDA * (e.t * dt / 60.0)) if self.BAT_CAIDA > 0 else 1.0
+        ang_max = self.ANGLE_MAX * bat
         # cabeceo que pide la consigna en bruto (antes de todo conformado): lo califica la suavidad del control
         axb, ayb = (vx_sp - e.dvx) / 0.35, (vy_sp - e.dvy) / 0.35
         escb = np.minimum(1.0, self.PSC_ACC_XY / np.maximum(np.hypot(axb, ayb), 1e-9))
@@ -116,8 +133,13 @@ class AutopilotoArduPilot(object):
             # ---- ATC: inclinación objetivo en el marco del dron
             af = ax * cps + ay * sps
             al = ax * sps - ay * cps                               # + = a la derecha
-            p_t = np.clip(-np.degrees(np.arctan(af / G)), -self.ANGLE_MAX, self.ANGLE_MAX)
-            r_t = np.clip(np.degrees(np.arctan(al / G)), -self.ANGLE_MAX, self.ANGLE_MAX)
+            p_t = np.clip(-np.degrees(np.arctan(af / G)), -ang_max, ang_max)
+            r_t = np.clip(np.degrees(np.arctan(al / G)), -ang_max, ang_max)
+            if self.MOTOR_TAU > 0:                                 # los motores tardan en entregar la inclinación pedida
+                kf = h / (self.MOTOR_TAU + h)
+                self.p_f += (p_t - self.p_f) * kf
+                self.r_f += (r_t - self.r_f) * kf
+                p_t, r_t = self.p_f, self.r_f
             # P de ángulo -> tasa objetivo -> PID de tasa -> aceleración angular (limitada) -> tasa -> ángulo
             for ang, q, integ, obj, cual in ((e.chasis_pitch, self.q_p, self.ip, p_t, "p"), (e.chasis_roll, self.q_r, self.ir, r_t, "r")):
                 q_t = self.ATC_ANG_P * (obj - ang)
@@ -129,15 +151,15 @@ class AutopilotoArduPilot(object):
             # ---- física: la aceleración real sale de la inclinación real
             af_r = -G * np.tan(np.radians(e.chasis_pitch))
             al_r = G * np.tan(np.radians(e.chasis_roll))
-            axr = af_r * cps + al_r * sps - self.ARRASTRE * e.dvx + self.viento_x
-            ayr = af_r * sps - al_r * cps - self.ARRASTRE * e.dvy + self.viento_y
+            axr = af_r * cps + al_r * sps - self.ARRASTRE * self.FACTOR_ARRASTRE * e.dvx + self.viento_x + self.med_x
+            ayr = af_r * sps - al_r * cps - self.ARRASTRE * self.FACTOR_ARRASTRE * e.dvy + self.viento_y + self.med_y
             e.dvx += axr * h
             e.dvy += ayr * h
             e.acc_x, e.acc_y = axr, ayr
             # ---- PSC vertical
             ez = vz_sp - e.dvz
             self.iz = np.clip(self.iz + ez * h, -2.0, 2.0)
-            azr = np.clip(self.PSC_VELZ_P * ez + self.PSC_VELZ_I * self.iz, -self.PSC_ACC_Z_ABAJO, self.PSC_ACC_Z_ARRIBA)
+            azr = np.clip(self.PSC_VELZ_P * ez + self.PSC_VELZ_I * self.iz, -self.PSC_ACC_Z_ABAJO, self.PSC_ACC_Z_ARRIBA * bat)
             e.dvz += azr * h
         return cab_pedido
 

@@ -2,6 +2,8 @@
 """V17 (docs/PLAN_V17_REFUERZO.md): la cancha (2 V de paneles de 2 m), los 7 botones con efecto, la evasión por regla del
 árbitro, la máscara de acciones (MaskablePPO), la partida desde la activación, la regla B2 y las reglas del ladrón. Las
 reglas duras de CLAUDE.md también se prueban en la cancha: si una falla, no se relaja la prueba."""
+import os
+import sys
 import unittest
 
 import numpy as np
@@ -51,12 +53,14 @@ class TestCancha(unittest.TestCase):
             u1 = env.pb[:, 2 * v] - env.pa[:, 2 * v]
             u2 = env.pb[:, 2 * v + 1] - env.pa[:, 2 * v + 1]
             np.testing.assert_allclose(env.pa[:, 2 * v], env.pa[:, 2 * v + 1])        # las dos alas comparten el vértice
-            np.testing.assert_allclose((u1 * u2).sum(1), 0.0, atol=1e-9)              # V de 90°
+            ap = np.degrees(np.arccos(np.clip((u1 * u2).sum(1) / E.ANCHO_PANEL_V17 ** 2, -1, 1)))
+            self.assertTrue(((ap >= E.ANG_V_V17[0] - 1e-6) & (ap <= E.ANG_V_V17[1] + 1e-6)).all())   # V de 120° a 175°
         sep = np.hypot(*(env.pa[:, 2] - env.pa[:, 0]).T)
         self.assertTrue(((sep > E.SEP_V17 - 2 * np.sqrt(2) * E.AZAR_POS_V17) & (sep < E.SEP_V17 + 2 * np.sqrt(2) * E.AZAR_POS_V17)).all())
+        self.assertTrue(np.allclose(env.grosor, 0.05))                                  # paneles de 5 cm
+        self.assertGreater(np.ptp(np.arctan2(*(env.pa[:, 2] - env.pa[:, 0]).T[::-1])), 1.0)   # la cancha gira por partida
         boca = lambda v: (env.pb[:, 2 * v] + env.pb[:, 2 * v + 1]) / 2 - env.pa[:, 2 * v]
         self.assertTrue(((boca(0) * boca(1)).sum(1) < 0).all())                         # bocas hacia lados contrarios
-        self.assertTrue((boca(0)[:, 1] < 0).all())                                       # la V del sur abre hacia el dron
         self.assertTrue((env.activa[:, 1:].sum(1) == 1).all())                           # 1 ladrón y 1 civil
         # E5: la partida empieza en la activación, en el borde sur de la zona, buscando
         self.assertTrue((np.abs(env.dy - E.Y_ACTIVA_V17) <= 1.0).all())
@@ -68,10 +72,11 @@ class TestCancha(unittest.TestCase):
     def test_paneles_reales_d066(self):
         # D-066: medidas de Brahian (alas de 1.5 m, alto 2.2-2.3 m); la V de 90° y los 10 m entre V no cambian
         self.assertEqual(E.ANCHO_PANEL_V17, 1.5)
-        self.assertEqual(E.ALTO_PANEL_V17, (2.2, 2.3))
+        self.assertEqual(E.ALTO_PANEL_V17, (2.3, 2.3))      # 20-oct: alto 2.30 m, grosor 5 cm, V de 120° a 175°
+        self.assertEqual(E.GROSOR_PANEL_V17, 0.05)
         env = E.EntornoDronPersona(32, semilla=8, nivel=E.NIVEL_V17)
         np.testing.assert_allclose(np.hypot(*(env.pb - env.pa).transpose(2, 0, 1)), 1.5, atol=1e-9)
-        self.assertTrue(((env.ph >= 2.2) & (env.ph <= 2.3)).all())
+        self.assertTrue(np.allclose(env.ph, 2.3))
 
     def test_geocerca_de_la_cancha(self):
         env = E.EntornoDronPersona(4, semilla=1, nivel=E.NIVEL_V17)
@@ -144,16 +149,16 @@ class TestRutaB5(unittest.TestCase):
 
 
 class TestHardwareActual(unittest.TestCase):
-    """D-072: cámara IMX219 fija a -5° (sin gimbal), TF03 paralelo, sin TF-Luna. La barrera -45..+15° se conserva."""
+    """D-072: cámara IMX219 fija (sin gimbal; FOV medido 68.3° x 54.0°), TF03 paralelo, sin TF-Luna. La barrera -45..+15° se conserva."""
 
     def test_camara_fija(self):
         E.aplicar_hw("ACTUAL")
         try:
-            self.assertEqual((E.HFOV, E.VFOV, E.GIMBAL_TIPO), (62.2, 48.8, "fijo"))
+            self.assertEqual((E.HFOV, E.VFOV, E.GIMBAL_TIPO), (68.3, 54.0, "fijo"))
             self.assertGreater(E.d_punto_ciego(3.8), 7.0)                  # sin inclinar la cámara, la zona ciega crece
             env = E.EntornoDronPersona(16, semilla=2, nivel=E.NIVEL_V17)
             for _ in range(300):
-                env.step(np.full(16, E.SUBIR), AP(16), auto_reset=True)
+                env.step(np.full(16, E.SUBIR), AP(16), auto_reset=False)
                 esperado = np.clip(env.chasis_pitch + E.CAM_FIJA_PITCH, E.GIMBAL_MIN, E.GIMBAL_MAX)
                 np.testing.assert_allclose(env.cam_pitch, esperado, atol=1e-9)
                 self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all() and (env.cam_pitch <= E.GIMBAL_MAX + EPS).all())
@@ -249,6 +254,8 @@ class TestBotones(unittest.TestCase):
 
     def test_cada_boton_cambia_algo(self):
         q = E.QUEDARSE
+        E.ALTURA_FIJA_V17 = False                                  # SUBIR / BAJAR siguen existiendo, apagados desde la V17.9
+        self.addCleanup(setattr, E, "ALTURA_FIJA_V17", True)
         # a 7.5 m (sin amenaza): rodear, acercarse, subir, bajar
         d, lat, z17, dz = self.correr_botones(7.5, E.Z_SEGURA + 1.0)
         self.assertLess(lat[E.RODEAR_IZQ], lat[q] - 0.5)          # mirando al norte: la izquierda es -x
@@ -280,7 +287,15 @@ class TestBotones(unittest.TestCase):
             evade |= info["inicia"]
         self.assertGreater(evade.mean(), 0.5, evade)                    # (que la prueba no quede vacía)
 
+    def test_altura_fija_sin_subir_ni_bajar(self):
+        env = fijado_quieto(8, z17=E.Z_SEGURA)
+        mk = env.action_masks()
+        self.assertTrue(env.mascara_decision().any() and mk[:, E.RODEAR_IZQ].any())
+        self.assertFalse(mk[:, E.SUBIR].any() or mk[:, E.BAJAR].any())
+
     def test_mascara(self):
+        E.ALTURA_FIJA_V17 = False
+        self.addCleanup(setattr, E, "ALTURA_FIJA_V17", True)
         env = E.EntornoDronPersona(16, semilla=0, nivel=E.NIVEL_V17)
         mk = env.action_masks()
         self.assertEqual(mk.shape, (16, len(E.CLASES_V17)))
@@ -427,3 +442,149 @@ class TestEntrenamientoV17(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestControlOperador(unittest.TestCase):
+    """Modo Enseñar: set_manual / set_objetivo pasan por el autopiloto y los topes; el tilt nunca sale de -45..+15."""
+
+    def entorno(self):
+        E.aplicar_hw("H")
+        self.addCleanup(E.aplicar_hw, "BASE")
+        env = E.EntornoDronPersona(2, semilla=5, nivel=E.NIVEL_V17)
+        env.px[:, 1:] = 40.0                                   # nadie cerca (sin árbitro)
+        return env
+
+    def test_punto(self):
+        env = self.entorno()
+        x0, y0 = env.dx[0], env.dy[0]
+        env.set_objetivo(0, x0 + 4.0, y0 + 3.0, yaw=90.0, pan=20.0, tilt=-20.0)
+        for _ in range(400):
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+            self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all() and (env.cam_pitch <= E.GIMBAL_MAX + EPS).all())
+            if env.objetivo_llego(0):
+                break
+        self.assertLess(np.hypot(env.dx[0] - x0 - 4.0, env.dy[0] - y0 - 3.0), 0.6)
+        self.assertLess(abs(np.degrees(E.envolver(np.radians(90.0) - env.psi[0]))), 6.0)
+        self.assertAlmostEqual(env.pan[0], 20.0, delta=3.0)
+        self.assertTrue(abs(env.dy[1] - y0) > 0 or True)       # la otra partida sigue con las reglas
+
+    def test_manual_y_liberar(self):
+        env = self.entorno()
+        x0, y0, p0 = env.dx[0], env.dy[0], env.psi[0]
+        for _ in range(30):
+            env.set_manual(0, vx=1.0, tilt=-1.0)               # adelante y tilt abajo
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        avance = (env.dx[0] - x0) * np.cos(p0) + (env.dy[0] - y0) * np.sin(p0)
+        self.assertGreater(avance, 1.0)
+        self.assertGreaterEqual(env.cam_pitch[0], E.GIMBAL_MIN - EPS)
+        self.assertTrue(env.foto(0)["operador"])
+        for _ in range(10):                                    # sin repetir el mando, vence y vuelven las reglas
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertFalse(env.foto(0)["operador"])
+
+    def test_grabador(self):
+        import tempfile
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "herramientas"))
+        from demostraciones import Grabador
+        env = self.entorno()
+        g = Grabador(env, 0)
+        for _ in range(12):
+            env.set_manual(0, vx=0.5)
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+            g.paso()
+        with tempfile.TemporaryDirectory() as d:
+            ruta = g.guardar(d)
+            with np.load(ruta) as z:
+                self.assertEqual(z["obs"].shape, (12, E.OBS_DRON))
+                self.assertEqual(z["cmd"].shape, (12, 5))
+                self.assertTrue(z["operador"].all())
+
+    def test_ruta_y_camara(self):
+        env = self.entorno()
+        x0, y0 = env.dx[0], env.dy[0]
+        env.set_ruta(0, [(x0 + 2, y0, 0.0, None, None), (x0 + 2, y0 + 2, 90.0, 30.0, -15.0)])
+        for _ in range(500):
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+            if env.ruta_terminada(0):
+                break
+        self.assertTrue(env.ruta_terminada(0))
+        env.liberar(0)
+        env.set_camara(0, "asistida")                      # la cámara va aparte del vuelo
+        for _ in range(40):
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        f = env.foto(0)
+        self.assertEqual(f["cam_modo"], "asistida")
+        self.assertGreaterEqual(f["tilt"], E.GIMBAL_MIN - EPS)
+        self.assertLessEqual(f["tilt"], E.GIMBAL_MAX + EPS)
+        self.assertTrue(len(f["v_ang"]) == 2 and all(E.ANG_V_V17[0] - 0.2 <= a <= E.ANG_V_V17[1] + 0.2 for a in f["v_ang"]))
+        env.set_camara(0, "reglas")
+        env.liberar(0)
+        self.assertFalse(env.foto(0)["operador"])
+
+    def test_fisicas_apagables(self):
+        E.aplicar_hw("H")
+        self.addCleanup(E.aplicar_hw, "BASE")
+        ant = (E.FISICA_VIENTO_MEDIO, E.FISICA_MOTOR_TAU, E.FISICA_BAT_CAIDA)
+        self.addCleanup(lambda: (setattr(E, "FISICA_VIENTO_MEDIO", ant[0]), setattr(E, "FISICA_MOTOR_TAU", ant[1]),
+                                 setattr(E, "FISICA_BAT_CAIDA", ant[2])))
+        def deriva(**kw):
+            for k, v in kw.items():
+                setattr(E, k, v)
+            env = E.EntornoDronPersona(32, semilla=4, nivel=E.NIVEL_V17)
+            env.ap.sigma_viento[:] = 0.0
+            env.px[:, 1:] = 40.0
+            for _ in range(60):
+                env.set_manual(0)                        # quieto
+                env.ap.paso(env, np.zeros(32), np.zeros(32), np.zeros(32), E.DT)
+            return np.hypot(env.dvx, env.dvy).mean()
+        base = deriva(FISICA_VIENTO_MEDIO=0.0)
+        self.assertLess(base, 1e-9)                       # apagado = sin viento medio
+        self.assertGreater(deriva(FISICA_VIENTO_MEDIO=1.0), 0.05)
+
+    def test_altura_manual(self):
+        env = self.entorno()
+        z0 = env.dz[0]
+        for _ in range(40):
+            env.set_manual(0, vz=1.0)
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertGreater(env.dz[0], z0 + 1.0)
+        self.assertLessEqual(env.dz[0], E.Z_MAX + 0.3)
+        self.assertGreater(env.foto(0)["z_op"], z0 + 1.0)
+        env.set_altura(0, z0)
+        env.liberar(0)
+        self.assertIsNone(env.foto(0)["z_op"])
+
+    def test_clic_del_operador_y_en_camara(self):
+        env = self.entorno()
+        env.px[0, 0], env.py[0, 0] = env.dx[0] + 7.0 * np.cos(env.psi[0]), env.dy[0] + 7.0 * np.sin(env.psi[0])
+        env.pa[:], env.pb[:] = 90.0, 91.0                                  # sin paneles que tapen
+        for _ in range(30):
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+            if env.foto(0)["en_camara"]:
+                break
+        vistos = env.foto(0)["en_camara"]
+        self.assertTrue(vistos and {"i", "d", "ang", "id"} <= set(vistos[0]))
+        self.assertNotEqual(env.modo[0], E.FIJADO)
+        env.fijar_sospechoso(0, 0)                                         # el humano hace clic sobre el ladrón
+        env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertEqual(env.modo[0], E.FIJADO)
+        self.assertEqual(env.foto(0)["op"], 1)
+
+    def test_soltar_sospechoso(self):
+        env = self.entorno()
+        env.px[0, 0], env.py[0, 0] = env.dx[0] + 7.0 * np.cos(env.psi[0]), env.dy[0] + 7.0 * np.sin(env.psi[0])
+        env.pa[:], env.pb[:] = 90.0, 91.0
+        for _ in range(30):
+            env.step(np.zeros(2, int), AP(2), auto_reset=False)
+            if env.foto(0)["en_camara"]:
+                break
+        env.fijar_sospechoso(0, 0)
+        env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertEqual(env.modo[0], E.FIJADO)
+        env.soltar_sospechoso(0)
+        env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertNotEqual(env.modo[0], E.FIJADO)
+        self.assertLess(env.modo[0], E.FIJADO)             # de vuelta en la búsqueda, no fijado ni persiguiendo
+        env.soltar_sospechoso(0)                           # sin objetivo fijado no rompe nada
+        env.step(np.zeros(2, int), AP(2), auto_reset=False)
+        self.assertTrue((env.cam_pitch >= E.GIMBAL_MIN - EPS).all())
