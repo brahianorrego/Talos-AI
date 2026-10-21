@@ -30,8 +30,47 @@ Fuente: `04_VISOR_Y_MOTOR_GRAFICO/mediciones/MEDICION_FPS_V16.md` (visor three.j
 | RTX 3050 sin tope | 202 | 203 | 228 |
 
 Hay que poner Chrome en "Alto rendimiento" (configuración de gráficos de Windows). Portátil: i5-12450HX, 16 GB de RAM, RTX 3050 de 6 GB.
-**Unreal en vivo en esta RTX: [pendiente]**; no hay una medición registrada en los documentos del repositorio. Si da menos de 15 cuadros por segundo, se deja como video (orden de Brahian, `docs/ORDENES_BRAHIAN_20OCT.md` §F).
+**Unreal en vivo en esta RTX (medido 20-21 oct, ver sección 5):** 60 cuadros por segundo (tope de la pantalla) en 1280×720 y en 1920×1080; con la partida en vivo, entre 52 y 60. Como pasa de 15, **va en vivo** (no hace falta dejarlo como video).
 
 ## 4. Qué se pidió corregir (para contar el proceso)
 
 Quitar el vuelo entre canchas (tecla T), un solo escenario seleccionable (cancha de fútbol o de tenis), árboles y edificios más realistas, mapa a pantalla completa, ingeniería fuera del primer plano, vista de vuelo real con cámara principal grande, mapa de los dos LiDAR de 1 haz y cámara 2 abajo, y quitar el botón "Dron: Mínimo/Plus" (`docs/ORDENES_BRAHIAN_20OCT.md` §F). Varias ya están hechas (commits `47f70ba`, `d44b52b`, `bb61d0c`, `81d71b2`).
+
+## 5. Estado final del motor gráfico y el juego (20-21 oct)
+
+**Cuadros por segundo de Unreal** (RTX 3050 6 GB, editor en tiempo real, cancha completa + 2 maniquíes + 4 paneles; `04_VISOR_Y_MOTOR_GRAFICO/unreal/medir_fps.py`, resultados en `unreal/_cache/fps_1280x720.json` y `fps_1920x1080.json`):
+- Alta (Lumen y sombras virtuales), media, baja y apagado: **60.0 fps** medio en 720p y en 1080p, con el 1 % de cuadros más lentos entre 55 y 58 fps (tiempo por cuadro 16.7 ms; el 99 % tarda menos de 18.2 ms).
+- Es un **tope** (la frecuencia de la pantalla), no el rendimiento máximo: la tarjeta iba al 49-61 % de uso, lo que sugiere margen hasta unos 100 fps. Los cambios de calidad no movieron la carga, así que no se distingue 720p de 1080p ni Lumen sí o no.
+- **Con la simulación en vivo** (`vivo_unreal.py`): 52 a 60 fps; dibujar cada cuadro cuesta entre 1.5 y 2.8 ms (dron, personas y cámara). Hay datos de la prueba de 7 minutos con 42 a 48 fps y la simulación a 3× velocidad, sin caídas.
+- Aviso: si la ventana de Unreal pierde el foco, el editor baja a 3-8 fps; se desactivó el límite de fondo (`EditorSettings.ini`, `bThrottleCPUWhenNotForeground=False`). Los 0.6 s por cuadro de los videos eran el Movie Render Queue (muchas muestras por cuadro), no el visor.
+
+**Cadena en vivo:** `en_vivo.py` (simulación, puerto 8767) → `puente_unreal.py` (UDP 8770, 10 pasos por segundo) → `unreal/vivo_unreal.py` dentro del editor (interpola a 30-60 cuadros por segundo). La estación web (Enseñar) manda las órdenes por POST a `en_vivo.py`. `VIVO_UNREAL.bat` abre todo y deja Unreal (60 %) y la estación (40 %) lado a lado en una pantalla (medido en 1536×864: Unreal de 0 a 922 px, Edge de 922 a 1536 px).
+
+**Caída del editor y su arreglo:** `Assertion failed: VertexFactory == nullptr || VertexFactory->IsReadyForStaticMeshCaching()`. Causa: crear o destruir mallas (los paneles de cada partida y las personas con esqueleto) mientras Unreal dibuja. Arreglo: todo se crea una sola vez y las personas se crean de a una con espera; después solo se mueven transformaciones. Prueba: 7 minutos con muchas partidas nuevas, 0 errores en el registro. Además el editor arranca con `-unattended` y un vigilante cierra solo la ventana del Crash Reporter.
+
+**Mapa de teclas final** (Enseñar → Manual; solo teclado y mouse, orden §G.1):
+| Tecla / mouse | Hace |
+|---|---|
+| W S · A D | adelante y atrás · de lado |
+| Q E | girar |
+| Espacio · C | subir · bajar (techo 7 m) |
+| Shift · Ctrl | rápido · lento y preciso |
+| F (mantener) | giro de 360° buscando |
+| Botón central arrastrado | pan y tilt de la cámara |
+| Clic izquierdo | fija al "posible objetivo" resaltado (regla 4: lo decide el humano) |
+| Clic derecho | suelta el objetivo (`env.soltar_sospechoso`) |
+| Rueda | zoom del mapa |
+| V · flechas | cámara asistida · pan y tilt alternativo |
+| 1 · 2 · 3 · 4 | CSI#1 grande · CSI#2 grande · 3D seguir · 3D libre |
+| Tab · R · G · B · P · Esc · H | Puntos⇄Manual · ruta · la IA guía (otra vez devuelve) · grabar · pausa · salir · ocultar la chuleta |
+
+**Pruebas hechas con el flujo completo** (VIVO_UNREAL.bat recién abierto, 37 pruebas automáticas OK, y la estación manejada con eventos reales de teclado y mouse):
+- Adelante + altura: el dron avanzó y subió de 1.8 a 3.9 m en 3 s; F mantenida: `f360` activo y +131° en 2.5 s.
+- Con dos personas a la vista, clic izquierdo sobre el ladrón: el dron pasó de BUSCAR a PERSECUCION; clic derecho: VERIFICAR (objetivo soltado).
+- G: la simulación pasó a modo `auto` (la IA guía) y volvió a `ensenar` al presionar G otra vez.
+- Botón central arrastrado: el pan y el tilt de la simulación siguieron el arrastre (en la prueba, pan 72° y tilt −29°).
+- Maniquíes: el salto se ve en el aire con su sombra; agacharse, caminar agachado, recostarse y gatear se verificaron en la lógica (`pruebas/test_posturas_vivo.py`) pero no tengo una foto clara de cada una.
+
+**Capturas** (todas en `04_VISOR_Y_MOTOR_GRAFICO/mediciones/capturas/`): `unreal_juego_en_vivo.png` (dron plus volando en vivo con paneles y personas), `unreal_en_vivo_dron_cerca.png`, `estacion_ensenar_mapa.png` (mapa con puntos de paso), `unreal_campus_dia2_1.png` y `unreal_campus_dia2_3.png` (adoquín, losas y canaleta), `unreal_campus_fachada2_0.png` y `_1.png` (fachadas de vidrio y de ladrillo), `unreal_campus_halos_0.png` (turbina y luminaria de noche).
+
+**Limitaciones sin resolver:** MetaHuman no se instaló (necesita la cuenta de Epic de Brahian; `docs/PENDIENTES_BRAHIAN_NOCHE.md`); no se probó con un gamepad real (el gamepad es opcional); el clic sobre una persona se probó con el ladrón real a la vista, pero el resaltado de "posible objetivo" en el mapa solo se vio por datos, no en una captura.

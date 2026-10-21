@@ -139,7 +139,7 @@
 
   // ----------------------------------------------------------------------------------------------------------- botones
   const fijarSub = x => {
-    sub = x; window.ENSENAR_MANUAL = x === "manual";
+    sub = x; window.ENSENAR_MANUAL = x === "manual"; iaGuia = false;                  // al elegir Puntos o Manual el dron vuelve a ser de Brahian (G ya no está activa)
     document.querySelectorAll("#p-ens [data-sub]").forEach(b => b.classList.toggle("activo", b.dataset.sub === x));
     document.body.classList.toggle("ens-manual", x === "manual");
     $("ens-ayuda").textContent = x === "manual" ? "Teclado y mouse: ver la chuleta (H la oculta). Mantenga F para el giro de 360°; cuando aparezca un posible objetivo, clic izquierdo sobre él para fijarlo." : "Clic: punto de paso · arrastre el círculo para girar la flecha · clic sobre un punto: pan y tilt · \"Ir\" lo ejecuta";
