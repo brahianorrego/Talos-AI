@@ -324,6 +324,18 @@ def extras(E):
         D.forma("Cylinder", "Motor_turbina", D.ue(px - 1.75 * math.cos(math.radians(x["rot"])), py - 1.75 * math.sin(math.radians(x["rot"])), 1.1), (1.32, 1.32, 0.5),
                 D.material("MotorRojo", (0.45, 0.02, 0.02), 0.4), 0.0, "Entorno/Extras", rot=(0.0, 90.0, yaw))
 
+        # de las fotos: sección abierta azul y gris, tobera plateada atrás, marco amarillo con patas bajas
+        c, sn = math.cos(math.radians(x["rot"])), math.sin(math.radians(x["rot"]))
+        gris = D.material("MotorGris", (0.34, 0.36, 0.4), 0.35, 0.8)
+        azul = D.material("MotorAzul", (0.04, 0.2, 0.55), 0.4, 0.5)
+        plata = D.material("MotorPlata", (0.6, 0.62, 0.66), 0.25, 0.9)
+        amar = D.material("MotorAmarillo", (0.7, 0.5, 0.02), 0.5)
+        for k, (dx_, mat_, esc_) in enumerate(((0.3, azul, 1.3), (0.9, gris, 1.28), (-0.5, gris, 1.3), (-1.1, azul, 1.27))):                       # anillos que ven el interior
+            D.forma("Cylinder", f"Motor_anillo_{k}", D.ue(px + dx_ * c, py + dx_ * sn, 1.1), (esc_, esc_, 0.22), mat_, 0.0, "Entorno/Extras", rot=(0.0, 90.0, yaw))
+        D.forma("Cylinder", "Motor_tobera", D.ue(px + 1.75 * c, py + 1.75 * sn, 1.1), (0.95, 0.95, 0.35), plata, 0.0, "Entorno/Extras", rot=(0.0, 90.0, yaw))
+        for lado in (-1, 1):
+            for d_ in (-1.2, 1.2):
+                D.caja("Motor_pata", px + d_ * c - lado * 0.62 * sn, py + d_ * sn + lado * 0.62 * c, 0.3, 0.12, 0.12, 0.55, amar, math.radians(x["rot"]), "Entorno/Extras")
 
 def poste_luz(x, y, alto, noche, n):
     gris = D.material("PosteLuz", (0.16, 0.17, 0.18), 0.5, 0.6)
@@ -331,6 +343,9 @@ def poste_luz(x, y, alto, noche, n):
     D.forma("Cylinder", "Luminaria_poste", D.ue(x, y, alto / 2), (0.18, 0.18, alto), gris, 0.0, "Entorno/Luminarias")
     D.caja("Luminaria_cabeza", x, y, alto + 0.1, 0.9, 0.5, 0.18, lamp, 0.0, "Entorno/Luminarias")
     if noche:
+        halo = D.material_translucido("HaloLuz", (1.0, 0.97, 0.85), 0.18)                         # el resplandor de las fotos: una esfera suave alrededor de la lámpara
+        D.forma("Sphere", "Luminaria_halo", D.ue(x, y, alto + 0.1), (2.6, 2.6, 2.6), halo, 0.0, "Entorno/Luminarias")
+        D.forma("Sphere", "Luminaria_halo_2", D.ue(x, y, alto + 0.1), (1.1, 1.1, 1.1), D.material_translucido("HaloLuzN", (1.0, 1.0, 0.95), 0.5), 0.0, "Entorno/Luminarias")
         a = D.actores.spawn_actor_from_class(unreal.PointLight, D.ue(x, y, alto - 0.2))
         a.set_actor_label(f"Luz_{n}")
         a.set_folder_path("Entorno/Luminarias")
