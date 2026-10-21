@@ -10,7 +10,7 @@ Brahian pidió que se cuenten. Cada fila: qué falló, causa, arreglo y archivo.
 | El único vuelo del dron (sin la Jetson) terminó en failsafe por batería | Batería baja | El mínimo **no ha volado con la Jetson** (`docs/HISTORIAL_PRUEBAS_FISICAS.md`, "Pendiente") |
 | Gimbal solo bajaba a −10° | Hipótesis: el cable grueso del TF03 hacía palanca | Se descartó el gimbal (D-072, D-073) |
 | Reinstalar la Jetson tomó más de un día | La imagen en microSD buscaba su disco raíz en otra ranura; Secure Boot rechazó el arranque; BitLocker pidió clave; una USB de 4 GB corrompía archivos | Se instaló en el NVMe con JetPack 6.2.1 (`08_EVIDENCIA_Y_DIAGRAMAS/reinstalacion_jetson/`) |
-| LiDAR TF03 sin driver | El kernel de JetPack 6 no trae `pl2303` | Se compiló el driver (`02_JETSON_MINIMO/jp6_driver_pl2303.sh`) |
+| LiDAR TF03 sin driver | El kernel de JetPack 6 no trae `pl2303` | Se compiló el driver con las fuentes del kernel 5.15.148 (`docs/HISTORIAL_PRUEBAS_FISICAS.md` cita el script `jp6_driver_pl2303.sh`, que **no está en este repositorio**: pedirlo a la parte física) |
 | Cámara USB casi blanca al aire libre | Su driver no controla la exposición; a pleno sol 95 % de píxeles quemados (la CSI, 0 %) | Se cambió a la CSI IMX219; después se quitó la USB (el sensor se dañó con el sol) |
 | Video lento por WiFi | JPEG de calidad 92 (~70 KB por cuadro) | Calidad 55 (~15-25 KB), buffer limitado y codificación en otro hilo |
 | En las tomas de campo el LiDAR leía la pared a 58 m | No estaba alineado con la cámara | Se midieron los ángulos y se re-simuló el mínimo |
