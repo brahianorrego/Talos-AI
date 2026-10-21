@@ -66,7 +66,9 @@ def textura(nombre):
 def mat_fachada(nombre):
     ruta = D.CARPETA + "/Materiales/MI_F_" + nombre
     if D.biblioteca.does_asset_exist(ruta):
-        return unreal.load_asset(ruta)
+        if os.environ.get("DRONIA_REHACER") != "1":
+            return unreal.load_asset(ruta)
+        D.biblioteca.delete_asset(ruta)
     t = textura(nombre)
     if t is None:
         return D.material("Ladrillo", (0.45, 0.14, 0.07), 0.9)
