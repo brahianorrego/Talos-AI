@@ -9,10 +9,16 @@ import os
 import statistics
 import time
 
+import sys
+
 import unreal
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dronia_ue as D  # noqa: E402
+
 AQUI = os.path.dirname(os.path.abspath(__file__))
-SALIDA = os.path.join(AQUI, "_cache", "fps.json")
+RES = "%sx%s" % (os.environ.get("DRONIA_RX", "1280"), os.environ.get("DRONIA_RY", "720"))
+SALIDA = os.path.join(AQUI, "_cache", "fps_%s.json" % RES)
 cmd = lambda c: unreal.SystemLibrary.execute_console_command(None, c)       # noqa: E731
 
 BASE = ["r.VSync 0", "t.MaxFPS 0"]
@@ -24,7 +30,7 @@ CALIDADES = {
     "bajo (sin Lumen, sombras clásicas)": ["r.DynamicGlobalIlluminationMethod 0", "r.ReflectionMethod 2", "r.Shadow.Virtual.Enable 0", "sg.PostProcessQuality 1", "sg.ShadowQuality 1"],
     "apagado (sin GI, sin sombras)": ["r.DynamicGlobalIlluminationMethod 0", "r.ReflectionMethod 2", "r.Shadow.Virtual.Enable 0", "r.ShadowQuality 0", "sg.PostProcessQuality 0"],
 }
-ESCALAS = [100, 150, 300, 500]                    # % de pantalla: 100 = el viewport tal cual; 150 = 2.25 veces los píxeles
+ESCALAS = [100]                    # % de pantalla: 100 = el viewport tal cual; 150 = 2.25 veces los píxeles
 res = {}
 cola = [(c, e) for c in CALIDADES for e in ESCALAS]
 est = {"i": -1, "t0": 0.0, "dts": [], "fase": "ini"}
@@ -51,6 +57,7 @@ def tick(dt):
             cmd(c)
         unreal.EditorLoadingAndSavingUtils.load_map("/Game/DronIA/Mapas/Cancha_V17")
         maniquies()
+        D.paneles_de_foto([[-8, -6, -3, -2, 2.3], [-3, -2, -8, 2, 2.3], [3, 6, 8, 2, 2.3], [8, 2, 3, -2, 2.3]], D.mats_paneles())     # dos V de dos paneles
         est["fase"], est["i"], est["t0"] = "esperar", -1, ahora
         return
     if est["fase"] == "esperar" and ahora - est["t0"] < 8:
@@ -76,9 +83,15 @@ def tick(dt):
         if ahora - est["t0"] > 6:
             d = sorted(est["dts"])
             nombre, esc = cola[est["i"]]
-            r = {"fps_medio": round(len(d) / sum(d), 1), "fps_p1_bajo": round(1 / d[int(len(d) * 0.99)], 1), "cuadros": len(d)}
+            r = {"fps_medio": round(len(d) / sum(d), 1), "ms_medio": round(1000 * sum(d) / len(d), 2), "ms_p99": round(1000 * d[int(len(d) * 0.99)], 2), "fps_p1_bajo": round(1 / d[int(len(d) * 0.99)], 1), "cuadros": len(d)}
             res["%s | %d%%" % (nombre, esc)] = r
             unreal.log("DRONIA FPS %s %d%%: %s" % (nombre, esc, r))
+            unreal.log("DRONIA GPU >>> %s %d%%" % (nombre, esc))
+            cmd("ProfileGPU")                                 # vuelca al log el tiempo de GPU por cuadro ("Total GPU time")
+            est["fase"], est["t0"] = "perfil", ahora
+            return
+    if est["fase"] == "perfil":
+        if ahora - est["t0"] > 1.5:
             est["fase"] = "medido"
 
 

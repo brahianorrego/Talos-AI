@@ -41,6 +41,21 @@ import ruta_busqueda  # noqa: E402
 
 
 class Manejador(http.server.SimpleHTTPRequestHandler):
+    def do_POST(self):
+        """/captura/<nombre>.png: guarda en mediciones/capturas la imagen (dataURL) que manda la página; solo ahí y solo .png."""
+        nombre = os.path.basename(self.path.split("?")[0])
+        if not (self.path.startswith("/captura/") and nombre.endswith(".png") and nombre.replace("_", "").replace(".png", "").isalnum()):
+            self.send_error(404)
+            return
+        import base64
+        cuerpo = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode("ascii", "ignore")
+        carpeta = os.path.normpath(os.path.join(AQUI, "..", "mediciones", "capturas"))
+        os.makedirs(carpeta, exist_ok=True)
+        with open(os.path.join(carpeta, nombre), "wb") as f:
+            f.write(base64.b64decode(cuerpo.split(",", 1)[-1]))
+        self.send_response(200)
+        self.end_headers()
+
     def do_GET(self):
         if self.path.split("?")[0] == "/ruta.json":              # ruta de búsqueda de Brahian sobre los paneles y la posición inicial que manda la página
             try:

@@ -138,9 +138,14 @@ def dibujar(c):
 
 def camara(x, y, z, psi):
     sub = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
-    if CAMARA == "cenital":
+    modo = CAMARA
+    try:                                                   # _cache/camara.txt (seguir | dron | cenital) cambia la cámara sin reiniciar
+        modo = open(os.path.join(AQUI, "_cache", "camara.txt")).read().strip() or CAMARA
+    except OSError:
+        pass
+    if modo == "cenital":
         pos, mira = D.ue(0, 0, 52), D.ue(0, 0.01, 0)
-    elif CAMARA == "dron":
+    elif modo == "dron":
         pos, mira = D.ue(x + math.cos(psi + 0.7) * 1.9, y + math.sin(psi + 0.7) * 1.9, z + 0.45), D.ue(x, y, z)
     else:
         pos, mira = D.ue(x - math.cos(psi) * 7.0, y - math.sin(psi) * 7.0, z + 2.8), D.ue(x + math.cos(psi) * 4.0, y + math.sin(psi) * 4.0, max(z - 0.8, 0.8))
