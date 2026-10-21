@@ -63,7 +63,17 @@ def textura(nombre):
     return unreal.load_asset(ruta)
 
 
+_fachadas = {}
+
+
 def mat_fachada(nombre):
+    if nombre in _fachadas:                                          # una instancia por fachada y por sesión: al rehacer, la 2ª pared del mismo lado borraba la de la 1ª (quedaban paredes grises)
+        return _fachadas[nombre]
+    _fachadas[nombre] = _mat_fachada(nombre)
+    return _fachadas[nombre]
+
+
+def _mat_fachada(nombre):
     ruta = D.CARPETA + "/Materiales/MI_F_" + nombre
     if D.biblioteca.does_asset_exist(ruta):
         if os.environ.get("DRONIA_REHACER") != "1":
@@ -114,9 +124,9 @@ def material_suelo():
     return mat
 
 
-def mat_suelo(nombre, tex, tu, tv, rug=0.9):
+def mat_suelo(nombre, tex, tu, tv, rug=0.9, **extra):
     """Instancia de M_Suelo con la textura suelo_<tex> repetida tu x tv veces."""
-    pbr = mat_pbr(nombre, tex, tu, tv)
+    pbr = mat_pbr(nombre, tex, tu, tv, **extra)
     if pbr is not None:
         return pbr
     ruta = D.CARPETA + "/Materiales/MI_S_" + nombre
@@ -137,7 +147,7 @@ def mat_suelo(nombre, tex, tu, tv, rug=0.9):
 
 # ------------------------------------------------------------------------------------------------ materiales de Fab (21-oct): color + normal + rugosidad
 FAB_SUELOS = {   # nombre de textura vieja -> (material de Fab, canal de rugosidad: 0 = R de una textura de rugosidad, 1 = G de una ORM)
-    "pasto": ("/Game/Fab/Megascans/Surfaces/Uncut_Grass_oilpt20/Medium/oilpt20_tier_2/Materials/MI_oilpt20", 1, (0.78, 1.0, 0.68)),
+    "pasto": ("/Game/Fab/Megascans/Surfaces/Uncut_Grass_oilpt20/Medium/oilpt20_tier_2/Materials/MI_oilpt20", 1, (1.5, 1.65, 0.85)),
     "adoquin": ("/Game/SM_Roads_05/Materials/Roads_05/MT00133-Cobblestone_01/MI_MT00133_Cobblestone_01", 0, (0.95, 0.9, 0.85)),
     "losas": ("/Game/SM_Roads_05/Materials/Roads_05/MT00268-Pavement/MI_MT00268_Pavement", 0, (1.0, 1.0, 1.0)),
     "asfalto": ("/Game/SM_Roads_05/Materials/Roads_05/MT00036-Asphalt/MI_MT00036_Asphalt", 0, (0.3, 0.31, 0.33)),
@@ -199,12 +209,59 @@ def material_suelo_pbr():
     mg = crear(unreal.MaterialExpressionComponentMask, -240, 520); mg.set_editor_property("r", False); mg.set_editor_property("g", True); mg.set_editor_property("b", False); mg.set_editor_property("a", False)
     mel.connect_material_expressions(rug, "RGB", mr, ""); mel.connect_material_expressions(rug, "RGB", mg, "")
     el = crear(unreal.MaterialExpressionScalarParameter, -240, 640); el.set_editor_property("parameter_name", "ElegirG"); el.set_editor_property("default_value", 0.0)
+    # variación suave de color a gran escala: la misma textura vista a 1/12 de escala, en gris, entre (1 - V) y (1 + V)
+    var = crear(unreal.MaterialExpressionScalarParameter, -480, 700); var.set_editor_property("parameter_name", "Variacion"); var.set_editor_property("default_value", 0.0)
+    uvg = crear(unreal.MaterialExpressionConstant, -720, 700); uvg.set_editor_property("r", 0.083)
+    mulg = crear(unreal.MaterialExpressionMultiply, -600, 640)
+    mel.connect_material_expressions(mul, "", mulg, "A"); mel.connect_material_expressions(uvg, "", mulg, "B")
+    macro = crear(unreal.MaterialExpressionTextureSampleParameter2D, -480, 560); macro.set_editor_property("parameter_name", "TexturaMacro")
+    if por_defecto:
+        macro.set_editor_property("texture", por_defecto[0])
+    mel.connect_material_expressions(mulg, "", macro, "UVs")
+    gris = crear(unreal.MaterialExpressionDesaturation, -240, 700)
+    mel.connect_material_expressions(macro, "RGB", gris, "")
+    menos = crear(unreal.MaterialExpressionSubtract, -120, 700); c05 = crear(unreal.MaterialExpressionConstant, -240, 780); c05.set_editor_property("r", 0.45)
+    mel.connect_material_expressions(gris, "", menos, "A"); mel.connect_material_expressions(c05, "", menos, "B")
+    mv = crear(unreal.MaterialExpressionMultiply, 0, 700)
+    mel.connect_material_expressions(menos, "", mv, "A"); mel.connect_material_expressions(var, "", mv, "B")
+    uno = crear(unreal.MaterialExpressionConstant, 0, 780); uno.set_editor_property("r", 1.0)
+    fvar = crear(unreal.MaterialExpressionAdd, 120, 700)
+    mel.connect_material_expressions(mv, "", fvar, "A"); mel.connect_material_expressions(uno, "", fvar, "B")
+    # franjas de corte del césped de la cancha: seno de la posición norte-sur (franjas de 5 m), endurecido, entre (1 - F) y (1 + F)
+    fr = crear(unreal.MaterialExpressionScalarParameter, -480, 860); fr.set_editor_property("parameter_name", "Franjas"); fr.set_editor_property("default_value", 0.0)
+    pos = crear(unreal.MaterialExpressionWorldPosition, -900, 900)
+    eje = crear(unreal.MaterialExpressionComponentMask, -720, 900); eje.set_editor_property("r", False); eje.set_editor_property("g", True); eje.set_editor_property("b", False); eje.set_editor_property("a", False)
+    mel.connect_material_expressions(pos, "", eje, "")
+    sen = crear(unreal.MaterialExpressionSine, -540, 900); sen.set_editor_property("period", 1000.0)
+    mel.connect_material_expressions(eje, "", sen, "")
+    k15 = crear(unreal.MaterialExpressionConstant, -540, 980); k15.set_editor_property("r", 1.5)
+    msen = crear(unreal.MaterialExpressionMultiply, -360, 900)
+    mel.connect_material_expressions(sen, "", msen, "A"); mel.connect_material_expressions(k15, "", msen, "B")
+    sat = crear(unreal.MaterialExpressionSaturate, -200, 900)
+    mel.connect_material_expressions(msen, "", sat, "")
+    k05 = crear(unreal.MaterialExpressionConstant, -200, 980); k05.set_editor_property("r", 0.5)
+    t01 = crear(unreal.MaterialExpressionAdd, -60, 900)
+    mel.connect_material_expressions(sat, "", t01, "A"); mel.connect_material_expressions(k05, "", t01, "B")
+    t2 = crear(unreal.MaterialExpressionMultiply, 60, 900); dos = crear(unreal.MaterialExpressionConstant, 60, 980); dos.set_editor_property("r", 2.0)
+    mel.connect_material_expressions(t01, "", t2, "A"); mel.connect_material_expressions(dos, "", t2, "B")           # t2 va de 0.5*2... se normaliza abajo
+    ffr = crear(unreal.MaterialExpressionLinearInterpolate, 200, 900)                                                 # 1 - F ... 1 + F
+    menosf = crear(unreal.MaterialExpressionSubtract, 80, 1040); masf = crear(unreal.MaterialExpressionAdd, 80, 1100)
+    mel.connect_material_expressions(uno, "", menosf, "A"); mel.connect_material_expressions(fr, "", menosf, "B")
+    mel.connect_material_expressions(uno, "", masf, "A"); mel.connect_material_expressions(fr, "", masf, "B")
+    mel.connect_material_expressions(menosf, "", ffr, "A"); mel.connect_material_expressions(masf, "", ffr, "B")
+    cl = crear(unreal.MaterialExpressionSaturate, 120, 960)
+    mel.connect_material_expressions(t01, "", cl, "")
+    mel.connect_material_expressions(cl, "", ffr, "Alpha")
     mez = crear(unreal.MaterialExpressionLinearInterpolate, 0, 460)
     mel.connect_material_expressions(mr, "", mez, "A"); mel.connect_material_expressions(mg, "", mez, "B"); mel.connect_material_expressions(el, "", mez, "Alpha")
     tinte = crear(unreal.MaterialExpressionVectorParameter, -240, -100); tinte.set_editor_property("parameter_name", "Tinte"); tinte.set_editor_property("default_value", unreal.LinearColor(1, 1, 1, 1))
     color = crear(unreal.MaterialExpressionMultiply, 0, -150)
     mel.connect_material_expressions(col, "RGB", color, "A"); mel.connect_material_expressions(tinte, "", color, "B")
-    mel.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    color2 = crear(unreal.MaterialExpressionMultiply, 200, -150)
+    mel.connect_material_expressions(color, "", color2, "A"); mel.connect_material_expressions(fvar, "", color2, "B")
+    color3 = crear(unreal.MaterialExpressionMultiply, 400, -150)
+    mel.connect_material_expressions(color2, "", color3, "A"); mel.connect_material_expressions(ffr, "", color3, "B")
+    mel.connect_material_property(color3, "", unreal.MaterialProperty.MP_BASE_COLOR)
     mel.connect_material_property(nor, "RGB", unreal.MaterialProperty.MP_NORMAL)
     mel.connect_material_property(mez, "", unreal.MaterialProperty.MP_ROUGHNESS)
     mel.recompile_material(mat)
@@ -212,7 +269,7 @@ def material_suelo_pbr():
     return mat
 
 
-def mat_pbr(nombre, tex, tu, tv):
+def mat_pbr(nombre, tex, tu, tv, tinte=None, franjas=0.0, variacion=0.0):
     """Instancia de M_SueloPBR con el material de Fab de `tex` (pasto, adoquin, losas, asfalto); None si no está importado."""
     fab = FAB_SUELOS.get(tex)
     t = texturas_fab(fab[0]) if fab else None
@@ -233,7 +290,10 @@ def mat_pbr(nombre, tex, tu, tv):
     D.mel.set_material_instance_scalar_parameter_value(mi, "TU", float(tu))
     D.mel.set_material_instance_scalar_parameter_value(mi, "TV", float(tv))
     D.mel.set_material_instance_scalar_parameter_value(mi, "ElegirG", float(fab[1]))
-    D.mel.set_material_instance_vector_parameter_value(mi, "Tinte", unreal.LinearColor(*fab[2], 1.0))
+    D.mel.set_material_instance_vector_parameter_value(mi, "Tinte", unreal.LinearColor(*(tinte or fab[2]), 1.0))
+    D.mel.set_material_instance_texture_parameter_value(mi, "TexturaMacro", t[0])
+    D.mel.set_material_instance_scalar_parameter_value(mi, "Franjas", float(franjas))
+    D.mel.set_material_instance_scalar_parameter_value(mi, "Variacion", float(variacion))
     D.biblioteca.save_loaded_asset(mi)
     return mi
 
@@ -251,7 +311,8 @@ def rect_lineas(x0, y0, x1, y1, mat, **kw):
 def campo(E):
     c, t, J = E["campo"]["centro"], E["campo"]["tam"], E["campo"]["juego"]
     cal = D.material("Cal", (0.85, 0.85, 0.82), 0.9)
-    D.forma("Plane", "Cancha_futbol", D.ue(c[0], c[1], 0.02), (t[0], t[1], 1), D.material_cesped(), 0.0, "Entorno/Campo")
+    cesped = mat_pbr("campo_futbol", "pasto", t[0] / 3.0, t[1] / 3.0, tinte=(1.3, 1.95, 0.9), franjas=0.22, variacion=0.5) or D.material_cesped()      # el mismo césped de Fab que el terreno, con franjas de corte
+    D.forma("Plane", "Cancha_futbol", D.ue(c[0], c[1], 0.02), (t[0], t[1], 1), cesped, 0.0, "Entorno/Campo")
     cy = c[1]
     rect_lineas(-J["x"], J["y0"], J["x"], J["y1"], cal)
     linea(-J["x"], cy, J["x"], cy, cal)
@@ -346,7 +407,7 @@ def suelos(E):
 
 
 def edificios(E):
-    gris = D.material("TechoGris", (0.12, 0.125, 0.135), 0.7)
+    gris = mat_pbr("techo_concreto", "asfalto", 40.0, 40.0, tinte=(0.75, 0.76, 0.78), variacion=0.5) or D.material("TechoGris", (0.12, 0.125, 0.135), 0.7)
     claro = D.material("TechoClaro", (0.72, 0.74, 0.76), 0.7)
     oscuro = D.material("Cubierta", (0.045, 0.048, 0.052), 0.55)
     for b in E["edificios"]:
@@ -560,7 +621,7 @@ def construir():
     E = cargar()
     D.cielo_y_luz()
     cerros(E)
-    D.forma("Plane", "Terreno", D.ue(0, 0, 0.0), (6000, 6000, 1), mat_suelo("terreno", "pasto", 6000 / 2.0, 6000 / 2.0, 1.0), 0.0, "Entorno/Campo")
+    D.forma("Plane", "Terreno", D.ue(0, 0, 0.0), (6000, 6000, 1), mat_suelo("terreno", "pasto", 6000 / 3.0, 6000 / 3.0, 1.0, variacion=0.6), 0.0, "Entorno/Campo")
     campo(E); canchas(E); suelos(E); estanque(E); vallas(E); edificios(E); carros(E); extras(E); avion_searca(E); detalles(E)
     n = arboles(E)
     unreal.log(f"DRONIA: entorno de la universidad: {len(E['edificios'])} edificios, {n} árboles, {len(E['carros'])} autos, {len(E['cerros'])} cerros")
