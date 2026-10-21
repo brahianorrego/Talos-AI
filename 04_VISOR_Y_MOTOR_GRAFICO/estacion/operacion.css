@@ -50,7 +50,7 @@ select { font: 13px var(--sans); color: var(--texto); background: var(--panel2);
 .cab .est.ok { border-color: #1d6b3c; background: #0f2a1b; } .cab .est.alerta { border-color: #7a5410; background: #2b200a; } .cab .est.peligro { border-color: #7d2a2d; background: #2f1214; }
 .cont { position: relative; flex: 1; min-height: 0; min-width: 0; }
 .cont > canvas, .cont > img { position: absolute; inset: 0; width: 100%; height: 100%; }
-#cam1 { object-fit: cover; display: none; }
+#cam1 { object-fit: contain; display: none; background: #000; }
 #sinvideo2 { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--tenue2); font: 600 13px var(--sans); letter-spacing: 2px; }
 #cam0, #cam1 { filter: url(#luzdia); }                       /* la captura de Unreal no tiene la adaptación de exposición del viewport: se corrige con gamma (filtro SVG de operacion.html) */
 
@@ -62,8 +62,8 @@ select { font: 13px var(--sans); color: var(--texto); background: var(--panel2);
 .ev.ok i { background: var(--ok); } .ev.alerta i { background: var(--alerta); } .ev.peligro i { background: var(--peligro); } .ev span { overflow: hidden; text-overflow: ellipsis; }
 
 /* columna derecha */
-#der { display: grid; grid-template-rows: minmax(0, 29fr) minmax(0, 71fr); gap: 6px; min-height: 0; min-width: 0; }
-#fila1 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 0; }
+#der { display: grid; grid-template-rows: clamp(200px, 33vh, 380px) minmax(0, 1fr); gap: 6px; min-height: 0; min-width: 0; }
+#fila1 { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px; min-height: 0; }
 
 /* telemetría en tarjetas */
 #rejilla { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: auto auto auto minmax(0, 1fr); gap: 5px; padding: 6px; }
@@ -97,3 +97,11 @@ select { font: 13px var(--sans); color: var(--texto); background: var(--panel2);
 
 #barra .marca small { white-space: nowrap; }
 @media (max-width: 1600px) { .bajo1600 { display: none; } .chip { padding: 0 10px; } #barra .marca small { display: none; } #barra button { padding: 5px 9px; } }
+
+/* CSI#2: formato 4:3 y tamaño real (ancho = alto de la imagen × 4/3); con X ocupa toda la pantalla */
+#csi2 { width: calc((clamp(200px, 33vh, 380px) - 28px) * 4 / 3); }
+#csi2 .cont { background: #000; }
+#csi2.grande { position: fixed; z-index: 12; top: 46px; left: 0; right: 0; bottom: 24px; width: auto; }
+.acc { display: flex; align-items: center; gap: 6px; } button.mini { font: 600 11.5px var(--sans); padding: 1px 8px; } button.mini.act { border-color: var(--acento); background: #12304d; }
+@media (max-height: 800px) { .t canvas.spark { display: none; } .t { padding: 3px 8px 4px; } #rejilla { gap: 4px; padding: 4px; } .t .cifra { font-size: 21px; } .barra-h { margin: 2px 0; } }
+@media (max-width: 1500px) { #estCsi2 { display: none; } }

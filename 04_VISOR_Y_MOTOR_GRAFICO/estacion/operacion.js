@@ -169,8 +169,17 @@ function dibujarHUD() {
 
 // ------------------------------------------------------------------------------------------------------------------ CSI#2 (rótulo)
 function dibujarCsi2() {
-  const [g, W, H] = ajustar($("hud1")); if (!S.c) return;
-  texto(g, `HFOV ${HFOV}° · −90°`, W - 8, H - 9, "right", "#fff", 13, 600);
+  const [g, W, H] = ajustar($("hud1")), c = S.c; if (!c || W < 60) return;
+  const R = rectImagen(W, H), z = Math.max(0.5, c.d[2]), mpx = z * Math.tan(rad(HFOV / 2)) / (R.w / 2), u = lim(R.h / 330, 0.85, 1.5);   // metros por píxel en el suelo (cámara mirando al piso)
+  if (S.grid1) {
+    const paso = z > 5 ? 2 : 1, cx = R.x + R.w / 2, cy = R.y + R.h / 2;
+    g.save(); g.beginPath(); g.rect(R.x, R.y, R.w, R.h); g.clip(); g.strokeStyle = "rgba(255,255,255,.34)"; g.lineWidth = 1;
+    for (let m = paso; m * 1 / mpx < R.w; m += paso) for (const s of [-1, 1]) { const x = cx + s * m / mpx; g.beginPath(); g.moveTo(x, R.y); g.lineTo(x, R.y + R.h); g.stroke(); const y = cy + s * m / mpx; g.beginPath(); g.moveTo(R.x, y); g.lineTo(R.x + R.w, y); g.stroke(); if (s > 0 && x < R.x + R.w - 24) texto(g, m + " m", x + 3, cy - 4, "left", "#fff", 12 * u, 600); }
+    g.strokeStyle = "rgba(47,164,231,.8)"; g.lineWidth = 1.4; g.beginPath(); g.moveTo(cx, R.y); g.lineTo(cx, R.y + R.h); g.moveTo(R.x, cy); g.lineTo(R.x + R.w, cy); g.stroke(); g.restore();
+    texto(g, `cuadro de ${paso} m`, R.x + R.w - 8, R.y + R.h - 8, "right", "#fff", 12 * u, 600);
+  }
+  texto(g, `HFOV ${HFOV}° · inclinación −90° · ALT ${c.d[2].toFixed(1)} m`, R.x + 8, R.y + R.h - 8, "left", "#fff", 12.5 * u, 600, false);
+  texto(g, `${(R.w * mpx).toFixed(1)} × ${(R.h * mpx).toFixed(1)} m en el suelo`, R.x + 8, R.y + 17 * u, "left", "#fff", 12.5 * u, 600, false);
 }
 
 // ------------------------------------------------------------------------------------------------------------------ mapa de los dos LiDAR
@@ -323,7 +332,7 @@ function devolverIA() { S.estado = "ia"; post("/modo", { modo: "auto" }); aviso(
 // ------------------------------------------------------------------------------------------------------------------ mando: teclado y mouse (ORDENES §G.1)
 const teclas = new Set(); let panAng = 0, tiltAng = -5, ultimoCam = "";
 const VUELO = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "KeyF"]);
-const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "Digit1", "Digit4", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "KeyX", "KeyK", "Digit1", "Digit4", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const eje = (a, b) => (teclas.has(a) ? 1 : 0) - (teclas.has(b) ? 1 : 0);
 const usarCamara = () => post("/camara", { modo: S.asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
 function accion(code) {
@@ -331,6 +340,8 @@ function accion(code) {
   if (code === "Tab") return ponerPanel(S.panel === "dron" ? "mapa" : "dron");
   if (code === "Digit1") return ponerPanel("mapa");
   if (code === "Digit4") return ponerPanel("dron");
+  if (code === "KeyX") { const on = $("csi2").classList.toggle("grande"); $("bGrande").textContent = on ? "Volver" : "⤢"; return; }
+  if (code === "KeyK") { S.grid1 = !S.grid1; $("bGrid").classList.toggle("act", S.grid1); return; }
   if (code === "KeyP") return alternarPausa();
   if (code === "KeyR") { S.ruta = !S.ruta; return; }
   if (code === "KeyB") return post("/grabar", { on: !S.grabando });
@@ -414,7 +425,7 @@ function pintarMenu() {
       <tr><td>W S · A D</td><td>adelante·atrás · lado</td><td>Q E</td><td>girar</td></tr><tr><td>Espacio · C</td><td>subir · bajar</td><td>Shift · Ctrl</td><td>rápido · lento</td></tr>
       <tr><td>F (mantener)</td><td>giro de 360° buscando</td><td>Botón central</td><td>arrastrar = pan y tilt</td></tr><tr><td>Clic izquierdo</td><td>fijar al posible objetivo</td><td>Clic derecho</td><td>soltar objetivo</td></tr>
       <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>G · M</td><td>IA guía · puntos de paso</td></tr><tr><td>Tab · 1 · 4</td><td>alterna vista · mapa · cámara</td><td>R · B · P</td><td>ruta · grabar · pausa</td></tr>
-      <tr><td>Rueda</td><td>zoom del mapa</td><td>Esc</td><td>este menú</td></tr></table>`;
+      <tr><td>Rueda</td><td>zoom del mapa</td><td>Esc</td><td>este menú</td></tr><tr><td>X · K</td><td>cámara al piso grande · cuadrícula</td><td></td><td></td></tr></table>`;
   $("mxCerrar").onclick = alternarMenu;
   document.querySelectorAll("#menuCaja [data-p]").forEach(b => (b.onclick = () => { ponerPanel(b.dataset.p); alternarMenu(); }));
   $("mxIA").onclick = () => { devolverIA(); alternarMenu(); }; $("mxMan").onclick = () => { tomarControl("manual"); alternarMenu(); }; $("mxPts").onclick = () => { tomarControl("puntos"); ponerPanel("mapa"); alternarMenu(); };
@@ -422,7 +433,7 @@ function pintarMenu() {
   $("mxMision").onchange = ev => { const v = ev.target.value; if (v === "vivo") conectar(); else { cargarRep(v).then(() => { S.rep.url = v.split("/").pop().replace(".json", ""); }); } alternarMenu(); };
 }
 $("menu").addEventListener("mousedown", ev => { if (ev.target === $("menu")) alternarMenu(); });
-$("bMenu").onclick = alternarMenu; $("bPausa").onclick = alternarPausa; $("bRuta").onclick = () => accion("KeyR"); $("bGrabar").onclick = () => accion("KeyB");
+$("bGrande").onclick = () => accion("KeyX"); $("bGrid").onclick = () => accion("KeyK"); $("bMenu").onclick = alternarMenu; $("bPausa").onclick = alternarPausa; $("bRuta").onclick = () => accion("KeyR"); $("bGrabar").onclick = () => accion("KeyB");
 
 // ------------------------------------------------------------------------------------------------------------------ arranque
 const q = new URLSearchParams(location.search);

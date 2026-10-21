@@ -30,6 +30,7 @@ Mantén la ventana de la estación al frente al teclear: las teclas las lee ella
 | Tab · 1 · 4 | alterna cámara ⇄ mapa · mapa · cámara |
 | R · B · P | ruta de búsqueda · grabar tu demostración · pausa |
 | Rueda | zoom del mapa táctico |
+| **X** · K | cámara al piso (CSI#2) a pantalla grande y volver · cuadrícula de distancia en esa cámara |
 | Esc | Ajustes y ayuda |
 
 ## Cómo se juega la búsqueda
