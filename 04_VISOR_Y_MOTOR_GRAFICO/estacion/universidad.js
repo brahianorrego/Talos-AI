@@ -194,7 +194,18 @@
     };
     if (tipo === "apartamentos") { ventanas(3.0, 1.5, 1.4, 1.0 * PPM, "#2a3a4a", "#d9d3c7"); for (let y = 3 * PPM; y < H; y += 3 * PPM) { g.fillStyle = "rgba(210,205,195,.9)"; g.fillRect(0, y - 0.35 * PPM, W, 0.35 * PPM); } }
     else if (tipo === "torre") { ventanas(2.9, 1.3, 1.3, 1.2 * PPM, "#27374a", "#cfc8bb"); for (let y = 2.9 * PPM; y < H; y += 2.9 * PPM) { g.fillStyle = "rgba(205,200,190,.85)"; g.fillRect(0, y - 0.3 * PPM, W, 0.3 * PPM); } for (let x = 0; x < W; x += 5 * PPM) { g.fillStyle = "rgba(190,100,70,.9)"; g.fillRect(x, 0, 0.9 * PPM, H); } }
-    else if (tipo === "laboratorio") { ventanas(3.2, 2.2, 1.8, 1.4 * PPM, "#3a5f86", "#8a8f94"); }
+    else if (tipo === "laboratorio") {                                            // fachada de vidrio en bandas con franja naranja (fotos nocturnas de la zona de vuelo)
+      g.fillStyle = "#54585c"; g.fillRect(0, 0, W, H);
+      for (let k = 0; k < Math.max(1, Math.floor(H / (3.4 * PPM))); k++) {
+        const y = 0.8 * PPM + k * 3.4 * PPM, x0 = 0.8 * PPM, x1 = W - 0.8 * PPM;
+        g.fillStyle = "#466c8e"; g.fillRect(x0, y, x1 - x0, 2.4 * PPM);
+        g.strokeStyle = "#c8ccd0"; g.lineWidth = Math.max(2, 0.08 * PPM); g.strokeRect(x0, y, x1 - x0, 2.4 * PPM);
+        for (let x = x0; x < x1; x += 2.2 * PPM) g.fillRect && (g.fillStyle = "#c8ccd0", g.fillRect(x, y, Math.max(2, 0.08 * PPM), 2.4 * PPM));
+        g.fillStyle = "rgba(255,255,255,.14)"; g.beginPath(); g.moveTo(x0, y + 2.4 * PPM); g.lineTo(W * 0.3, y); g.lineTo(W * 0.45, y); g.lineTo(x0 + W * 0.15, y + 2.4 * PPM); g.fill();
+      }
+      g.fillStyle = "#e87624"; g.fillRect(0, H * 0.5, W, 0.7 * PPM);
+      g.fillStyle = "#3c4044"; g.fillRect(0, 0, W, 0.5 * PPM);
+    }
     else if (tipo === "ladrillo") { ventanas(3.0, 2.0, 1.2, 1.4 * PPM, "#27374a", "#7a4a35"); }
     else if (tipo === "caseta") { g.fillStyle = "#3d2a1d"; g.fillRect(W * 0.55, H * 0.22, W * 0.2, H * 0.78); g.fillStyle = "#31404a"; g.fillRect(W * 0.1, H * 0.35, W * 0.35, H * 0.3); }
     else if (tipo === "coliseo") {                                                // ladrillo abajo, franja larga de ventanas arriba
