@@ -63,8 +63,17 @@ def fachada(tipo, ancho, alto, semilla):
             d.rectangle([0, y - 0.1 * PPM, W, y], fill=(205, 200, 190, 220))
         for x in range(0, W, int(5 * PPM)):
             d.rectangle([x, 0, x + int(0.9 * PPM), H], fill=(190, 100, 70, 230))
-    elif tipo == "laboratorio":
-        ventanas(3.2, 2.2, 1.8 * PPM, 1.4 * PPM, (58, 95, 134), (138, 143, 148))
+    elif tipo == "laboratorio":                                  # fachada de vidrio continua en bandas y franja naranja (fotos nocturnas, zona de vuelo)
+        d.rectangle([0, 0, W, H], fill=(84, 88, 92))             # estructura gris oscuro
+        for k in range(max(1, int(H / (3.4 * PPM)))):
+            y = int(0.8 * PPM + k * 3.4 * PPM)
+            d.rectangle([0.8 * PPM, y, W - 0.8 * PPM, y + 2.4 * PPM], fill=(70, 108, 142))              # vidrio azul
+            d.rectangle([0.8 * PPM, y, W - 0.8 * PPM, y + 2.4 * PPM], outline=(200, 204, 208), width=max(2, int(0.08 * PPM)))
+            for x in range(int(0.8 * PPM), int(W - 0.8 * PPM), int(2.2 * PPM)):                        # montantes
+                d.rectangle([x, y, x + max(2, int(0.08 * PPM)), y + 2.4 * PPM], fill=(200, 204, 208))
+            d.polygon([(0.8 * PPM, y + 2.4 * PPM), (W * 0.3, y), (W * 0.45, y), (0.8 * PPM + W * 0.15, y + 2.4 * PPM)], fill=(255, 255, 255, 36))      # reflejo
+        d.rectangle([0, int(H * 0.5), W, int(H * 0.5 + 0.7 * PPM)], fill=(232, 118, 36))                  # franja naranja
+        d.rectangle([0, 0, W, 0.5 * PPM], fill=(60, 64, 68))
     elif tipo == "ladrillo":
         ventanas(3.0, 2.0, 1.2 * PPM, 1.4 * PPM, (39, 55, 74), (122, 74, 53))
     elif tipo == "caseta":
