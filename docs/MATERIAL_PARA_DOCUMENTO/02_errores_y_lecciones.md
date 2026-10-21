@@ -30,7 +30,8 @@ Brahian pidió que se cuenten. Cada fila: qué falló, causa, arreglo y archivo.
 | Un error de comparación: archivos `d_r3_b0` y `d_r5_b0` eran en realidad B5' | Se mezclaron condiciones distintas al comparar con B0 | Se corrigió el mensaje; tabla justa pendiente (`docs/PROGRESO_V17.md`) |
 | Se implementó 3.30 m fijo cuando la orden de Brahian era base 2.0 m | La orden se había implementado de otra forma | Se corrigió (D-080) |
 | Documentos duplicados y carpetas confusas | Muchas sesiones escribiendo | Brahian pidió menos documentos: el trabajo va en código y datos |
-| Caída de Unreal | **[sin fuente]**: el Coordinador la mencionó, pero no consta en el repositorio. Pedir a quien la vio | |
+| Caída de Unreal (20-oct): `assert VertexFactory` al abrir la simulación en vivo | La reportó Brahian; la fuente es el aviso del Coordinador, **no hay informe en el repositorio** | Arreglo en curso por el Visor (aún sin confirmar) |
+| La altura del mínimo estaba sin decidir (3.30 m de D-043 contra 2.0 m de las mediciones) | La altura segura se pensó para el plus, con saltos de personas; el mínimo se calibró a 2.0 m | D-081: altura del mínimo = 2.0 m (a 2.0 m el TF03 a −6.7° alcanza a una persona de 1.70-1.72 m solo a más de ≈ 2.5 m). El plus se rige por D-080 |
 
 ## Lecciones
 

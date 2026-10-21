@@ -11,6 +11,7 @@ del repositorio `Dron-IA-Proyecto`). Lo que no tiene fuente o no se verificó es
 | `04_indice_de_imagenes.md` | Cada foto, captura y diagrama con su ruta y qué demuestra |
 | `05_motor_grafico_y_juego.md` | Estación de tierra, Unreal, controles y cuadros por segundo |
 | `06_anexos_sugeridos.md` | Qué código y tablas van en anexos (máximo 100 páginas) |
+| `07_conversacion_y_decisiones_de_brahian.md` | Lo que pidió y corrigió Brahian, con fechas, y lo que frenó el trabajo |
 
 Escribir "proyecto de grado", nunca "tesis". Todo el plus es simulación: no ha volado. El mínimo tampoco ha volado con la Jetson
 (`docs/HISTORIAL_PRUEBAS_FISICAS.md`, "Pendiente a esta fecha").
