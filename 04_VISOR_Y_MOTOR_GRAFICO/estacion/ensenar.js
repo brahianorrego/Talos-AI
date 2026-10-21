@@ -27,7 +27,7 @@
           <tr><td>W S</td><td>adelante · atrás</td><td>A D</td><td>de lado</td></tr>
           <tr><td>Q E</td><td>girar</td><td>Espacio · C</td><td>subir · bajar</td></tr>
           <tr><td>Shift · Ctrl</td><td>rápido · lento</td><td>F (mantener)</td><td>giro 360° buscando</td></tr>
-          <tr><td>Mouse</td><td>mover = pan y tilt</td><td>Rueda</td><td>zoom del mapa</td></tr>
+          <tr><td>Botón central</td><td>arrastrar = pan y tilt</td><td>Rueda</td><td>zoom del mapa</td></tr>
           <tr><td>Clic izq.</td><td>fijar al posible objetivo</td><td>Clic der.</td><td>soltar objetivo</td></tr>
           <tr><td>V</td><td>cámara asistida</td><td>flechas</td><td>pan / tilt</td></tr>
           <tr><td>1 · 2</td><td>CSI#1 · CSI#2 grande</td><td>3 · 4</td><td>3D seguir · libre</td></tr>
@@ -155,7 +155,7 @@
   $("ens-reset").onclick = () => { L.length = 0; sel = -1; mostrarPunto(); post("/reset"); };
 
   // ----------------------------------------------------------------------------------------------------------- manual: teclado y mouse (ORDENES §G.1)
-  // Mano izquierda: W/S A/D Q/E, Espacio/C (altura), Shift rápido, Ctrl lento, F mantenida = 360°. Mano derecha: el mouse mueve el pan y el tilt, clic izquierdo
+  // Mano izquierda: W/S A/D Q/E, Espacio/C (altura), Shift rápido, Ctrl lento, F mantenida = 360°. Mano derecha: el botón central arrastrado mueve el pan y el tilt, clic izquierdo
   // fija al posible objetivo, clic derecho lo suelta, la rueda acerca el mapa. Resto: V, 1-4, Tab, R, G, B, P, Esc, H y las flechas (pan/tilt alternativo).
   const teclas = new Set();
   let panAng = 0, tiltAng = -5, asist = false, iaGuia = false, ultimoCam = "";
@@ -189,11 +189,14 @@
   addEventListener("keyup", ev => teclas.delete(ev.code), true);
   addEventListener("blur", () => teclas.clear());
   const eje = (m, p) => (teclas.has(m) ? 1 : 0) - (teclas.has(p) ? 1 : 0);
-  // mouse: la posición en la ventana es el ángulo (izquierda = pan a la izquierda; arriba = mirar al frente/arriba, abajo = mirar al piso)
+  // mouse: mantener el BOTÓN CENTRAL y arrastrar mueve el pan y el tilt (así el mouse libre no estorba al clic izquierdo, que fija al objetivo)
+  let arrastraCam = false;
+  addEventListener("mousedown", ev => { if (modoActivo() && sub === "manual" && ev.button === 1) { arrastraCam = true; ev.preventDefault(); } });
+  addEventListener("mouseup", ev => { if (ev.button === 1) arrastraCam = false; });
   addEventListener("mousemove", ev => {
-    if (!modoActivo() || sub !== "manual" || asist) return;
-    panAng = Math.round(Math.max(-90, Math.min(90, (0.5 - ev.clientX / innerWidth) * 180)));
-    tiltAng = Math.round(Math.max(-45, Math.min(15, 15 - (ev.clientY / innerHeight) * 60)));
+    if (!arrastraCam || !modoActivo() || sub !== "manual" || asist) return;
+    panAng = Math.round(Math.max(-90, Math.min(90, panAng - ev.movementX * 0.3)));
+    tiltAng = Math.round(Math.max(-45, Math.min(15, tiltAng - ev.movementY * 0.3)));
   });
   addEventListener("wheel", ev => { if (modoActivo() && ev.target === cv) { M = Math.max(10, Math.min(40, M * (ev.deltaY > 0 ? 1.1 : 0.9))); ev.preventDefault(); } }, { passive: false });
   const candidatos = () => ((window.ESTADO_VISTA && window.ESTADO_VISTA.pers) || []).map((q, j) => ({ q, j })).filter(o => o.q.vis);       // personas que YOLO ve ahora
@@ -209,7 +212,7 @@
       post("/fijar", { j: mejor.j });
       $("ens-punto").textContent = `Objetivo fijado: ${mejor.q.rol === "ladron" ? "el sospechoso" : "una persona (no es él: se descarta)"}. El 360° termina y usted lleva el dron.`;
       teclas.delete("KeyF");
-    } else if (ev.button === 2) { post("/fijar", { j: -1 }); $("ens-punto").textContent = "Objetivo soltado."; }
+    } else if (ev.button === 2) { post("/soltar"); $("ens-punto").textContent = "Objetivo soltado."; }
   });
   addEventListener("contextmenu", ev => { if (modoActivo() && sub === "manual") ev.preventDefault(); });
   setInterval(() => {

@@ -61,7 +61,7 @@ estado = {"partida": 0, "cabecera": None, "cuadros": []}
 cambio = threading.Condition()
 
 # ---------------------------------------------------------------------------------------------------------------- modo enseñar
-ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": "", "cam": "manual", "cam_enviada": "", "cam_pan": 0.0, "cam_tilt": -5.0, "fijar": -1, "f360": False}
+ens = {"modo": "auto", "sub": "mapa", "cola": [], "i": 0, "ir": False, "man": {}, "t_man": 0.0, "graba": False, "reg": [], "reset": False, "fin": False, "demo": "", "cam": "manual", "cam_enviada": "", "cam_pan": 0.0, "cam_tilt": -5.0, "fijar": -1, "soltar": False, "f360": False}
 lock = threading.Lock()
 DEMOS = os.path.join(SIM, "demos_brahian")
 
@@ -96,6 +96,10 @@ def mandar(env):
         if ens["fijar"] >= 0:                                # clic izquierdo sobre la persona resaltada: el operador humano la fija (regla dura 4)
             env.fijar_sospechoso(0, ens["fijar"])
             ens["fijar"] = -1
+        if ens["soltar"]:                                    # clic derecho: soltar el objetivo (si la simulación ya tiene la función)
+            if hasattr(env, "soltar_sospechoso"):
+                env.soltar_sospechoso(0)
+            ens["soltar"] = False
     elif c is not None:
         if enviado["i"] != i:
             env.set_objetivo(0, c["x"], c["y"], c["yaw"], c["pan"], c["tilt"])
@@ -230,6 +234,8 @@ class Manejador(BaseHTTPRequestHandler):
                     ens["cam_tilt"] = float(np.clip(m["tilt"], -45.0, 15.0))
             elif ruta == "/fijar":
                 ens["fijar"] = int(m.get("j", -1))
+            elif ruta == "/soltar":
+                ens["soltar"] = True
             elif ruta == "/reset":
                 ens["reset"] = True
             elif ruta == "/grabar":
