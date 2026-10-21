@@ -2,7 +2,7 @@
 // (Enseñar); derecha tres casillas fijas: cámara al piso (CSI#2), mapa de los dos LiDAR de 1 haz y telemetría (con actitud y minimapa). Los ajustes van en un menú (Esc).
 // Habla con en_vivo.py (puerto 8767): lee los cuadros por Server-Sent Events y manda las órdenes del operador por POST.
 "use strict";
-const NOMBRE_DRON = "Dron-IA-Vigilancia";          // UNA constante: el nombre exacto del dron se cambia solo aquí (y en el <span id="nombreDron"> si hace falta)
+const NOMBRE_DRON = "TALOS-AI";          // UNA constante: el nombre exacto del dron se cambia solo aquí (y en el <span id="nombreDron"> si hace falta)
 const EN_VIVO = "http://127.0.0.1:8767";
 const HFOV = 68.3, VFOV = 54.0, MONTAJE = -2.4;       // CSI medida por Brahian (D-078); el montaje inclina la cámara -2.4° respecto al soporte
 const ARENA = 25;                                     // geocerca (m)
