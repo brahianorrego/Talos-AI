@@ -47,7 +47,7 @@ async function cargarRep(url) {
 
 // ------------------------------------------------------------------------------------------------------------------ utilidades de dibujo
 function ajustar(cv) {
-  const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  const dpr = Math.min(devicePixelRatio || 1, 1.25), w = cv.clientWidth, h = cv.clientHeight;
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   return [g, w, h];
@@ -368,9 +368,12 @@ function registrarEventos(a, c) {
   if (c.ens && a.ens && c.ens.f360 && !a.ens.f360) evento("Giro de 360° en curso", "");
 }
 let _n = 0, _t = performance.now();
+let _ult = 0;
 function lazo() {
-  const ahora = performance.now(); _n++; if (ahora - _t > 1000) { S.fps = _n * 1000 / (ahora - _t); _n = 0; _t = ahora; }
   requestAnimationFrame(lazo);                                           // primero el siguiente cuadro: un error al dibujar no debe detener la pantalla
+  const ahora = performance.now();
+  if (ahora - _ult < 50) return;                                         // 20 cuadros por segundo bastan para los instrumentos (la imagen de las cámaras llega a 8): a 140 la estación le quitaba cerca de la mitad de la tarjeta gráfica a Unreal (misma RTX 3050)
+  _ult = ahora; _n++; if (ahora - _t > 1000) { S.fps = _n * 1000 / (ahora - _t); _n = 0; _t = ahora; }
   for (const f of [dibujarHUD, dibujarCsi2, dibujarLidar, dibujarTel, dibujarMapa]) { try { f(); } catch (e) { if (!S.errDib) { S.errDib = true; console.warn("dibujo:", f.name, e); } } }
 }
 

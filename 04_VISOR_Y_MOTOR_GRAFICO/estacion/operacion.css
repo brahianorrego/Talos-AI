@@ -52,7 +52,7 @@ select { font: 13px var(--sans); color: var(--texto); background: var(--panel2);
 .cont > canvas, .cont > img { position: absolute; inset: 0; width: 100%; height: 100%; }
 #cam1 { object-fit: contain; display: none; background: #000; }
 #sinvideo2 { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--tenue2); font: 600 13px var(--sans); letter-spacing: 2px; }
-#cam0, #cam1 { filter: url(#luzdia); }                       /* la captura de Unreal no tiene la adaptación de exposición del viewport: se corrige con gamma (filtro SVG de operacion.html) */
+/* (la corrección de luz se hace ahora en Unreal: color_gamma 2.0 en las cámaras de captura; sin filtro SVG = menos carga de la tarjeta gráfica) */                       /* la captura de Unreal no tiene la adaptación de exposición del viewport: se corrige con gamma (filtro SVG de operacion.html) */
 
 /* registro de eventos */
 #log { display: grid; grid-template-rows: 28px auto; background: var(--panel); border: 1px solid var(--linea); }
@@ -126,6 +126,6 @@ select { font: 13px var(--sans); color: var(--texto); background: var(--panel2);
 #entPie { font: 13px var(--sans); color: var(--tenue); } #entPie b { color: var(--texto); }
 
 /* vista Mundo 3D: lo que dibuja Unreal con una tercera cámara, solo mientras se mira */
-#cam2 { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; z-index: 3; visibility: hidden; filter: url(#luzdia); }
+#cam2 { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; z-index: 3; visibility: hidden; }
 #mundoBarra { position: absolute; z-index: 4; left: 10px; top: 10px; display: none; gap: 6px; align-items: center; background: rgba(7,9,11,.85); border: 1px solid var(--linea2); padding: 6px 8px; }
 #mundoBarra span { color: var(--tenue); font: 12px var(--mono); margin-left: 6px; }

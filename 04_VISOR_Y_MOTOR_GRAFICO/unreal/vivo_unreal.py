@@ -19,6 +19,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import dronia_ue as D  # noqa: E402
 import maniquies_unreal as MQ  # noqa: E402
+import personajes_ue as PU  # noqa: E402
 
 PUERTO = int(os.environ.get("DRONIA_UDP", "8770"))
 CAMARA = os.environ.get("DRONIA_CAMARA", "seguir")
@@ -60,13 +61,15 @@ def preparar():
     for a in D.actores.get_all_level_actors():              # los árboles Megaplant son mallas con esqueleto: quietas, sin animación (ahorra ~4 cuadros por segundo)
         if a.get_actor_label().startswith("Megaplant_"):
             a.skeletal_mesh_component.set_component_tick_enabled(False)
+    for _rol in ("ladron", "peaton"):                         # las mallas de las personas se funden ahora, no a mitad de la partida
+        PU.malla_fusionada(_rol)
     anims()                                                  # las animaciones también se cargan ya, no a mitad de la partida
     unreal.log("DRONIA VIVO: escuchando UDP %d" % PUERTO)
 
 
 # ---------------------------------------------------------------------------------------------------------------- cámaras del dron (lo que ve el dron)
 # CSI#1: en el pan-tilt, 68.3° x 54.0° (640 x 480 da 68.3 x 53.9), inclinación -2.4° de montaje + el tilt. CSI#2: mira al piso (-90°), mismo modelo de cámara.
-# Cada una es una SceneCapture que se redibuja ~10 Hz (CSI#2 ~5 Hz) y se guarda como JPG en _cache/cam/; la estación las muestra como la imagen de la cámara.
+# Cada una es una SceneCapture que se redibuja 8 Hz (CSI#2 2.5 Hz, Mundo 3D 4 Hz); cada captura cuesta ~20 ms fijos (no depende de la resolución): con 15 capturas por segundo el juego bajaba a 28 cuadros por segundo, con 10.5 sube a 38 y se guarda como JPG en _cache/cam/; la estación las muestra como la imagen de la cámara.
 CAM_DIR = os.path.join(AQUI, "_cache", "cam")
 MUNDO = os.path.join(AQUI, "_cache", "mundo.txt")
 HFOV_CSI, MONTAJE_PITCH = 68.3, -2.4
@@ -76,7 +79,7 @@ def preparar_camaras():
     os.makedirs(CAM_DIR, exist_ok=True)
     mundo = unreal.EditorLevelLibrary.get_editor_world()
     est["cams"] = []
-    for nombre, (ancho, alto) in (("cam0", (640, 480)), ("cam1", (480, 360)), ("cam2", (800, 450))):                     # CSI#2 más pequeña (mismo 4:3: mismo campo de visión)
+    for nombre, (ancho, alto) in (("cam0", (512, 384)), ("cam1", (320, 240)), ("cam2", (640, 360))):                     # CSI#2 más pequeña (mismo 4:3: mismo campo de visión)
         rt = unreal.RenderingLibrary.create_render_target2d(mundo, ancho, alto, unreal.TextureRenderTargetFormat.RTF_RGBA8)
         a = D.actores.spawn_actor_from_class(unreal.SceneCapture2D, unreal.Vector(0, 0, 0))
         a.set_actor_label("Vivo_" + nombre)
@@ -87,7 +90,11 @@ def preparar_camaras():
         c.set_editor_property("capture_every_frame", False)
         c.set_editor_property("capture_on_movement", False)
         c.set_editor_property("capture_source", unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR)
-        est["cams"].append({"actor": a, "comp": c, "rt": rt, "archivo": os.path.join(CAM_DIR, nombre + ".jpg"), "t": 0.0, "cada": {"cam0": 0.1, "cam1": 0.2, "cam2": 0.2}[nombre]})
+        ps = c.get_editor_property("post_process_settings")             # la captura sale con sombras negras (no recibe la luz indirecta del visor): gamma 2.0 las levanta sin filtro en el navegador
+        ps.set_editor_property("override_color_gamma", True)
+        ps.set_editor_property("color_gamma", unreal.Vector4(2.0, 2.0, 2.0, 1.0))
+        c.set_editor_property("post_process_settings", ps)
+        est["cams"].append({"actor": a, "comp": c, "rt": rt, "archivo": os.path.join(CAM_DIR, nombre + ".jpg"), "t": 0.0, "cada": {"cam0": 0.125, "cam1": 0.4, "cam2": 0.25}[nombre]})
     opt = unreal.ImageWriteOptions()
     opt.set_editor_property("format", unreal.DesiredImageFormat.JPG)
     opt.set_editor_property("compression_quality", 85)
@@ -214,7 +221,7 @@ def postura(p, q, dt):
 def persona(j, estatura):
     p = est["pers"][j]
     if abs(p["est"] - estatura) > 0.02:                     # la estatura de cada persona puede cambiar de una partida a otra
-        k = estatura * 100.0 / MQ.ALTO_MANIQUI
+        k = estatura * 100.0 / p.get("alto", MQ.ALTO_MANIQUI)
         p["actor"].set_actor_scale3d(unreal.Vector(k, k, k))
         p["est"] = estatura
     return p
@@ -330,10 +337,16 @@ FLAG = os.path.join(AQUI, "_cache", "captura.txt")                  # si existe 
 
 
 def crear_persona():
+    """Una pieza de una persona por llamada (ver personajes_ue.figura_por_pasos); la persona queda lista cuando el generador entrega su actor."""
     j = est["n_listo"]
-    est["pers"][j] = {"actor": MQ.figura(f"Vivo_{ROLES[j]}_{j}", ROLES[j], COLORES[ROLES[j]], 1.75, "Vivo"), "anim": None, "est": 1.75}
-    est["pers"][j]["actor"].set_actor_location(D.ue(0, 0, -50), False, False)
-    est["n_listo"] += 1
+    if "gen" not in est:
+        est["gen"] = PU.figura_por_pasos(f"Vivo_{ROLES[j]}_{j}", ROLES[j], 1.75, "Vivo")
+    actor = next(est["gen"])
+    if actor is not None:
+        est["pers"][j] = {"actor": actor, "anim": None, "est": 1.75, "alto": PU.alto(ROLES[j])}
+        actor.set_actor_location(D.ue(0, 0, -50), False, False)
+        del est["gen"]
+        est["n_listo"] += 1
 
 
 def tick(dt):
@@ -341,7 +354,7 @@ def tick(dt):
     est["dt_dibujo"] = min(dt, 0.1)
     if est["n_listo"] < len(ROLES):                          # una persona cada 45 cuadros, empezando a los 90: nunca dos mallas con esqueleto nuevas en el mismo cuadro
         est["ticks"] += 1
-        if est["ticks"] >= 90 and (est["ticks"] - 90) % 45 == 0:
+        if est["ticks"] >= 90 and (est["ticks"] - 90) % 12 == 0:
             crear_persona()
         return
     if os.path.exists(CONSOLA):                              # _cache/consola.txt: una orden de consola de Unreal por línea (para probar la calidad sin reiniciar)

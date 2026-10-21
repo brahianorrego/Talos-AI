@@ -319,7 +319,7 @@ def cancha():
 
 
 def mats_paneles():
-    return (material("Panel", (0.9, 0.9, 0.88), 0.7), material("Marco", (0.012, 0.012, 0.012), 0.5, 0.0), material("Arena", (0.35, 0.27, 0.16), 1.0))
+    return (material("PanelBlanco", (0.9, 0.9, 0.88), 0.7), material("MarcoNegro", (0.012, 0.012, 0.012), 0.5, 0.0), material("Arena", (0.35, 0.27, 0.16), 1.0))
 
 
 def nivel_nuevo(ruta):
