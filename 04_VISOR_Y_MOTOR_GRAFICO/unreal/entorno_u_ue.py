@@ -380,6 +380,7 @@ def megaplant(a, n, r):
     comp = b.skeletal_mesh_component
     comp.set_skeletal_mesh_asset(malla)
     comp.set_editor_property("mobility", unreal.ComponentMobility.STATIC)
+    comp.set_component_tick_enabled(False)                          # un árbol no se anima: sin esto cada malla esquelética gasta tiempo en cada cuadro
     b.set_actor_scale3d(unreal.Vector(s, s, s))
     b.set_actor_label(f"Megaplant_{n}")
     b.set_folder_path("Entorno/Arboles")

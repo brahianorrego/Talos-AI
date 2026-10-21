@@ -93,3 +93,17 @@ Por orden de Brahian la estación pasó a una sola pantalla sobria, igual para v
 - **Pruebas:** capturas a 1920×1080 y 1366×768 sin scroll ni solapes (`mediciones/capturas/interfaz_1920x1080.png`, `interfaz_1366x768.png`); teclas de vuelo, giro de 360°, clic izquierdo que fija (BUSCAR → PERSECUCION), clic derecho que suelta (→ VERIFICAR), botón central (pan y tilt) y G (IA ⇄ manual) con la simulación en vivo.
 - **Cajas de YOLO sin desfase:** la imagen de Unreal llega ~0.25 s tarde; el horizonte y las cajas se calculan con el cuadro de la simulación del instante en que se tomó la imagen (se guarda un historial de 80 cuadros y la edad de la imagen viene en la cabecera `X-Edad`).
 - **Teclas finales:** Tab alterna cámara ⇄ mapa; 1 mapa, 4 cámara; M puntos ⇄ manual; G IA ⇄ manual; V, R, B, P, Esc; el 3 y el 5 de la versión anterior desaparecen porque el mundo en 3D (centinela) es la ventana de Unreal.
+
+## 8. Rendimiento con el campus de Fab (21-oct-2026) · RTX 3050 de 6 GB, 2 cámaras del dron (CSI#1 640×480 a 10 Hz, CSI#2 480×360 a 5 Hz)
+
+Medido con `unreal/vivo_unreal.py` (línea "DRONIA VIVO fps" del log, un valor cada 5 s) y `stat unit`:
+
+| Situación | Cuadros por segundo (media · mínimo) |
+|---|---|
+| Antes de Fab (20-oct), ventana de Unreal visible | 54.7 · 43.5 |
+| Con campus real + materiales PBR + Megaplants, ventana visible | ≈ 30 · 28 |
+| Igual, sin animar los Megaplants (son mallas con esqueleto) | +4 (38 → 42 sin cámaras) |
+| Igual, **Unreal minimizado y la estación como única ventana** | **49 · 45.5** |
+
+Lo que se encontró: el cuello de botella era el hilo del juego del editor (≈ 26 ms por cuadro con la GPU en solo 9.5 ms), no la tarjeta gráfica: bajar la resolución (`r.ScreenPercentage 50`), apagar Lumen o las sombras virtuales o esconder árboles y edificios no cambió nada. Minimizar el editor evita que dibuje su propia interfaz (Esquematizador, 990 actores, viewport) y las cámaras del dron siguen entregando imagen. Por eso `VIVO_UNREAL.bat` abre ahora **una sola ventana** (la estación); con `DRONIA_PANTALLA_UNREAL=50` vuelve la vista en dos mitades.
+Tiempo de GPU de un cuadro del viewport: 14.3 ms (≈ 70 cuadros por segundo posibles). Memoria de video: 3.4 de 5.1 GB.

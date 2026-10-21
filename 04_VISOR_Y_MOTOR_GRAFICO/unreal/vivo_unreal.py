@@ -57,6 +57,9 @@ def preparar():
         unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).editor_set_game_view(True)      # sin iconos ni rejilla del editor
     except Exception:                                                                              # noqa: BLE001
         pass
+    for a in D.actores.get_all_level_actors():              # los árboles Megaplant son mallas con esqueleto: quietas, sin animación (ahorra ~4 cuadros por segundo)
+        if a.get_actor_label().startswith("Megaplant_"):
+            a.skeletal_mesh_component.set_component_tick_enabled(False)
     anims()                                                  # las animaciones también se cargan ya, no a mitad de la partida
     unreal.log("DRONIA VIVO: escuchando UDP %d" % PUERTO)
 
@@ -308,6 +311,7 @@ def camara(x, y, z, psi):
     sub.set_level_viewport_camera_info(est["cam"], unreal.MathLibrary.find_look_at_rotation(est["cam"], mira))
 
 
+CONSOLA = os.path.join(AQUI, "_cache", "consola.txt")
 FLAG = os.path.join(AQUI, "_cache", "captura.txt")                  # si existe este archivo se guarda una captura del viewport (Saved/Screenshots) y se borra
 
 
@@ -326,6 +330,17 @@ def tick(dt):
         if est["ticks"] >= 90 and (est["ticks"] - 90) % 45 == 0:
             crear_persona()
         return
+    if os.path.exists(CONSOLA):                              # _cache/consola.txt: una orden de consola de Unreal por línea (para probar la calidad sin reiniciar)
+        lineas = open(CONSOLA, encoding="utf-8").read().splitlines()
+        os.remove(CONSOLA)
+        for l in lineas:
+            if l.startswith("py "):                          # "py <código>": solo para medir el rendimiento desde la sesión de trabajo (no hay red: lee un archivo local)
+                try:
+                    exec(l[3:], globals())
+                except Exception as e:                       # noqa: BLE001
+                    unreal.log_warning("DRONIA consola py: " + repr(e))
+            elif l.strip():
+                unreal.SystemLibrary.execute_console_command(None, l.strip())
     if os.path.exists(FLAG):
         os.remove(FLAG)
         unreal.SystemLibrary.execute_console_command(None, "HighResShot 1280x720")
