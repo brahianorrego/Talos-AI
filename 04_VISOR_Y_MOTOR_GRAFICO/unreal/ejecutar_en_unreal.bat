@@ -16,5 +16,5 @@ goto sig
 :fin
 set "ORDEN=%ORDEN:\=/%"
 set "DRONIA_ORDEN=%ORDEN%"
-start "" /wait "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "%USERPROFILE%\Documents\Unreal Projects\DronIA_Cancha\DronIA_Cancha.uproject" -nosplash -windowed -NoVSync -ResX=%DRONIA_RX% -ResY=%DRONIA_RY%
+start "" /wait "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe" "%USERPROFILE%\Documents\Unreal Projects\DronIA_Cancha\DronIA_Cancha.uproject" -nosplash -windowed -unattended -NoVSync -ResX=%DRONIA_RX% -ResY=%DRONIA_RY%
 endlocal

@@ -45,9 +45,9 @@ def preparar():
     # Todo se crea UNA vez aquí; después solo se mueven transformaciones (crear o destruir mallas con el render en marcha tumbó el editor: Assertion VertexFactory...IsReadyForStaticMeshCaching)
     tablero, marco, _ = D.mats_paneles()
     est["pool_paneles"] = [(D.caja(f"Vivo_panel_{i}", 0, 0, -50, 1, 1, 1, tablero, 0.0, "Vivo"), D.caja(f"Vivo_panel_{i}_marco", 0, 0, -50, 1, 1, 1, marco, 0.0, "Vivo")) for i in range(N_PANELES)]
-    for j, rol in enumerate(ROLES):
-        est["pers"][j] = {"actor": MQ.figura(f"Vivo_{rol}_{j}", rol, COLORES[rol], 1.75, "Vivo"), "anim": None, "est": 1.75}
-        est["pers"][j]["actor"].set_actor_location(D.ue(0, 0, -50), False, False)
+    est["n_listo"], est["ticks"] = 0, 0
+    for c in ("r.Streaming.FullyLoadUsedTextures 1", "r.Streaming.PoolSize 3000"):       # que las texturas lleguen a su máxima resolución (sin esto se ven borrosas un buen rato)
+        unreal.SystemLibrary.execute_console_command(None, c)
     for g in ("pan", "tilt"):
         est[g] = next((a for a in D.actores.get_all_level_actors() if a.get_actor_label() == f"Dron_vivo_{g}"), None)
     try:
@@ -182,8 +182,20 @@ def camara(x, y, z, psi):
 FLAG = os.path.join(AQUI, "_cache", "captura.txt")                  # si existe este archivo se guarda una captura del viewport (Saved/Screenshots) y se borra
 
 
+def crear_persona():
+    j = est["n_listo"]
+    est["pers"][j] = {"actor": MQ.figura(f"Vivo_{ROLES[j]}_{j}", ROLES[j], COLORES[ROLES[j]], 1.75, "Vivo"), "anim": None, "est": 1.75}
+    est["pers"][j]["actor"].set_actor_location(D.ue(0, 0, -50), False, False)
+    est["n_listo"] += 1
+
+
 def tick(dt):
     ahora = time.time()
+    if est["n_listo"] < len(ROLES):                          # una persona cada 45 cuadros, empezando a los 90: nunca dos mallas con esqueleto nuevas en el mismo cuadro
+        est["ticks"] += 1
+        if est["ticks"] >= 90 and (est["ticks"] - 90) % 45 == 0:
+            crear_persona()
+        return
     if os.path.exists(FLAG):
         os.remove(FLAG)
         unreal.SystemLibrary.execute_console_command(None, "HighResShot 1280x720")

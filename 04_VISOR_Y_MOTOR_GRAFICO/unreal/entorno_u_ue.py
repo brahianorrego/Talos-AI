@@ -49,7 +49,9 @@ def textura(nombre):
     """Importa entorno/texturas/<nombre>.png a /Game/DronIA/Texturas (una vez) y la devuelve."""
     ruta = f"{TEX}/{nombre}"
     if D.biblioteca.does_asset_exist(ruta):
-        return unreal.load_asset(ruta)
+        if os.environ.get("DRONIA_REHACER") != "1":
+            return unreal.load_asset(ruta)
+        D.biblioteca.delete_asset(ruta)                                    # al rehacer el nivel se vuelven a importar (por si cambió la imagen)
     png = os.path.join(ENTORNO, "texturas", nombre + ".png")
     if not os.path.exists(png):
         unreal.log_warning("DRONIA: falta la textura " + png + " (correr entorno/fachadas.py)")
@@ -342,22 +344,22 @@ def detalles(E):
     """Lo que se ve de cerca a 2-3 m de altura (fotos nocturnas de la zona de vuelo): plaza de adoquín, camino de losas con pasto, canaleta de rejilla,
     setos, canecas verdes, base azul de la escultura del motor y luminarias."""
     noche = os.environ.get("DRONIA_NOCHE") == "1"
-    D.caja("Plaza_adoquin", -56.0, -8.0, 0.02, 34.0, 12.0, 0.04, mat_suelo("plaza_adoquin", "adoquin", 34.0 / 3.2, 12.0 / 3.2), 0.0, "Entorno/Suelos")
-    # camino de losas entre el motor y la zona verde, con su canaleta
-    D.caja("Camino_losas", -40.0, 2.0, 0.025, 3.0, 22.0, 0.05, mat_suelo("losas", "losas", 3.0 / 2.0, 22.0 / 2.0), 0.0, "Entorno/Suelos")
-    D.caja("Canaleta", -38.1, 2.0, 0.03, 0.35, 22.0, 0.04, mat_suelo("rejilla", "rejilla", 1.0, 22.0 / 0.8), 0.0, "Entorno/Suelos")
+    D.caja("Plaza_adoquin", -38.0, -4.0, 0.02, 20.0, 12.0, 0.04, mat_suelo("plaza_adoquin", "adoquin", 20.0 / 3.2, 12.0 / 3.2), 0.0, "Entorno/Suelos")
+    # camino de losas con pasto entre ellas hacia el norte, con su canaleta de rejilla al lado
+    D.caja("Camino_losas", -26.0, 8.0, 0.025, 3.0, 20.0, 0.05, mat_suelo("losas", "losas", 3.0 / 2.0, 20.0 / 2.0), 0.0, "Entorno/Suelos")
+    D.caja("Canaleta", -24.1, 8.0, 0.03, 0.35, 20.0, 0.04, mat_suelo("rejilla", "rejilla", 1.0, 20.0 / 0.8), 0.0, "Entorno/Suelos")
     # base azul de la escultura (turbina)
     for x in E["extras"]:
         D.caja("Motor_base_azul", x["p"][0], x["p"][1], 0.05, 6.0, 3.6, 0.1, D.material("BaseAzul", (0.03, 0.18, 0.55), 0.7), math.radians(x["rot"]), "Entorno/Extras")
     # setos bajos junto a las canchas y canecas verdes
     seto = D.material("Seto", (0.18, 0.32, 0.06), 1.0)
-    for (cx, cy, w, h) in ((-62.5, -1.0, 19.0, 0.9), (-45.3, 5.6, 13.0, 0.9), (-36.0, 14.0, 0.9, 12.0)):
+    for (cx, cy, w, h) in ((-62.5, 3.0, 19.0, 0.9), (-45.3, 5.2, 13.0, 0.9), (-36.0, 14.0, 0.9, 12.0)):
         D.caja("Seto", cx, cy, 0.45, w, h, 0.9, seto, 0.0, "Entorno/Vegetacion")
     caneca = D.material("Caneca", (0.04, 0.32, 0.12), 0.6)
-    for k, (cx, cy) in enumerate(((-47.0, 9.0), (-47.0, 10.0), (-34.0, -3.0))):
+    for k, (cx, cy) in enumerate(((-36.5, 10.0), (-36.5, 11.0), (-34.0, -3.0))):
         D.forma("Cylinder", f"Caneca_{k}", D.ue(cx, cy, 0.5), (0.5, 0.5, 1.0), caneca, 0.0, "Entorno/Mobiliario")
     # luminarias de poste: halos muy brillantes de noche
-    for n, (lx, ly) in enumerate(((-74.5, 1.0), (-38.0, 1.0), (-56.0, -14.0), (-36.0, -12.0), (-52.0, 41.0), (-60.0, -26.0))):
+    for n, (lx, ly) in enumerate(((-52.0, 3.0), (-38.0, 1.0), (-46.0, -12.0), (-30.0, -12.0), (-52.0, 41.0), (-45.0, -25.0))):
         poste_luz(lx, ly, 7.5, noche, n)
 
 
