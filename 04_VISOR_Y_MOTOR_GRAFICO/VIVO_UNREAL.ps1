@@ -9,7 +9,7 @@ $vista = if ($env:DRONIA_VISTA -eq 'mapa') { 'mapa' } else { 'dron' }          #
 $pct = if ($null -ne $env:DRONIA_PANTALLA_UNREAL -and $env:DRONIA_PANTALLA_UNREAL -ne '') { [int]$env:DRONIA_PANTALLA_UNREAL } else { 0 }       # 0 = UNA SOLA VENTANA (la estación); Unreal corre minimizado y la estación muestra lo que ven sus cámaras. 50 = Unreal a la izquierda y la estación a la derecha (más lento: el editor dibuja su propia ventana)
 
 # si quedaron copias de una corrida anterior se cierran (dos en_vivo.py se pisan el puerto y el puente se queda sin datos)
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'en_vivo\.py|puente_unreal\.py|estacion\servidor\.py|acomodar_ventanas' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'en_vivo\.py|puente_unreal\.py|servidor\.py|acomodar_ventanas' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Sleep 1
 Start-Process -FilePath $py -ArgumentList ('"' + (Join-Path $aqui 'en_vivo.py') + '"') -WindowStyle Hidden
 for ($i = 0; $i -lt 60; $i++) { if (Get-NetTCPConnection -LocalPort 8767 -State Listen -ErrorAction SilentlyContinue) { break }; Start-Sleep 1 }       # el puente espera a que la simulación esté escuchando

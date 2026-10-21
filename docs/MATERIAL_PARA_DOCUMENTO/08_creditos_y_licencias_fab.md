@@ -25,6 +25,9 @@ Texto sugerido para la sección de créditos:
 | Uncut Grass (superficie Megascans `oilpt20`) | Quixel Megascans | Pasto del terreno |
 | Pack Bonus Textures | Lord Enot Store | Descargado (pasto, piedra, losa); a la fecha no se usa en el nivel |
 | HighPoly Tree Model | _autor por confirmar en la ficha_ | Descargado por Brahian; a la fecha no se usa |
+| Survival Character (chaqueta, jeans, botas, guantes, mochila) | _autor y licencia por confirmar en la ficha de Fab_ | El ladrón |
+| Quantum Modular Character (muestra gratuita) | _autor y licencia por confirmar en la ficha de Fab_ | Los civiles |
+| Free Shrubs Pack (GV_FreeShrubsPack) | _por confirmar_ | Descargado; sin usar a la fecha |
 
 Los materiales de Quixel y de Fab con licencia estándar se pueden usar en proyectos propios; no se pueden revender ni redistribuir como activos.
 
