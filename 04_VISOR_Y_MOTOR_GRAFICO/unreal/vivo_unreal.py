@@ -72,8 +72,8 @@ def preparar_camaras():
     os.makedirs(CAM_DIR, exist_ok=True)
     mundo = unreal.EditorLevelLibrary.get_editor_world()
     est["cams"] = []
-    for nombre in ("cam0", "cam1"):
-        rt = unreal.RenderingLibrary.create_render_target2d(mundo, 640, 480, unreal.TextureRenderTargetFormat.RTF_RGBA8)
+    for nombre, (ancho, alto) in (("cam0", (640, 480)), ("cam1", (480, 360))):                     # CSI#2 más pequeña (mismo 4:3: mismo campo de visión)
+        rt = unreal.RenderingLibrary.create_render_target2d(mundo, ancho, alto, unreal.TextureRenderTargetFormat.RTF_RGBA8)
         a = D.actores.spawn_actor_from_class(unreal.SceneCapture2D, unreal.Vector(0, 0, 0))
         a.set_actor_label("Vivo_" + nombre)
         a.set_folder_path("Vivo")

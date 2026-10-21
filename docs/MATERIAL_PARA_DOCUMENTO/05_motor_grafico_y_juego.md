@@ -62,7 +62,7 @@ Quitar el vuelo entre canchas (tecla T), un solo escenario seleccionable (cancha
 | Rueda | zoom del mapa |
 | V · flechas | cámara asistida · pan y tilt alternativo |
 | Tab | alterna centinela (mundo 3D) ⇄ **Vista del dron** |
-| 1 · 2 · 3 · 4 | mapa y cámaras · Vista del dron · centinela que sigue · centinela libre |
+| 1 · 3 · 4 · 5 | mapa y cámaras · centinela que sigue · **Vista del dron** · centinela libre |
 | X · M | CSI#2 grande · Puntos⇄Manual |
 | R · G · B · P · Esc · H | ruta · la IA guía (otra vez devuelve) · grabar · pausa · salir del juego · ocultar la chuleta |
 
@@ -83,3 +83,5 @@ Quitar el vuelo entre canchas (tecla T), un solo escenario seleccionable (cancha
 - **Interfaz:** en la Vista del dron la CSI#1 ocupa la mayor parte de la pantalla con YOLO y la telemetría encima, la CSI#2 es un cuadro pequeño y el mapa de los dos LiDAR va al lado (o debajo si la ventana es angosta). Con Tab se alterna centinela ⇄ Vista del dron sin soltar el dron; las teclas de vuelo valen en las dos.
 - **Una sola pantalla:** `VIVO_UNREAL.bat` (sin ventanas de consola, ver `VIVO_UNREAL.ps1`) deja Unreal en el 50 % izquierdo y la estación (Edge) en el 50 % derecho. Evidencia: `04_VISOR_Y_MOTOR_GRAFICO/mediciones/capturas/una_pantalla_juntas.png`, `una_pantalla_estacion_dron.png` y `una_pantalla_unreal.png`.
 - **Límite conocido:** la captura de Unreal sale oscura (no tiene la adaptación automática de exposición del viewport); los intentos de fijar la exposición por código no cambiaron nada, así que la estación aclara la imagen con un filtro de brillo (`estacion/modos.css`, clase `.cam-unreal`).
+- **Cuadros por segundo con las dos cámaras del dron capturando** (CSI#1 640×480 a 10 Hz y CSI#2 480×360 a 5 Hz, mismo campo de visión 68.3° × 54.0°), mientras la simulación en vivo y un entrenamiento corrían al lado: 37 muestras de 5 s, **mínimo 43.5 y media 54.7 fps** (antes, sin cámaras, 52-60). Por encima de los 30 pedidos, así que no hizo falta bajar más la resolución. Foto final: `04_VISOR_Y_MOTOR_GRAFICO/mediciones/capturas/vista_del_dron_final.png`.
+- **Cajas de YOLO:** salen de la proyección de las personas del simulador sobre la cámara con el mismo campo de visión y la misma inclinación (−2.4° + tilt) que el render de Unreal; en la foto final las cajas coinciden con las personas del render.

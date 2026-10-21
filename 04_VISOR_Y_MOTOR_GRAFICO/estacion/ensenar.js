@@ -38,7 +38,7 @@
       <tr><td>Clic izq.</td><td>fijar al posible objetivo</td><td>Clic der.</td><td>soltar objetivo</td></tr>
       <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>X</td><td>CSI#2 grande</td></tr>
       <tr><td>Tab</td><td>centinela ⇄ vista del dron</td><td>M</td><td>Puntos ⇄ Manual</td></tr>
-      <tr><td>1 · 2</td><td>mapa+cámaras · vista del dron</td><td>3 · 4</td><td>centinela: seguir · libre</td></tr>
+      <tr><td>1</td><td>mapa + cámaras</td><td>3 · 4 · 5</td><td>centinela · Vista del dron · centinela libre</td></tr>
       <tr><td>R · G · B</td><td>ruta · la IA guía · grabar</td><td>P · Esc · H</td><td>pausa · salir · ayuda</td></tr>
     </table>`;
   document.body.appendChild(chuleta);
@@ -165,7 +165,7 @@
   const teclas = new Set();
   let panAng = 0, tiltAng = -5, asist = false, iaGuia = false, ultimoCam = "";
   const MIAS = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyF", "KeyV", "KeyX", "KeyM", "Digit1", "Digit2",
-    "Digit3", "Digit4", "Tab", "KeyR", "KeyG", "KeyB", "KeyP", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyH"]);
+    "Digit3", "Digit4", "Digit5", "Tab", "KeyR", "KeyG", "KeyB", "KeyP", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyH"]);
   const clic = id => { const b = document.getElementById(id); if (b) b.click(); };
   const vista = n => { document.body.classList.toggle("ens-vista-2", n === 2); };
   const usarCamara = () => post("/camara", { modo: asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
@@ -176,9 +176,9 @@
     if (code === "Tab") vistaModo(document.body.dataset.modo === "dron" ? "3d" : "dron");                       // centinela ⇄ vista del dron
     else if (code === "KeyV") { asist = !asist; $("ens-cam").classList.toggle("activo", asist); usarCamara(); }
     else if (code === "Digit1") vistaModo("ens");
-    else if (code === "Digit2") vistaModo("dron");
-    else if (code === "Digit3") { vistaModo("3d"); ponerCamara("seguir"); }
-    else if (code === "Digit4") { vistaModo("3d"); ponerCamara("orbita"); }
+    else if (code === "Digit3") { vistaModo("3d"); ponerCamara("seguir"); }                       // centinela
+    else if (code === "Digit4") vistaModo("dron");                                                 // Vista del dron
+    else if (code === "Digit5") { vistaModo("3d"); ponerCamara("orbita"); }                       // centinela libre
     else if (code === "KeyX") document.body.classList.toggle("ens-vista-2");
     else if (code === "KeyR") clic("b-ruta");
     else if (code === "KeyG") { iaGuia = !iaGuia; post("/modo", { modo: iaGuia ? "auto" : "ensenar", sub: "manual" }); $("ens-tag").textContent = iaGuia ? "la IA guía (G devuelve el control)" : "listo"; }

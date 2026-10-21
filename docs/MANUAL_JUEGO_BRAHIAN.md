@@ -21,8 +21,8 @@ Antes de jugar: mantén la ventana de la estación al frente al teclear (las tec
 | Rueda | acerca o aleja el mapa |
 | V · flechas | cámara asistida (sigue sola al objetivo) · pan y tilt con el teclado |
 | **Tab** | **alterna centinela (mundo 3D) ⇄ Vista del dron** (lo que ve el dron) |
-| 1 · 2 | mapa y cámaras · Vista del dron |
-| 3 · 4 | centinela: seguir al dron · vista libre |
+| 1 | mapa y cámaras |
+| 3 · 4 · 5 | centinela (mundo que sigue al dron) · **Vista del dron** · centinela libre |
 | X | la cámara 2 pasa a ser la grande (en la pantalla de mapa y cámaras) |
 | M | cambia entre Puntos (clic en el mapa) y Manual |
 | R · G · B · P · Esc · H | ruta · la IA guía (otra vez te devuelve el control) · grabar tu demostración · pausa · salir · ocultar esta ayuda |

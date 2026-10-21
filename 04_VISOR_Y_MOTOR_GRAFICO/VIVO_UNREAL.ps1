@@ -19,7 +19,8 @@ $uw = [int]($a.Width * $pct / 100); $ew = $a.Width - $uw
 Start-Sleep 3
 $edge = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
 $url = "http://127.0.0.1:8768/?modo=$vista"
-if (Test-Path $edge) { Start-Process $edge -ArgumentList "--app=$url", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--window-position=$($a.Left + $uw),$($a.Top)", "--window-size=$ew,$($a.Height)" } else { Start-Process $url }
+$depurar = @(); if ($env:DRONIA_DEPURAR) { $depurar = "--remote-debugging-port=9222", "--user-data-dir=$(Join-Path $aqui 'unreal\_cache\edge_depurar')" }      # solo para sacar fotos con capturar_estacion_cdp.mjs
+if (Test-Path $edge) { Start-Process $edge -ArgumentList ($depurar + "--app=$url", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--window-position=$($a.Left + $uw),$($a.Top)", "--window-size=$ew,$($a.Height)") } else { Start-Process $url }
 Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile', '-File', (Join-Path $aqui 'acomodar_ventanas.ps1'), '-Porcentaje', $pct
 
 $env:DRONIA_ORDEN = ((Join-Path $aqui 'unreal\vivo_unreal.py') -replace '\\', '/')

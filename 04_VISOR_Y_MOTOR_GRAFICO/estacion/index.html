@@ -426,6 +426,7 @@ let MODO_DRON = (() => {
 })();
 const CAM_VIEJA = MODO_DRON === "gimbal" || new URLSearchParams(location.search).get("camara") === "gimbal", PITCH_FIJO = -5;
 const camFija = () => !CAM_VIEJA && MODO_DRON === "minimo", camPantilt = () => !CAM_VIEJA && MODO_DRON === "plus";
+const MONTAJE_CSI = CAM_VIEJA ? 0 : -2.4 * Math.PI / 180;                                  // la CSI va inclinada -2.4° respecto al soporte (D-078); Unreal la usa igual
 const HFOV = CAM_VIEJA ? 38.9 : 68.3, VFOV = CAM_VIEJA ? 29.7 : 54.0;          // CSI medida por Brahian (D-078): 68.3° x 54.0°
 let panDeg = 0;                                                   // el pan del pan-tilt (la V17 lo deja en 0; si la repetición trae c.pan, se usa)
 const mundo = (x, y, z = 0) => new THREE.Vector3(x, z, -y);
@@ -2020,7 +2021,8 @@ function animar(ahora) {
     else if (camPantilt()) { const pv = window.PANTILT ? window.PANTILT.pivoteTilt : new THREE.Vector3(0.075, -0.11, 0), xf = pv.x + 0.0365;   // en la cuna del pan-tilt (arriba o colgado)
       camDron.position.copy(mundo(dx + xf * Math.cos(psi), dy + xf * Math.sin(psi), dz + pv.y + 0.013)); }
     else camDron.position.copy(mundo(dx + 0.08 * Math.cos(psi), dy + 0.08 * Math.sin(psi), dz - 0.12));
-    camDron.lookAt(camDron.position.clone().add(new THREE.Vector3(Math.cos(psiCam) * Math.cos(pitch), Math.sin(pitch), -Math.sin(psiCam) * Math.cos(pitch))));
+    const pitchCam = pitch + MONTAJE_CSI;                                                                                   // la cámara real apunta -2.4° más abajo que el soporte
+    camDron.lookAt(camDron.position.clone().add(new THREE.Vector3(Math.cos(psiCam) * Math.cos(pitchCam), Math.sin(pitchCam), -Math.sin(psiCam) * Math.cos(pitchCam))));
     if (window.PANTILT) { PANTILT.pan.rotation.y = panDeg * Math.PI / 180; PANTILT.tilt.rotation.z = pitch; }               // el modelo 3D mueve sus dos servos
     camDron.updateMatrixWorld();
     const trk = a.fase === 1 ? ["IA INACTIVA", COL.tenue] : a.trk === undefined ? (a.vis ? TRK[1] : TRK[3]) : TRK[a.trk];
