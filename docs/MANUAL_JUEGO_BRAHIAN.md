@@ -31,6 +31,7 @@ Mantén la ventana de la estación al frente al teclear: las teclas las lee ella
 | R · B · P | ruta de búsqueda · grabar tu demostración · pausa |
 | Rueda | zoom del mapa táctico |
 | **X** · K | cámara al piso (CSI#2) a pantalla grande y volver · cuadrícula de distancia en esa cámara |
+| 3 · 5 | mapa satelital (GPS, geocerca, trayectoria) · pestaña Entrenamiento (curvas del entrenamiento y partida de la política) |
 | Esc | Ajustes y ayuda |
 
 ## Cómo se juega la búsqueda

@@ -223,10 +223,10 @@ def paneles(lista):
         x1, y1, x2, y2, h = lista[i]
         L, psi = math.hypot(x2 - x1, y2 - y1), math.atan2(y2 - y1, x2 - x1)
         cx, cy, rot = (x1 + x2) / 2, (y1 + y2) / 2, unreal.Rotator(0.0, 0.0, D.guinada(psi))
-        tab.set_actor_scale3d(unreal.Vector(L, D.GROSOR_PANEL, h))
+        mar.set_actor_scale3d(unreal.Vector(L, D.GROSOR_PANEL, h))                                                  # marco negro de 4 cm: la tabla blanca va dentro y sobresale 1 cm por cada cara
+        mar.set_actor_location_and_rotation(D.ue(cx, cy, h / 2), rot, False, False)
+        tab.set_actor_scale3d(unreal.Vector(max(L - 0.08, 0.1), D.GROSOR_PANEL + 0.02, max(h - 0.08, 0.1)))
         tab.set_actor_location_and_rotation(D.ue(cx, cy, h / 2), rot, False, False)
-        mar.set_actor_scale3d(unreal.Vector(L, D.GROSOR_PANEL + 0.01, 0.04))
-        mar.set_actor_location_and_rotation(D.ue(cx, cy, h - 0.02), rot, False, False)
     est["paneles"] = lista
 
 

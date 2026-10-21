@@ -52,7 +52,7 @@ function ajustar(cv) {
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   return [g, w, h];
 }
-const col = { texto: "#e9eef7", tenue: "#93a6c2", tenue2: "#62768f", linea: "#243653", acento: "#2fa4e7", alerta: "#f5a623", peligro: "#e5484d", ok: "#2ecc71" };
+const col = { texto: "#e8ecef", tenue: "#98a2ab", tenue2: "#6a747d", linea: "#2a3036", acento: "#2fa4e7", alerta: "#f5a623", peligro: "#e5484d", ok: "#2ecc71" };
 const fuente = (g, tam, peso = 400, mono = false) => { g.font = `${peso} ${tam}px ${mono ? "'IBM Plex Mono','Roboto Mono','Cascadia Mono',Consolas,monospace" : "Inter,'Segoe UI',Roboto,sans-serif"}`; };
 function texto(g, t, x, y, al = "left", c = col.texto, tam = 11, peso = 500, mono = true) { fuente(g, tam, peso, mono); g.textAlign = al; g.fillStyle = "rgba(0,0,0,.6)"; g.fillText(t, x + 1, y + 1); g.fillStyle = c; g.fillText(t, x, y); }
 
@@ -98,14 +98,14 @@ function cuadroDeLaImagen() {
 const FIJADOS = ["PERSECUCION", "PERDIDA", "RECONFIRMAR", "FIJADO"];
 const ALERTAS = { reflejo_ataque: "REFLEJO · EVASIÓN", evadiendo: "EVASIÓN", amenaza: "AMENAZA CERCANA", punto_ciego: "PUNTO CIEGO", perimetro: "PERÍMETRO" };
 function cinta(g, x, y, w, h, valor, paso, px, rotulo, fmt, lado) {          // cinta vertical (altitud o velocidad): ticks que corren, caja con el valor actual
-  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = "rgba(11,18,32,.62)"; g.fillRect(x, y, w, h);
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = "rgba(7,9,11,.62)"; g.fillRect(x, y, w, h);
   const cyy = y + h / 2; g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.4;
   for (let v = Math.floor((valor - h / 2 / px) / paso) * paso; v <= valor + h / 2 / px; v += paso) {
     const yy = cyy - (v - valor) * px, mayor = Math.abs(v % 1) < 1e-6;
     g.beginPath(); g.moveTo(lado === "der" ? x : x + w, yy); g.lineTo(lado === "der" ? x + (mayor ? 14 : 8) : x + w - (mayor ? 14 : 8), yy); g.stroke();
     if (mayor && v >= 0) texto(g, String(Math.round(v)), lado === "der" ? x + 20 : x + w - 20, yy + 5, lado === "der" ? "left" : "right", col.texto, 14, 600);
   }
-  g.restore(); g.fillStyle = "#0b1220"; g.fillRect(x - 2, cyy - 15, w + 4, 30); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(x - 2, cyy - 15, w + 4, 30);
+  g.restore(); g.fillStyle = "#07090b"; g.fillRect(x - 2, cyy - 15, w + 4, 30); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(x - 2, cyy - 15, w + 4, 30);
   texto(g, fmt(valor), x + w / 2, cyy + 8, "center", "#fff", 20, 700); texto(g, rotulo, x + w / 2, y - 6, "center", col.acento, 13, 700, false);
 }
 function dibujarHUD() {
@@ -140,11 +140,11 @@ function dibujarHUD() {
   g.restore();
   // cinta de rumbo (arriba)
   const hdg = (deg(c.d[3]) + 360) % 360, tw = Math.min(R.w * 0.46, 480), tx = cx - tw / 2, tyy = R.y + 10;
-  g.save(); g.beginPath(); g.rect(tx, tyy, tw, 36); g.clip(); g.fillStyle = "rgba(11,18,32,.62)"; g.fillRect(tx, tyy, tw, 36); g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.4;
+  g.save(); g.beginPath(); g.rect(tx, tyy, tw, 36); g.clip(); g.fillStyle = "rgba(7,9,11,.62)"; g.fillRect(tx, tyy, tw, 36); g.strokeStyle = "rgba(233,238,247,.8)"; g.lineWidth = 1.4;
   const pxg = tw / 90;
   for (let a = Math.floor((hdg - 50) / 5) * 5; a <= hdg + 50; a += 5) { const x = cx + (a - hdg) * pxg, n = ((a % 360) + 360) % 360; g.beginPath(); g.moveTo(x, tyy + 36); g.lineTo(x, tyy + 36 - (n % 15 === 0 ? 11 : 6)); g.stroke();
     if (n % 15 === 0) texto(g, { 0: "E", 90: "N", 180: "O", 270: "S" }[n] ?? String(Math.round(((90 - n) + 360) % 360)).padStart(3, "0"), x, tyy + 16, "center", n % 90 === 0 ? col.acento : col.texto, 14, 700); }
-  g.restore(); g.fillStyle = "#0b1220"; g.fillRect(cx - 30, tyy + 38, 60, 24); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(cx - 30, tyy + 38, 60, 24);
+  g.restore(); g.fillStyle = "#07090b"; g.fillRect(cx - 30, tyy + 38, 60, 24); g.strokeStyle = col.acento; g.lineWidth = 1.6; g.strokeRect(cx - 30, tyy + 38, 60, 24);
   const rumbo = ((90 - hdg) + 360) % 360; texto(g, String(Math.round(rumbo) % 360).padStart(3, "0") + "°", cx, tyy + 56, "center", "#fff", 18, 700);
   // cintas de velocidad (izquierda) y altitud (derecha)
   const mh = Math.max(46, Math.round(44 * u)), cinH = Math.min(R.h * 0.5, 330), cinY = cy - cinH / 2 + 4, v = Math.hypot((c.dv || [0, 0])[0], (c.dv || [0, 0])[1]);
@@ -154,14 +154,14 @@ function dibujarHUD() {
   [-45, -30, -20, -10, 0, 10, 20, 30, 45].forEach(r => { const an = rad(r - 90); g.beginPath(); g.moveTo(Math.cos(an) * 40 * u, Math.sin(an) * 40 * u); g.lineTo(Math.cos(an) * (r % 30 === 0 ? 31 : 35) * u, Math.sin(an) * (r % 30 === 0 ? 31 : 35) * u); g.stroke(); });
   g.rotate(roll); g.fillStyle = col.acento; g.beginPath(); g.moveTo(0, -37 * u); g.lineTo(-6, -27 * u); g.lineTo(6, -27 * u); g.closePath(); g.fill(); g.restore();
   const pan = c.pan || 0, tilt = c.gmb ?? -5, gx = R.x + 16, gy = R.y + R.h - mh - 70;
-  g.fillStyle = "rgba(11,18,32,.7)"; g.fillRect(gx, gy, 178, 60); g.strokeStyle = "rgba(233,238,247,.35)"; g.lineWidth = 1; g.strokeRect(gx, gy, 178, 60);
+  g.fillStyle = "rgba(7,9,11,.7)"; g.fillRect(gx, gy, 178, 60); g.strokeStyle = "rgba(233,238,247,.35)"; g.lineWidth = 1; g.strokeRect(gx, gy, 178, 60);
   texto(g, "PAN", gx + 8, gy + 17, "left", col.tenue, 13, 700, false); g.strokeStyle = "rgba(233,238,247,.6)"; g.beginPath(); g.moveTo(gx + 44, gy + 12); g.lineTo(gx + 166, gy + 12); g.stroke(); g.fillStyle = col.acento; g.fillRect(gx + 105 + pan / 90 * 61 - 3, gy + 6, 6, 12);
   texto(g, "TILT", gx + 8, gy + 41, "left", col.tenue, 13, 700, false); g.beginPath(); g.moveTo(gx + 44, gy + 36); g.lineTo(gx + 166, gy + 36); g.stroke(); g.fillStyle = col.acento; g.fillRect(gx + 44 + (tilt + 45) / 60 * 122 - 3, gy + 30, 6, 12);
   texto(g, `${pan >= 0 ? "+" : ""}${pan.toFixed(0)}°`, gx + 168, gy + 55, "right", col.texto, 13, 700); texto(g, `${tilt.toFixed(0)}°`, gx + 98, gy + 55, "right", col.texto, 13, 700);
   // alerta y barra de misión
   const alerta = ALERTAS[c.arb], my = R.y + R.h - mh;
   if (alerta) { fuente(g, 16, 700); const tw2 = g.measureText(alerta).width + 34; g.fillStyle = "rgba(61,40,6,.94)"; g.fillRect(cx - tw2 / 2, my - 40, tw2, 30); g.strokeStyle = col.alerta; g.lineWidth = 2; g.strokeRect(cx - tw2 / 2, my - 40, tw2, 30); texto(g, alerta, cx, my - 19, "center", col.alerta, 16, 700); }
-  g.fillStyle = "rgba(11,18,32,.88)"; g.fillRect(R.x, my, R.w, mh); g.fillStyle = col.linea; g.fillRect(R.x, my, R.w, 1);
+  g.fillStyle = "rgba(7,9,11,.88)"; g.fillRect(R.x, my, R.w, mh); g.fillStyle = col.linea; g.fillRect(R.x, my, R.w, 1);
   const hay = (cv.en_camara || []).length > 0, obj = fijado ? "FIJADO" : hay ? "POSIBLE OBJETIVO" : "NINGUNO", segs = [["MODO", cv.eb ?? "–", col.acento], ["OBJETIVO", obj, fijado ? col.peligro : hay ? col.alerta : col.tenue], ["A LA VISTA", (cv.tf ?? 0).toFixed(1) + " s", col.texto], ["AMENAZA", alerta ? alerta : "NINGUNA", alerta ? col.alerta : col.ok], ["HFOV", HFOV + "° · −2.4°", col.tenue]];
   const sw = R.w / segs.length; segs.forEach(([k, val, cc], i) => { texto(g, k, R.x + i * sw + 12, my + 17, "left", col.tenue2, 12, 700, false); texto(g, val, R.x + i * sw + 12, my + mh - 9, "left", cc, Math.round(16 * Math.min(1.2, Math.max(u, .9))), 700); });
   S.vista = [R.x, R.y, R.w, R.h];
@@ -187,7 +187,7 @@ function dibujarLidar() {
   const [g, W, H] = ajustar($("lidar")), c = S.c; if (!c || W < 60 || H < 60) return;
   const cx = W / 2, cy = H / 2 + 6, alc = 14, k = Math.min(W / 2 - 10, cy - 18, H - cy - 22) / alc, [x, y, , psi] = c.d;
   const P = (wx, wy) => [cx + (wx - x) * k, cy - (wy - y) * k];
-  g.strokeStyle = "#243653"; g.lineWidth = 1; [5, 10].forEach(r => { g.beginPath(); g.arc(cx, cy, r * k, 0, 7); g.stroke(); texto(g, r + " m", cx + r * k * 0.71 + 3, cy - r * k * 0.71 - 2, "left", col.tenue2, 12); });
+  g.strokeStyle = "#2a3036"; g.lineWidth = 1; [5, 10].forEach(r => { g.beginPath(); g.arc(cx, cy, r * k, 0, 7); g.stroke(); texto(g, r + " m", cx + r * k * 0.71 + 3, cy - r * k * 0.71 - 2, "left", col.tenue2, 12); });
   g.beginPath(); g.moveTo(cx, cy - alc * k); g.lineTo(cx, cy + alc * k); g.moveTo(cx - alc * k, cy); g.lineTo(cx + alc * k, cy); g.stroke(); texto(g, "N", cx, cy - alc * k - 3, "center", col.tenue, 13, 700);
   (S.paneles || []).forEach(p => { const a = P(p[0], p[1]), b = P(p[2], p[3]); g.strokeStyle = "#8fa3bf"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); });
   g.fillStyle = col.acento; S.lidar.forEach(q => { const [px, py] = P(q[0], q[1]); if (Math.abs(px - cx) < W && Math.abs(py - cy) < H) g.fillRect(px - 1.2, py - 1.2, 2.4, 2.4); });
@@ -204,7 +204,7 @@ const MODO_VUELO = { ia: "GUIADO (IA)", manual: "MANUAL", puntos: "PUNTOS DE PAS
 function spark(id, datos, color = col.acento, lo, hi) {
   const cv = $(id); if (!cv) return; const [g, W, H] = ajustar(cv); if (datos.length < 2) return;
   const mn = lo ?? Math.min(...datos), mx = hi ?? Math.max(...datos), rg = Math.max(mx - mn, 1e-6);
-  g.strokeStyle = "#243653"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, H - 0.5); g.lineTo(W, H - 0.5); g.stroke();
+  g.strokeStyle = "#2a3036"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, H - 0.5); g.lineTo(W, H - 0.5); g.stroke();
   g.strokeStyle = color; g.lineWidth = 1.8; g.beginPath(); datos.forEach((d, i) => { const x = i / 59 * W, y = H - 3 - (d - mn) / rg * (H - 6); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
 }
 function barrasSenal(id, n) { document.querySelectorAll(`#${id} u`).forEach((u, i) => u.classList.toggle("on", i < n)); }
@@ -241,30 +241,40 @@ setInterval(() => {                                                         // c
   if (margen < 3 && !S.geoAvisada) { S.geoAvisada = true; evento("Cerca de la geocerca: " + margen.toFixed(1) + " m", "alerta"); } else if (margen > 5) S.geoAvisada = false;
   spark("spAlt", S.tend.alt, col.acento); spark("spEnl", S.tend.enl, col.ok, 0, 200);
 }, 200);
+SAT.iniciar();
+setInterval(() => { try { SAT.actualizar(S.c, S); } catch (e) { console.warn("mapa", e); } }, 200);                // mapa satelital: 5 veces por segundo
 setInterval(() => { const c = S.c; if (!c) return; const t = S.tend; t.alt.push(c.d[2]); t.bat.push(bateria().pct); t.enl.push(S.fuente === "rep" ? 0 : Math.min(200, Math.round(performance.now() - S.ultimo))); for (const k of Object.keys(t)) if (t[k].length > 60) t[k].shift(); }, 1000);
 function dibujarTel() {
   const c = S.c; if (!c) return;
-  // actitud: horizonte artificial con escala y el dron visto desde atrás que se inclina con el alabeo
-  const [g, W, H] = ajustar($("actitud")), roll = rad(c.cr || 0), pit = c.cp || 0, mx = W / 2, my = H / 2 + 6, esc = (H - 26) / 70;
-  g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip(); g.translate(mx, my); g.rotate(-roll); const oy = pit * esc * 1.4;
-  g.fillStyle = "#1b6aa5"; g.fillRect(-W * 2, -H * 2 + oy, W * 4, H * 2); g.fillStyle = "#7a5530"; g.fillRect(-W * 2, oy, W * 4, H * 2);
-  g.strokeStyle = "#fff"; g.lineWidth = 2; g.beginPath(); g.moveTo(-W, oy); g.lineTo(W, oy); g.stroke();
-  for (let p = -20; p <= 20; p += 5) { if (!p) continue; const yy = oy - p * esc * 1.4, l = p % 10 === 0 ? 38 : 20; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-l, yy); g.lineTo(l, yy); g.stroke(); if (p % 10 === 0) { texto(g, String(Math.abs(p)), l + 6, yy + 5, "left", "#fff", 13, 700); texto(g, String(Math.abs(p)), -l - 6, yy + 5, "right", "#fff", 13, 700); } }
+  // actitud (PFD): cielo y tierra desaturados, línea de horizonte fina, escala de cabeceo cada 5°, arco de alabeo con marcas, símbolo fijo de aeronave
+  const [g, W, H] = ajustar($("actitud")), roll = rad(c.cr || 0), pit = c.cp || 0, mx = W / 2, my = H / 2 + 8, esc = Math.min(H / 46, 6.2), oy = pit * esc;
+  g.fillStyle = "#07090b"; g.fillRect(0, 0, W, H);
+  g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip(); g.translate(mx, my); g.rotate(-roll);
+  g.fillStyle = "#3a5a70"; g.fillRect(-W * 2, -H * 3 + oy, W * 4, H * 3); g.fillStyle = "#5e5446"; g.fillRect(-W * 2, oy, W * 4, H * 3);
+  g.fillStyle = "rgba(255,255,255,.07)"; g.fillRect(-W * 2, oy - H * 0.35, W * 4, H * 0.35); g.fillStyle = "rgba(0,0,0,.12)"; g.fillRect(-W * 2, oy, W * 4, H * 0.35);       // velo suave junto al horizonte
+  g.strokeStyle = "#f3f5f7"; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-W * 2, oy); g.lineTo(W * 2, oy); g.stroke();
+  for (let p = -30; p <= 30; p += 5) { if (!p) continue; const yy = oy - p * esc, l = p % 10 === 0 ? 34 : 17; g.lineWidth = 1.3; g.strokeStyle = "rgba(243,245,247,.92)"; g.beginPath(); g.moveTo(-l, yy); g.lineTo(l, yy); g.stroke();
+    if (p % 10 === 0) { texto(g, String(Math.abs(p)), l + 6, yy + 4, "left", "#f3f5f7", 12, 600, false); texto(g, String(Math.abs(p)), -l - 6, yy + 4, "right", "#f3f5f7", 12, 600, false); } }
   g.restore();
-  g.save(); g.translate(mx, 26 + 4); g.strokeStyle = "#fff"; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 56, 56, rad(-140), rad(-40)); g.stroke(); g.rotate(-roll); g.fillStyle = "#fff"; g.beginPath(); g.moveTo(0, 6); g.lineTo(-7, -4); g.lineTo(7, -4); g.closePath(); g.fill(); g.restore();
-  g.save(); g.translate(mx, my); g.strokeStyle = "#fff"; g.fillStyle = "#0b1220"; g.lineWidth = 2.6; const r = Math.min(W, H) * 0.3;                                   // el dron visto desde atrás
-  g.rotate(-roll); g.beginPath(); g.moveTo(-r, 0); g.lineTo(r, 0); g.stroke(); g.fillRect(-r * 0.2, -r * 0.14, r * 0.4, r * 0.28); g.strokeRect(-r * 0.2, -r * 0.14, r * 0.4, r * 0.28); [-1, 1].forEach(s => { g.beginPath(); g.arc(r * s, -r * 0.08, r * 0.17, 0, 7); g.stroke(); g.beginPath(); g.moveTo(r * s, -r * 0.1); g.lineTo(r * s, 0); g.stroke(); }); g.restore();
-  texto(g, `ALABEO ${(c.cr || 0) >= 0 ? "+" : ""}${(c.cr || 0).toFixed(1)}°`, 10, H - 28, "left", "#fff", 13, 700); texto(g, `CABECEO ${pit >= 0 ? "+" : ""}${pit.toFixed(1)}°`, 10, H - 10, "left", "#fff", 13, 700);
+  g.save(); g.translate(mx, my); const R = Math.min(W, H) * 0.44;                                 // arco de alabeo fijo con marcas a 10, 20, 30, 45 y 60° y puntero que gira con el dron
+  g.strokeStyle = "rgba(243,245,247,.85)"; g.lineWidth = 1.4; g.beginPath(); g.arc(0, 0, R, rad(-150), rad(-30)); g.stroke();
+  [-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60].forEach(r => { const an = rad(r - 90), l = Math.abs(r) % 30 === 0 || r === 45 ? 10 : 6; g.beginPath(); g.moveTo(Math.cos(an) * R, Math.sin(an) * R); g.lineTo(Math.cos(an) * (R - l), Math.sin(an) * (R - l)); g.stroke(); });
+  g.fillStyle = "#f3f5f7"; g.beginPath(); g.moveTo(0, -R + 1); g.lineTo(-6, -R - 10); g.lineTo(6, -R - 10); g.closePath(); g.fill();
+  g.rotate(-roll); g.fillStyle = "#ffb000"; g.beginPath(); g.moveTo(0, -R + 3); g.lineTo(-6, -R + 15); g.lineTo(6, -R + 15); g.closePath(); g.fill(); g.restore();
+  g.save(); g.translate(mx, my); g.strokeStyle = "#ffb000"; g.lineWidth = 3; g.lineJoin = "miter";                      // símbolo de aeronave (fijo): alas con corte central
+  g.beginPath(); g.moveTo(-58, 0); g.lineTo(-22, 0); g.lineTo(-22, 8); g.moveTo(58, 0); g.lineTo(22, 0); g.lineTo(22, 8); g.stroke(); g.fillStyle = "#ffb000"; g.fillRect(-2.5, -2.5, 5, 5); g.restore();
+  g.strokeStyle = "#3a4249"; g.lineWidth = 1; g.strokeRect(.5, .5, W - 1, H - 1);
+  texto(g, `ALABEO ${(c.cr || 0) >= 0 ? "+" : ""}${(c.cr || 0).toFixed(1)}°`, 10, H - 28, "left", "#e8ecef", 13, 700); texto(g, `CABECEO ${pit >= 0 ? "+" : ""}${pit.toFixed(1)}°`, 10, H - 10, "left", "#e8ecef", 13, 700);
   // minimapa: la cancha, la geocerca, los paneles, las personas y el dron con su rumbo
   const [m, MW, MH] = ajustar($("minimapa")), ext = 29, kk = Math.min(MW, MH) / (2 * ext), ox = MW / 2, oy2 = MH / 2 + 4, Q = (wx, wy) => [ox + wx * kk, oy2 - wy * kk], [x, y, , psi] = c.d;
-  m.fillStyle = "#17382a"; m.fillRect(0, 0, MW, MH);
+  m.fillStyle = "#14261c"; m.fillRect(0, 0, MW, MH);
   for (let i = -ext; i < ext; i += 5) { if ((Math.round(i / 5)) % 2 === 0) { m.fillStyle = "rgba(255,255,255,.045)"; const a = Q(i, ext), bb = Q(i + 5, -ext); m.fillRect(a[0], a[1], bb[0] - a[0], bb[1] - a[1]); } }
   m.strokeStyle = "rgba(255,255,255,.18)"; m.lineWidth = 1; for (let i = -20; i <= 20; i += 10) { let a = Q(i, -ext), bb = Q(i, ext); m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); a = Q(-ext, i); bb = Q(ext, i); m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); }
   m.setLineDash([6, 4]); m.strokeStyle = col.alerta; m.lineWidth = 1.6; const g1 = Q(-ARENA, ARENA), g2 = Q(ARENA, -ARENA); m.strokeRect(g1[0], g1[1], g2[0] - g1[0], g2[1] - g1[1]); m.setLineDash([]);
   texto(m, "GEOCERCA 25 m", g1[0] + 6, g1[1] + 16, "left", col.alerta, 12, 700, false);
   (S.paneles || []).forEach(p => { const a = Q(p[0], p[1]), bb = Q(p[2], p[3]); m.strokeStyle = "#f2f4f8"; m.lineWidth = 3; m.beginPath(); m.moveTo(...a); m.lineTo(...bb); m.stroke(); });
   if (S.ruta && c.ruta) { m.fillStyle = col.acento; c.ruta.forEach(q => { const [rx, ry] = Q(q[0], q[1]); m.beginPath(); m.arc(rx, ry, 2.5, 0, 7); m.fill(); }); }
-  (c.pers || []).forEach(q => { const [px, py] = Q(q.p[0], q.p[1]); m.fillStyle = q.rol === "ladron" ? col.peligro : "#d5dce8"; m.beginPath(); m.arc(px, py, 4.5, 0, 7); m.fill(); m.strokeStyle = "#0b1220"; m.lineWidth = 1; m.stroke(); });
+  (c.pers || []).forEach(q => { const [px, py] = Q(q.p[0], q.p[1]); m.fillStyle = q.rol === "ladron" ? col.peligro : "#d5dce8"; m.beginPath(); m.arc(px, py, 4.5, 0, 7); m.fill(); m.strokeStyle = "#07090b"; m.lineWidth = 1; m.stroke(); });
   const [dx, dy] = Q(x, y); m.fillStyle = "rgba(47,164,231,.2)"; m.beginPath(); m.moveTo(dx, dy); m.arc(dx, dy, 46, -(psi + rad(c.pan || 0)) - 0.6, -(psi + rad(c.pan || 0)) + 0.6); m.closePath(); m.fill();
   m.save(); m.translate(dx, dy); m.rotate(-psi); m.fillStyle = col.acento; m.strokeStyle = "#fff"; m.lineWidth = 1.5; m.beginPath(); m.moveTo(11, 0); m.lineTo(-8, 7); m.lineTo(-4, 0); m.lineTo(-8, -7); m.closePath(); m.fill(); m.stroke(); m.restore();
   texto(m, "N ↑", MW - 8, 18, "right", "#fff", 14, 700, false); texto(m, `RUMBO ${String(Math.round(((90 - deg(psi)) % 360 + 360) % 360)).padStart(3, "0")}°`, 8, MH - 10, "left", "#fff", 13, 700);
@@ -322,7 +332,7 @@ function lazo() {
 
 // ------------------------------------------------------------------------------------------------------------------ vistas
 function ponerPanel(p) {
-  S.panel = p; $("cam0").style.visibility = p === "dron" ? "visible" : "hidden"; $("sinvideo").style.visibility = p === "dron" ? "visible" : "hidden";
+  S.panel = p; SAT.mostrar(p === "sat"); ENT.mostrar(p === "ent"); $("cam0").style.visibility = p === "dron" ? "visible" : "hidden"; $("sinvideo").style.visibility = p === "dron" ? "visible" : "hidden";
   $("mapa").style.display = p === "mapa" ? "block" : "none"; $("barramapa").style.display = p === "mapa" ? "flex" : "none"; $("hud").style.display = p === "dron" ? "block" : "none";
   if (p === "mapa" && S.estado === "ia") tomarControl("puntos");
 }
@@ -332,7 +342,7 @@ function devolverIA() { S.estado = "ia"; post("/modo", { modo: "auto" }); aviso(
 // ------------------------------------------------------------------------------------------------------------------ mando: teclado y mouse (ORDENES §G.1)
 const teclas = new Set(); let panAng = 0, tiltAng = -5, ultimoCam = "";
 const VUELO = new Set(["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE", "Space", "KeyC", "KeyF"]);
-const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "KeyX", "KeyK", "Digit1", "Digit4", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const PROPIAS = new Set([...VUELO, "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyV", "KeyM", "KeyG", "KeyB", "KeyP", "KeyR", "Tab", "KeyX", "KeyK", "Digit1", "Digit3", "Digit4", "Digit5", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const eje = (a, b) => (teclas.has(a) ? 1 : 0) - (teclas.has(b) ? 1 : 0);
 const usarCamara = () => post("/camara", { modo: S.asist ? "asistida" : "manual", pan: panAng, tilt: tiltAng });
 function accion(code) {
@@ -340,6 +350,8 @@ function accion(code) {
   if (code === "Tab") return ponerPanel(S.panel === "dron" ? "mapa" : "dron");
   if (code === "Digit1") return ponerPanel("mapa");
   if (code === "Digit4") return ponerPanel("dron");
+  if (code === "Digit3") return ponerPanel("sat");
+  if (code === "Digit5") return ponerPanel("ent");
   if (code === "KeyX") { const on = $("csi2").classList.toggle("grande"); $("bGrande").textContent = on ? "Volver" : "⤢"; return; }
   if (code === "KeyK") { S.grid1 = !S.grid1; $("bGrid").classList.toggle("act", S.grid1); return; }
   if (code === "KeyP") return alternarPausa();
@@ -417,14 +429,14 @@ function alternarMenu() { $("menu").classList.toggle("ver"); if (menuAbierto()) 
 function pintarMenu() {
   const reps = [["rendicion", "El ladrón se rinde"], ["reencuentro_alto", "Reencuentro desde arriba"], ["salto", "El ladrón salta al dron"], ["civil_curioso", "El civil mira o graba"], ["cambio_de_v", "El ladrón cambia de V"]];
   $("menuCaja").innerHTML = `<h3><span>Ajustes · ${NOMBRE_DRON}</span><button id="mxCerrar">Cerrar (Esc)</button></h3>
-    <h5>Vistas</h5><div class="fila"><button data-p="dron" class="${S.panel === "dron" ? "act" : ""}">Cámara del dron (4)</button><button data-p="mapa" class="${S.panel === "mapa" ? "act" : ""}">Mapa táctico · enseñar (1)</button><span style="color:var(--tenue)">Tab alterna las dos. El mundo en 3D (centinela) es la ventana de Unreal.</span></div>
+    <h5>Vistas</h5><div class="fila"><button data-p="dron" class="${S.panel === "dron" ? "act" : ""}">Cámara del dron (4)</button><button data-p="mapa" class="${S.panel === "mapa" ? "act" : ""}">Mapa táctico · enseñar (1)</button><button data-p="sat" class="${S.panel === "sat" ? "act" : ""}">Mapa satelital (3)</button><button data-p="ent" class="${S.panel === "ent" ? "act" : ""}">Entrenamiento (5)</button><span style="color:var(--tenue)">Tab alterna las dos. El mundo en 3D (centinela) es la ventana de Unreal.</span></div>
     <h5>Control del dron</h5><div class="fila"><button id="mxIA" class="${S.estado === "ia" ? "act" : ""}">La IA guía (G)</button><button id="mxMan" class="${S.estado === "manual" ? "act" : ""}">Tomar el mando · manual</button><button id="mxPts" class="${S.estado === "puntos" ? "act" : ""}">Puntos de paso (M)</button><button id="mxAsi" class="${S.asist ? "act" : ""}">Cámara asistida (V)</button></div>
     <h5>Misión</h5><div class="fila"><select id="mxMision"><option value="vivo">Simulación en vivo</option>${reps.map(([k, t]) => `<option value="repeticiones_v17_h/${k}.json" ${S.fuente === "rep" && S.rep.url === k ? "selected" : ""}>Repetición · ${t}</option>`).join("")}<option value="mision_completa.json">Misión completa · despegue, tránsito y zona</option></select><button id="mxRuta" class="${S.ruta ? "act" : ""}">Ruta de búsqueda (R)</button><button id="mxGrab" class="${S.grabando ? "rec" : ""}">${S.grabando ? "Parar y guardar" : "Grabar mi demostración (B)"}</button><button id="mxOtra">Otra partida</button></div>
     <h5>Escena</h5><div class="fila"><span style="color:var(--tenue)">Día (activa). La noche se elige al armar el nivel de Unreal (DRONIA_NOCHE=1); ver el manual.</span></div>
     <h5>Teclas</h5><table>
       <tr><td>W S · A D</td><td>adelante·atrás · lado</td><td>Q E</td><td>girar</td></tr><tr><td>Espacio · C</td><td>subir · bajar</td><td>Shift · Ctrl</td><td>rápido · lento</td></tr>
       <tr><td>F (mantener)</td><td>giro de 360° buscando</td><td>Botón central</td><td>arrastrar = pan y tilt</td></tr><tr><td>Clic izquierdo</td><td>fijar al posible objetivo</td><td>Clic derecho</td><td>soltar objetivo</td></tr>
-      <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>G · M</td><td>IA guía · puntos de paso</td></tr><tr><td>Tab · 1 · 4</td><td>alterna vista · mapa · cámara</td><td>R · B · P</td><td>ruta · grabar · pausa</td></tr>
+      <tr><td>V · flechas</td><td>cámara asistida · pan/tilt</td><td>G · M</td><td>IA guía · puntos de paso</td></tr><tr><td>Tab · 1 · 3 · 4 · 5</td><td>alterna · mapa táctico · satélite · cámara · entrenamiento</td><td>R · B · P</td><td>ruta · grabar · pausa</td></tr>
       <tr><td>Rueda</td><td>zoom del mapa</td><td>Esc</td><td>este menú</td></tr><tr><td>X · K</td><td>cámara al piso grande · cuadrícula</td><td></td><td></td></tr></table>`;
   $("mxCerrar").onclick = alternarMenu;
   document.querySelectorAll("#menuCaja [data-p]").forEach(b => (b.onclick = () => { ponerPanel(b.dataset.p); alternarMenu(); }));

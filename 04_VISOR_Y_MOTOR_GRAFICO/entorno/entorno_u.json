@@ -2,7 +2,19 @@
  "nombre": "Universidad de San Buenaventura, Bogotá · cancha de fútbol y canchas cerradas",
  "unidades": "m",
  "marco": "x este, y norte, z arriba; origen = centro de la zona de IA (30 x 30 m) en la mitad norte de la cancha de fútbol",
- "fuente": "08_EVIDENCIA_Y_DIAGRAMAS/privado/sitio_universidad (Google Earth y fotos de Brahian); aproximado, por medir",
+ "fuente": "vista satelital z19 (Esri World Imagery), mapa-USB.pdf y 08_EVIDENCIA_Y_DIAGRAMAS/fotos/universidad_referencia_dia; aproximado (±3 m), por medir con GPS",
+ "georef": {
+  "centro_campo_latlon": [
+   4.752094,
+   -74.029553
+  ],
+  "origen_desde_centro_campo_m": [
+   0.0,
+   25.5
+  ],
+  "rotacion_grados": 0.0,
+  "metros_por_pixel_z19": 0.29755
+ },
  "campo": {
   "centro": [
    0.0,
@@ -23,8 +35,8 @@
   {
    "nombre": "tenis",
    "centro": [
-    -62.5,
-    23.5
+    -65.5,
+    28.4
    ],
    "tam": [
     19.5,
@@ -35,285 +47,807 @@
   {
    "nombre": "multiple",
    "centro": [
-    -45.3,
-    22.1
+    -48.2,
+    28.4
    ],
    "tam": [
     14.0,
-    30.0
+    34.0
    ],
    "tipo": "multiple"
   }
  ],
  "edificios": [
   {
-   "nombre": "coliseo",
+   "nombre": "edificio_aeronautica",
    "centro": [
-    -70.0,
-    -26.9
+    -88.4,
+    36.5
    ],
    "tam": [
-    39.5,
-    34.5
+    26.8,
+    28.3
+   ],
+   "alto": 9.0,
+   "tipo": "laboratorio"
+  },
+  {
+   "nombre": "polideportivo",
+   "centro": [
+    -69.6,
+    -18.5
+   ],
+   "tam": [
+    38.7,
+    36.0
    ],
    "alto": 11.0,
    "tipo": "coliseo"
   },
   {
-   "nombre": "vestuarios_del_coliseo",
+   "nombre": "edificio_1",
    "centro": [
-    -70.0,
-    -2.0
+    -89.4,
+    -93.5
    ],
    "tam": [
-    31.0,
-    8.0
+    19.3,
+    43.1
    ],
-   "alto": 6.5,
+   "alto": 12.0,
    "tipo": "ladrillo"
   },
   {
-   "nombre": "laboratorio",
+   "nombre": "edificio_2",
    "centro": [
-    -88.0,
-    29.0
+    -89.4,
+    -136.6
    ],
    "tam": [
-    23.0,
-    26.0
+    16.4,
+    40.2
    ],
-   "alto": 8.5,
-   "tipo": "laboratorio"
+   "alto": 12.0,
+   "tipo": "ladrillo"
   },
   {
-   "nombre": "caseta_parqueadero",
+   "nombre": "edificio_principal",
    "centro": [
-    -99.0,
-    -71.0
+    -89.4,
+    -173.1
    ],
    "tam": [
-    3.6,
-    3.0
+    25.3,
+    26.8
    ],
-   "alto": 2.8,
-   "tipo": "caseta"
+   "alto": 13.0,
+   "tipo": "ladrillo",
+   "techo": "terracota"
   },
   {
-   "nombre": "bloque_norte_1",
+   "nombre": "capilla_san_damian",
    "centro": [
-    -62.0,
-    53.0
+    -59.7,
+    -99.3
    ],
    "tam": [
-    24.0,
-    15.0
+    19.3,
+    20.8
    ],
-   "alto": 15.0,
+   "alto": 8.0,
+   "tipo": "ladrillo",
+   "techo": "terracota"
+  },
+  {
+   "nombre": "cafeteria",
+   "centro": [
+    -29.2,
+    -91.0
+   ],
+   "tam": [
+    14.9,
+    12.5
+   ],
+   "alto": 4.5,
+   "tipo": "ladrillo",
+   "techo": "blanco"
+  },
+  {
+   "nombre": "edificio_3",
+   "centro": [
+    -5.4,
+    -120.3
+   ],
+   "tam": [
+    23.8,
+    31.2
+   ],
+   "alto": 14.0,
+   "tipo": "ladrillo",
+   "techo": "blanco"
+  },
+  {
+   "nombre": "edificio_4",
+   "centro": [
+    -5.4,
+    -154.0
+   ],
+   "tam": [
+    23.8,
+    32.1
+   ],
+   "alto": 14.0,
+   "tipo": "ladrillo",
+   "techo": "blanco"
+  },
+  {
+   "nombre": "biblioteca",
+   "centro": [
+    -29.9,
+    -156.7
+   ],
+   "tam": [
+    19.3,
+    56.5
+   ],
+   "alto": 14.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "edificio_5",
+   "centro": [
+    -53.7,
+    -179.8
+   ],
+   "tam": [
+    19.3,
+    55.0
+   ],
+   "alto": 14.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "casa_san_buenaventura",
+   "centro": [
+    15.5,
+    -186.5
+   ],
+   "tam": [
+    32.7,
+    35.7
+   ],
+   "alto": 10.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "talleres_a",
+   "centro": [
+    -164.5,
+    -83.1
+   ],
+   "tam": [
+    20.8,
+    13.4
+   ],
+   "alto": 8.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "talleres_b",
+   "centro": [
+    -141.5,
+    -92.0
+   ],
+   "tam": [
+    16.4,
+    46.1
+   ],
+   "alto": 8.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "talleres_c",
+   "centro": [
+    -179.4,
+    -88.6
+   ],
+   "tam": [
+    14.9,
+    29.2
+   ],
+   "alto": 8.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "talleres_d",
+   "centro": [
+    -164.8,
+    -106.1
+   ],
+   "tam": [
+    29.2,
+    29.8
+   ],
+   "alto": 8.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "talleres_e",
+   "centro": [
+    -159.3,
+    -129.8
+   ],
+   "tam": [
+    22.3,
+    16.4
+   ],
+   "alto": 7.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "edificio_noroeste",
+   "centro": [
+    -136.6,
+    159.3
+   ],
+   "tam": [
+    55.9,
+    51.2
+   ],
+   "alto": 10.0,
+   "tipo": "ladrillo"
+  },
+  {
+   "nombre": "hilera_a1",
+   "centro": [
+    -56.1,
+    195.3
+   ],
+   "tam": [
+    52.1,
+    14.9
+   ],
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "bloque_norte_2",
+   "nombre": "hilera_a2",
    "centro": [
-    -34.0,
-    53.0
+    -59.1,
+    179.2
    ],
    "tam": [
-    24.0,
-    15.0
+    52.1,
+    15.5
    ],
-   "alto": 15.0,
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "bloque_norte_3",
+   "nombre": "hilera_a3",
    "centro": [
-    -6.0,
-    53.0
+    -61.9,
+    164.0
    ],
    "tam": [
-    24.0,
-    15.0
+    50.6,
+    14.9
    ],
-   "alto": 15.0,
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "bloque_norte_4",
+   "nombre": "hilera_a4",
    "centro": [
-    22.0,
-    53.0
+    -65.0,
+    148.0
    ],
    "tam": [
-    24.0,
-    15.0
+    52.1,
+    15.5
    ],
-   "alto": 15.0,
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "bloque_este_1",
+   "nombre": "hilera_a5",
    "centro": [
-    88.0,
-    -48.0
+    -1.8,
+    189.6
    ],
    "tam": [
-    16.0,
-    24.0
+    53.6,
+    15.5
    ],
-   "alto": 15.0,
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "bloque_este_2",
+   "nombre": "hilera_a6",
    "centro": [
-    88.0,
-    -78.0
+    -3.1,
+    174.5
    ],
    "tam": [
-    16.0,
-    24.0
+    52.1,
+    14.9
    ],
-   "alto": 15.0,
+   "alto": 10.0,
    "tipo": "apartamentos"
   },
   {
-   "nombre": "torre_1",
+   "nombre": "hilera_a7",
    "centro": [
-    135.0,
+    -2.2,
+    158.5
+   ],
+   "tam": [
+    46.7,
+    15.8
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_a8",
+   "centro": [
+    -3.6,
+    142.0
+   ],
+   "tam": [
+    48.2,
+    15.5
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b1",
+   "centro": [
+    -66.8,
+    115.2
+   ],
+   "tam": [
+    58.6,
+    15.5
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b2",
+   "centro": [
+    -8.5,
+    109.3
+   ],
+   "tam": [
+    52.1,
+    15.5
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b3",
+   "centro": [
+    -66.2,
+    98.3
+   ],
+   "tam": [
+    31.8,
+    15.5
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b4",
+   "centro": [
+    -17.4,
+    91.0
+   ],
+   "tam": [
+    58.0,
+    19.3
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b5",
+   "centro": [
+    -77.4,
+    84.4
+   ],
+   "tam": [
+    54.2,
+    19.3
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b6",
+   "centro": [
+    -18.2,
+    75.2
+   ],
+   "tam": [
+    62.5,
+    18.7
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_b7",
+   "centro": [
+    -78.4,
     70.0
    ],
    "tam": [
-    20.0,
-    20.0
+    58.0,
+    18.4
    ],
-   "alto": 58.0,
-   "tipo": "torre"
+   "alto": 10.0,
+   "tipo": "apartamentos"
   },
   {
-   "nombre": "torre_2",
+   "nombre": "hilera_b8",
    "centro": [
-    165.0,
-    -15.0
+    -17.4,
+    60.2
    ],
    "tam": [
-    20.0,
-    20.0
+    58.0,
+    18.4
    ],
-   "alto": 66.0,
-   "tipo": "torre"
+   "alto": 10.0,
+   "tipo": "apartamentos"
   },
   {
-   "nombre": "torre_3",
+   "nombre": "bloque_e1",
    "centro": [
-    125.0,
-    -125.0
+    104.6,
+    169.7
    ],
    "tam": [
-    20.0,
-    20.0
+    25.3,
+    44.0
    ],
-   "alto": 52.0,
-   "tipo": "torre"
+   "alto": 17.0,
+   "tipo": "apartamentos"
   },
   {
-   "nombre": "torre_4",
+   "nombre": "bloque_e2",
    "centro": [
-    45.0,
-    -135.0
+    141.8,
+    136.1
    ],
    "tam": [
-    18.0,
-    18.0
+    66.9,
+    27.4
    ],
-   "alto": 46.0,
-   "tipo": "torre"
+   "alto": 17.0,
+   "tipo": "apartamentos"
   },
   {
-   "nombre": "torre_5",
+   "nombre": "bloque_e3",
    "centro": [
-    -30.0,
-    125.0
+    157.4,
+    174.5
    ],
    "tam": [
-    20.0,
-    20.0
+    26.8,
+    23.8
    ],
-   "alto": 50.0,
-   "tipo": "torre"
+   "alto": 17.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "bloque_e4",
+   "centro": [
+    123.2,
+    97.1
+   ],
+   "tam": [
+    65.5,
+    14.9
+   ],
+   "alto": 14.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "bloque_e5",
+   "centro": [
+    119.5,
+    81.2
+   ],
+   "tam": [
+    58.0,
+    15.8
+   ],
+   "alto": 14.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e1",
+   "centro": [
+    95.7,
+    54.7
+   ],
+   "tam": [
+    13.4,
+    37.2
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e2",
+   "centro": [
+    115.7,
+    51.7
+   ],
+   "tam": [
+    14.9,
+    37.2
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e3",
+   "centro": [
+    131.1,
+    51.0
+   ],
+   "tam": [
+    14.0,
+    38.7
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e4",
+   "centro": [
+    146.2,
+    46.5
+   ],
+   "tam": [
+    13.4,
+    32.7
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e5",
+   "centro": [
+    161.1,
+    44.3
+   ],
+   "tam": [
+    13.4,
+    34.2
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_e6",
+   "centro": [
+    176.7,
+    43.5
+   ],
+   "tam": [
+    14.9,
+    38.7
+   ],
+   "alto": 11.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se1",
+   "centro": [
+    124.4,
+    -82.5
+   ],
+   "tam": [
+    60.1,
+    18.7
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se2",
+   "centro": [
+    174.4,
+    -86.3
+   ],
+   "tam": [
+    22.0,
+    15.8
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se3",
+   "centro": [
+    121.0,
+    -107.3
+   ],
+   "tam": [
+    58.0,
+    17.9
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se4",
+   "centro": [
+    171.1,
+    -110.7
+   ],
+   "tam": [
+    28.6,
+    15.8
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se5",
+   "centro": [
+    115.4,
+    -133.1
+   ],
+   "tam": [
+    60.1,
+    19.9
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
+  },
+  {
+   "nombre": "hilera_se6",
+   "centro": [
+    168.9,
+    -139.8
+   ],
+   "tam": [
+    33.0,
+    20.2
+   ],
+   "alto": 10.0,
+   "tipo": "apartamentos"
   }
  ],
  "suelos": [
   {
    "nombre": "parqueadero",
    "centro": [
-    -70.6,
+    -74.2,
     -59.1
    ],
    "tam": [
-    55.0,
-    25.0
+    61.0,
+    27.4
    ],
    "tipo": "asfalto"
   },
   {
-   "nombre": "camino_peatonal",
+   "nombre": "patio_adoquin",
    "centro": [
-    -52.0,
-    -46.0
+    -58.9,
+    -132.2
    ],
    "tam": [
-    3.0,
-    40.0
+    38.7,
+    31.2
    ],
    "tipo": "adoquin"
+  },
+  {
+   "nombre": "cancha_baloncesto",
+   "centro": [
+    -142.7,
+    -45.1
+   ],
+   "tam": [
+    28.3,
+    32.7
+   ],
+   "tipo": "asfalto"
+  },
+  {
+   "nombre": "via_interna_oeste",
+   "centro": [
+    -113.8,
+    -30.9
+   ],
+   "tam": [
+    8.0,
+    371.9
+   ],
+   "tipo": "via"
   },
   {
    "nombre": "via_este",
    "centro": [
-    56.0,
-    -30.0
+    70.1,
+    -77.0
    ],
    "tam": [
     8.0,
-    260.0
+    279.7
    ],
    "tipo": "via"
   },
   {
-   "nombre": "via_oeste",
+   "nombre": "via_norte",
    "centro": [
-    -108.0,
-    -20.0
+    40.2,
+    128.3
    ],
    "tam": [
-    8.0,
-    260.0
+    290.4,
+    8.9
    ],
    "tipo": "via"
   },
   {
-   "nombre": "via_sur",
+   "nombre": "avenida_oeste",
    "centro": [
-    -20.0,
-    -112.0
+    -231.5,
+    1.0
    ],
    "tam": [
-    330.0,
-    8.0
+    17.9,
+    457.0
    ],
    "tipo": "via"
+  },
+  {
+   "nombre": "plaza_avion",
+   "centro": [
+    -96.0,
+    11.0
+   ],
+   "tam": [
+    22.0,
+    22.0
+   ],
+   "tipo": "adoquin"
   },
   {
    "nombre": "acera_cancha_cerrada",
    "centro": [
-    -56.0,
-    0.8
+    -57.0,
+    7.5
    ],
    "tam": [
-    40.0,
+    42.0,
     3.0
    ],
    "tipo": "adoquin"
+  }
+ ],
+ "agua": [
+  {
+   "nombre": "estanque",
+   "centro": [
+    30.4,
+    -91.4
+   ],
+   "tam": [
+    24.4,
+    34.2
+   ]
   }
  ],
  "vallas": [
@@ -324,20 +858,20 @@
    "cerrado": true,
    "p": [
     [
-     -74.0,
-     3.8
+     -76.75,
+     8.399999999999999
     ],
     [
-     -37.6,
-     3.8
+     -39.7,
+     8.399999999999999
     ],
     [
-     -37.6,
-     39.0
+     -39.7,
+     48.4
     ],
     [
-     -74.0,
-     39.0
+     -76.75,
+     48.4
     ]
    ]
   },
@@ -348,12 +882,12 @@
    "cerrado": false,
    "p": [
     [
-     -52.5,
-     3.8
+     -56.65,
+     8.399999999999999
     ],
     [
-     -52.5,
-     39.0
+     -56.65,
+     48.4
     ]
    ]
   },
@@ -364,32 +898,12 @@
    "cerrado": false,
    "p": [
     [
-     38.0,
+     50.0,
      -80.0
     ],
     [
-     38.0,
+     50.0,
      28.0
-    ]
-   ]
-  },
-  {
-   "nombre": "malla_parqueadero",
-   "tipo": "malla",
-   "alto": 2.4,
-   "cerrado": false,
-   "p": [
-    [
-     -98.0,
-     -72.0
-    ],
-    [
-     -98.0,
-     -47.0
-    ],
-    [
-     -43.0,
-     -47.0
     ]
    ]
   }
@@ -397,328 +911,318 @@
  "arboles": [
   {
    "p": [
-    40.55,
-    -29.64
+    -135.29,
+    -9.96
    ],
-   "alto": 13.16,
-   "copa": 3.71,
-   "semilla": 0.223,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    46.81,
-    -21.86
-   ],
-   "alto": 11.29,
-   "copa": 4.96,
-   "semilla": 0.768,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    48.76,
-    -17.54
-   ],
-   "alto": 11.69,
-   "copa": 3.72,
-   "semilla": 0.817,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    44.85,
-    15.33
-   ],
-   "alto": 12.08,
-   "copa": 3.92,
-   "semilla": 0.252,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    49.47,
-    41.95
-   ],
-   "alto": 8.46,
-   "copa": 4.18,
-   "semilla": 0.557,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    42.8,
-    -36.13
-   ],
-   "alto": 12.22,
-   "copa": 4.65,
-   "semilla": 0.025,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    48.24,
-    -49.65
-   ],
-   "alto": 10.39,
-   "copa": 4.67,
-   "semilla": 0.498,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    45.38,
-    30.01
-   ],
-   "alto": 10.52,
-   "copa": 5.35,
-   "semilla": 0.479,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    45.73,
-    -98.35
-   ],
-   "alto": 8.77,
-   "copa": 3.6,
-   "semilla": 0.705,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    50.53,
-    -87.23
-   ],
-   "alto": 10.82,
-   "copa": 4.46,
-   "semilla": 0.229,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    50.52,
-    -11.76
-   ],
-   "alto": 10.82,
-   "copa": 5.36,
-   "semilla": 0.987,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    47.71,
-    -57.7
-   ],
-   "alto": 11.01,
-   "copa": 4.46,
-   "semilla": 0.884,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    44.96,
-    -26.7
-   ],
-   "alto": 13.53,
-   "copa": 4.02,
-   "semilla": 0.486,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    50.79,
-    17.72
-   ],
-   "alto": 13.5,
-   "copa": 3.7,
-   "semilla": 0.689,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    44.89,
-    37.0
-   ],
-   "alto": 13.05,
-   "copa": 4.46,
-   "semilla": 0.064,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    40.26,
-    5.65
-   ],
-   "alto": 10.7,
-   "copa": 3.53,
-   "semilla": 0.0,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    40.08,
-    12.3
-   ],
-   "alto": 11.73,
-   "copa": 5.0,
-   "semilla": 0.956,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    41.01,
-    -56.86
-   ],
-   "alto": 12.62,
-   "copa": 5.4,
-   "semilla": 0.492,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    48.37,
-    -82.58
-   ],
-   "alto": 11.53,
-   "copa": 5.42,
-   "semilla": 0.876,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    45.56,
-    -89.84
-   ],
-   "alto": 13.61,
-   "copa": 5.07,
-   "semilla": 0.915,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    42.98,
-    -42.67
-   ],
-   "alto": 11.12,
-   "copa": 3.89,
-   "semilla": 0.014,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    40.38,
-    25.84
-   ],
-   "alto": 11.08,
-   "copa": 2.55,
-   "semilla": 0.77,
+   "alto": 12.07,
+   "copa": 3.06,
+   "semilla": 0.103,
    "tipo": "cipres"
   },
   {
    "p": [
-    43.24,
-    -84.52
+    -133.19,
+    3.47
    ],
-   "alto": 11.43,
-   "copa": 5.11,
-   "semilla": 0.154,
-   "tipo": "frondoso"
+   "alto": 12.34,
+   "copa": 2.98,
+   "semilla": 0.548,
+   "tipo": "cipres"
   },
   {
    "p": [
-    43.37,
-    -15.86
+    -122.94,
+    26.24
    ],
-   "alto": 8.42,
-   "copa": 4.3,
-   "semilla": 0.195,
-   "tipo": "frondoso"
+   "alto": 13.51,
+   "copa": 2.79,
+   "semilla": 0.24,
+   "tipo": "cipres"
   },
   {
    "p": [
-    50.98,
-    -95.49
+    -125.29,
+    -63.36
    ],
-   "alto": 13.03,
-   "copa": 4.4,
-   "semilla": 0.755,
-   "tipo": "frondoso"
+   "alto": 13.9,
+   "copa": 2.65,
+   "semilla": 0.815,
+   "tipo": "cipres"
   },
   {
    "p": [
-    41.45,
-    0.38
+    -123.86,
+    14.15
    ],
-   "alto": 8.77,
-   "copa": 4.56,
-   "semilla": 0.785,
-   "tipo": "frondoso"
+   "alto": 10.26,
+   "copa": 2.45,
+   "semilla": 0.98,
+   "tipo": "cipres"
   },
   {
    "p": [
-    41.09,
-    19.59
+    -118.93,
+    31.29
    ],
-   "alto": 10.55,
-   "copa": 4.33,
-   "semilla": 0.079,
-   "tipo": "frondoso"
+   "alto": 15.0,
+   "copa": 2.71,
+   "semilla": 0.076,
+   "tipo": "cipres"
   },
   {
    "p": [
-    42.96,
-    -52.45
+    -130.82,
+    -2.47
    ],
-   "alto": 10.99,
-   "copa": 5.06,
-   "semilla": 0.416,
-   "tipo": "frondoso"
+   "alto": 10.75,
+   "copa": 2.66,
+   "semilla": 0.876,
+   "tipo": "cipres"
   },
   {
    "p": [
-    49.36,
-    12.73
+    -123.48,
+    0.25
    ],
-   "alto": 13.09,
-   "copa": 3.96,
-   "semilla": 0.954,
-   "tipo": "frondoso"
+   "alto": 9.15,
+   "copa": 2.91,
+   "semilla": 0.364,
+   "tipo": "cipres"
   },
   {
    "p": [
-    50.04,
-    -5.46
+    -129.17,
+    -24.1
    ],
-   "alto": 10.11,
-   "copa": 3.81,
-   "semilla": 0.562,
-   "tipo": "frondoso"
+   "alto": 12.51,
+   "copa": 2.7,
+   "semilla": 0.116,
+   "tipo": "cipres"
   },
   {
    "p": [
-    40.32,
-    -64.03
+    -127.47,
+    23.8
    ],
-   "alto": 9.03,
-   "copa": 4.87,
+   "alto": 12.6,
+   "copa": 2.69,
+   "semilla": 0.917,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -118.99,
+    -13.14
+   ],
+   "alto": 12.11,
+   "copa": 2.23,
+   "semilla": 0.225,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -123.47,
+    42.42
+   ],
+   "alto": 9.62,
+   "copa": 2.82,
+   "semilla": 0.47,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -119.8,
+    6.97
+   ],
+   "alto": 11.74,
+   "copa": 2.67,
+   "semilla": 0.929,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -131.49,
+    30.56
+   ],
+   "alto": 12.01,
+   "copa": 2.68,
+   "semilla": 0.884,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -128.44,
+    -7.18
+   ],
+   "alto": 11.94,
+   "copa": 3.12,
+   "semilla": 0.26,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -120.91,
+    -35.29
+   ],
+   "alto": 14.5,
+   "copa": 2.3,
+   "semilla": 0.689,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -121.84,
+    -8.23
+   ],
+   "alto": 11.72,
+   "copa": 3.17,
+   "semilla": 0.967,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -122.6,
+    -22.39
+   ],
+   "alto": 11.7,
+   "copa": 2.21,
+   "semilla": 0.0,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -125.97,
+    48.61
+   ],
+   "alto": 9.5,
+   "copa": 2.99,
+   "semilla": 0.248,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -118.38,
+    12.66
+   ],
+   "alto": 12.81,
+   "copa": 2.35,
+   "semilla": 0.313,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -118.34,
+    40.95
+   ],
+   "alto": 12.03,
+   "copa": 2.28,
+   "semilla": 0.669,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -127.2,
+    -51.64
+   ],
+   "alto": 9.08,
+   "copa": 2.31,
+   "semilla": 0.888,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -118.53,
+    -0.54
+   ],
+   "alto": 13.83,
+   "copa": 2.35,
+   "semilla": 0.52,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -136.3,
+    -24.04
+   ],
+   "alto": 10.17,
+   "copa": 3.12,
+   "semilla": 0.045,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -126.7,
+    35.9
+   ],
+   "alto": 11.71,
+   "copa": 2.95,
+   "semilla": 0.189,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -118.38,
+    -56.59
+   ],
+   "alto": 14.07,
+   "copa": 2.59,
+   "semilla": 0.425,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -129.34,
+    -67.73
+   ],
+   "alto": 10.83,
+   "copa": 2.54,
+   "semilla": 0.263,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -129.3,
+    -14.7
+   ],
+   "alto": 10.95,
+   "copa": 2.68,
+   "semilla": 0.12,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -121.21,
+    37.11
+   ],
+   "alto": 10.39,
+   "copa": 3.15,
+   "semilla": 0.879,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -132.37,
+    51.7
+   ],
+   "alto": 10.03,
+   "copa": 2.88,
    "semilla": 0.759,
-   "tipo": "frondoso"
+   "tipo": "cipres"
   },
   {
    "p": [
-    48.39,
-    -75.29
+    -132.11,
+    35.69
    ],
-   "alto": 11.04,
-   "copa": 4.05,
-   "semilla": 0.837,
-   "tipo": "frondoso"
+   "alto": 10.75,
+   "copa": 2.51,
+   "semilla": 0.261,
+   "tipo": "cipres"
   },
   {
    "p": [
-    49.1,
-    -42.31
+    -129.33,
+    -76.35
    ],
    "alto": 9.58,
    "copa": 2.22,
@@ -727,238 +1231,458 @@
   },
   {
    "p": [
-    47.92,
-    22.03
+    -118.79,
+    -30.7
    ],
-   "alto": 13.54,
-   "copa": 4.28,
-   "semilla": 0.947,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    46.29,
-    1.92
-   ],
-   "alto": 12.71,
-   "copa": 2.32,
-   "semilla": 0.126,
+   "alto": 13.68,
+   "copa": 2.81,
+   "semilla": 0.655,
    "tipo": "cipres"
   },
   {
    "p": [
-    43.6,
-    -8.7
+    -128.35,
+    55.0
    ],
-   "alto": 8.17,
-   "copa": 4.66,
-   "semilla": 0.356,
+   "alto": 14.27,
+   "copa": 2.89,
+   "semilla": 0.861,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -123.65,
+    -38.98
+   ],
+   "alto": 14.75,
+   "copa": 3.0,
+   "semilla": 0.122,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -137.12,
+    0.35
+   ],
+   "alto": 11.14,
+   "copa": 2.58,
+   "semilla": 0.239,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -70.64,
+    -80.21
+   ],
+   "alto": 12.26,
+   "copa": 2.86,
+   "semilla": 0.935,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -56.55,
+    -77.99
+   ],
+   "alto": 8.89,
+   "copa": 3.55,
+   "semilla": 0.277,
    "tipo": "frondoso"
   },
   {
    "p": [
-    43.99,
-    -67.54
+    -63.56,
+    -74.82
    ],
-   "alto": 9.32,
-   "copa": 3.75,
-   "semilla": 0.543,
+   "alto": 11.08,
+   "copa": 4.03,
+   "semilla": 0.633,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.5,
-    -27.98
+    -57.94,
+    -82.81
    ],
-   "alto": 11.8,
+   "alto": 10.82,
+   "copa": 5.44,
+   "semilla": 0.679,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -44.64,
+    -77.96
+   ],
+   "alto": 13.71,
+   "copa": 3.97,
+   "semilla": 0.829,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -73.95,
+    -74.99
+   ],
+   "alto": 10.84,
+   "copa": 5.08,
+   "semilla": 0.581,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -42.26,
+    -72.78
+   ],
+   "alto": 12.21,
+   "copa": 5.09,
+   "semilla": 0.639,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -75.32,
+    -79.68
+   ],
+   "alto": 12.56,
+   "copa": 2.99,
+   "semilla": 0.162,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -51.44,
+    -81.85
+   ],
+   "alto": 9.87,
    "copa": 5.01,
-   "semilla": 0.317,
+   "semilla": 0.226,
    "tipo": "frondoso"
   },
   {
    "p": [
-    50.21,
-    31.52
+    -63.91,
+    -80.33
    ],
-   "alto": 10.39,
-   "copa": 5.45,
-   "semilla": 0.951,
+   "alto": 9.98,
+   "copa": 5.35,
+   "semilla": 0.724,
    "tipo": "frondoso"
   },
   {
    "p": [
-    43.47,
-    -73.06
+    -51.49,
+    -77.0
    ],
-   "alto": 11.82,
-   "copa": 4.6,
-   "semilla": 0.474,
+   "alto": 10.03,
+   "copa": 3.57,
+   "semilla": 0.22,
    "tipo": "frondoso"
   },
   {
    "p": [
-    49.86,
-    -0.86
+    -39.75,
+    -78.05
    ],
-   "alto": 11.83,
-   "copa": 3.67,
-   "semilla": 0.373,
+   "alto": 11.23,
+   "copa": 3.8,
+   "semilla": 0.551,
    "tipo": "frondoso"
   },
   {
    "p": [
-    39.24,
-    -70.73
+    -40.51,
+    -82.57
    ],
-   "alto": 11.49,
-   "copa": 4.65,
-   "semilla": 0.956,
+   "alto": 11.89,
+   "copa": 5.33,
+   "semilla": 0.789,
    "tipo": "frondoso"
   },
   {
    "p": [
-    41.81,
-    -79.79
+    -68.9,
+    -75.77
    ],
-   "alto": 8.76,
-   "copa": 5.47,
-   "semilla": 0.485,
+   "alto": 10.65,
+   "copa": 4.77,
+   "semilla": 0.784,
    "tipo": "frondoso"
   },
   {
    "p": [
-    47.89,
-    -36.35
+    -181.57,
+    -161.04
    ],
-   "alto": 8.5,
-   "copa": 5.06,
-   "semilla": 0.088,
+   "alto": 10.58,
+   "copa": 4.04,
+   "semilla": 0.74,
    "tipo": "frondoso"
   },
   {
    "p": [
-    48.79,
-    -69.45
+    -162.58,
+    -206.04
    ],
-   "alto": 11.04,
-   "copa": 4.16,
-   "semilla": 0.907,
+   "alto": 12.58,
+   "copa": 4.88,
+   "semilla": 0.031,
    "tipo": "frondoso"
   },
   {
    "p": [
-    39.14,
-    -21.52
+    -196.37,
+    -183.51
    ],
-   "alto": 10.0,
-   "copa": 4.79,
-   "semilla": 0.415,
-   "tipo": "frondoso"
+   "alto": 11.35,
+   "copa": 2.27,
+   "semilla": 0.994,
+   "tipo": "cipres"
   },
   {
    "p": [
-    41.84,
-    -94.2
+    -175.18,
+    -168.96
    ],
-   "alto": 8.39,
-   "copa": 4.94,
-   "semilla": 0.661,
+   "alto": 9.31,
+   "copa": 4.18,
+   "semilla": 0.093,
    "tipo": "frondoso"
   },
   {
    "p": [
-    47.87,
-    8.28
+    -161.01,
+    -167.56
+   ],
+   "alto": 10.09,
+   "copa": 5.07,
+   "semilla": 0.138,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -192.63,
+    -177.37
+   ],
+   "alto": 10.34,
+   "copa": 4.68,
+   "semilla": 0.471,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -189.31,
+    -162.53
+   ],
+   "alto": 10.84,
+   "copa": 5.32,
+   "semilla": 0.595,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -154.61,
+    -196.31
+   ],
+   "alto": 11.21,
+   "copa": 5.48,
+   "semilla": 0.345,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -129.53,
+    -165.48
+   ],
+   "alto": 13.53,
+   "copa": 5.33,
+   "semilla": 0.152,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -168.17,
+    -153.3
+   ],
+   "alto": 12.28,
+   "copa": 3.92,
+   "semilla": 0.124,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -126.95,
+    -158.1
    ],
    "alto": 10.9,
-   "copa": 3.68,
-   "semilla": 0.51,
-   "tipo": "frondoso"
+   "copa": 2.5,
+   "semilla": 0.971,
+   "tipo": "cipres"
   },
   {
    "p": [
-    41.36,
-    40.4
+    -148.27,
+    -157.31
    ],
-   "alto": 9.05,
-   "copa": 4.01,
-   "semilla": 0.947,
+   "alto": 9.75,
+   "copa": 4.37,
+   "semilla": 0.876,
    "tipo": "frondoso"
   },
   {
    "p": [
-    39.1,
-    -88.37
+    -152.12,
+    -149.89
    ],
-   "alto": 12.23,
-   "copa": 5.13,
-   "semilla": 0.257,
-   "tipo": "frondoso"
+   "alto": 14.91,
+   "copa": 2.4,
+   "semilla": 0.626,
+   "tipo": "cipres"
   },
   {
    "p": [
-    39.91,
-    30.85
+    -179.08,
+    -198.73
    ],
-   "alto": 10.32,
-   "copa": 4.79,
-   "semilla": 0.575,
+   "alto": 13.03,
+   "copa": 4.87,
+   "semilla": 0.541,
    "tipo": "frondoso"
   },
   {
    "p": [
-    40.5,
-    -101.78
+    -155.22,
+    -213.75
    ],
-   "alto": 13.79,
-   "copa": 4.5,
-   "semilla": 0.419,
+   "alto": 11.45,
+   "copa": 4.48,
+   "semilla": 0.685,
    "tipo": "frondoso"
   },
   {
    "p": [
-    42.09,
-    -47.68
+    -149.25,
+    -212.35
    ],
-   "alto": 9.82,
-   "copa": 4.85,
-   "semilla": 0.68,
+   "alto": 13.24,
+   "copa": 3.9,
+   "semilla": 0.938,
    "tipo": "frondoso"
   },
   {
    "p": [
-    44.6,
-    -4.11
+    -160.1,
+    -179.33
    ],
-   "alto": 11.42,
-   "copa": 4.22,
-   "semilla": 0.761,
+   "alto": 11.22,
+   "copa": 5.03,
+   "semilla": 0.636,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.16,
-    36.38
+    -133.43,
+    -160.59
    ],
-   "alto": 8.62,
-   "copa": 4.73,
-   "semilla": 0.516,
+   "alto": 13.6,
+   "copa": 3.6,
+   "semilla": 0.598,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.45,
-    -63.95
+    -166.66,
+    -208.21
    ],
-   "alto": 9.35,
-   "copa": 3.92,
-   "semilla": 0.986,
+   "alto": 13.17,
+   "copa": 5.41,
+   "semilla": 0.264,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.5,
-    25.52
+    -185.14,
+    -200.7
+   ],
+   "alto": 13.92,
+   "copa": 4.42,
+   "semilla": 0.685,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -194.91,
+    -163.96
+   ],
+   "alto": 10.11,
+   "copa": 4.29,
+   "semilla": 0.803,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -153.05,
+    -158.64
+   ],
+   "alto": 9.81,
+   "copa": 4.12,
+   "semilla": 0.431,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -170.71,
+    -185.66
+   ],
+   "alto": 8.54,
+   "copa": 4.25,
+   "semilla": 0.368,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -187.37,
+    -177.99
+   ],
+   "alto": 12.61,
+   "copa": 5.42,
+   "semilla": 0.262,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -179.17,
+    -165.81
+   ],
+   "alto": 12.84,
+   "copa": 5.21,
+   "semilla": 0.331,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -197.51,
+    -202.91
+   ],
+   "alto": 8.48,
+   "copa": 3.85,
+   "semilla": 0.722,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -186.54,
+    -194.75
+   ],
+   "alto": 13.05,
+   "copa": 3.59,
+   "semilla": 0.274,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -127.47,
+    -153.57
    ],
    "alto": 8.55,
    "copa": 3.59,
@@ -967,38 +1691,278 @@
   },
   {
    "p": [
-    46.98,
-    -63.09
+    -142.19,
+    -192.8
    ],
-   "alto": 13.46,
-   "copa": 4.63,
-   "semilla": 0.274,
+   "alto": 12.56,
+   "copa": 5.28,
+   "semilla": 0.511,
    "tipo": "frondoso"
   },
   {
    "p": [
-    39.32,
-    -7.08
+    -144.85,
+    -186.89
    ],
-   "alto": 13.89,
-   "copa": 3.53,
-   "semilla": 0.731,
+   "alto": 13.12,
+   "copa": 2.32,
+   "semilla": 0.055,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -135.14,
+    -199.15
+   ],
+   "alto": 11.46,
+   "copa": 4.14,
+   "semilla": 0.226,
    "tipo": "frondoso"
   },
   {
    "p": [
-    47.16,
-    -31.41
+    -159.22,
+    -197.25
    ],
-   "alto": 11.8,
-   "copa": 4.31,
-   "semilla": 0.04,
+   "alto": 10.76,
+   "copa": 4.54,
+   "semilla": 0.718,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.33,
-    -100.45
+    -145.09,
+    -162.05
+   ],
+   "alto": 13.82,
+   "copa": 2.6,
+   "semilla": 0.179,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -127.31,
+    -172.67
+   ],
+   "alto": 11.35,
+   "copa": 3.52,
+   "semilla": 0.559,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -199.07,
+    -153.69
+   ],
+   "alto": 8.26,
+   "copa": 4.13,
+   "semilla": 0.131,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -202.96,
+    -213.13
+   ],
+   "alto": 14.66,
+   "copa": 2.64,
+   "semilla": 0.051,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -144.25,
+    -174.36
+   ],
+   "alto": 13.82,
+   "copa": 3.58,
+   "semilla": 0.453,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -125.52,
+    -182.71
+   ],
+   "alto": 12.17,
+   "copa": 3.69,
+   "semilla": 0.421,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -132.53,
+    -194.98
+   ],
+   "alto": 8.5,
+   "copa": 3.51,
+   "semilla": 0.028,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -163.56,
+    -149.14
+   ],
+   "alto": 10.83,
+   "copa": 2.83,
+   "semilla": 0.003,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -24.82,
+    -107.15
+   ],
+   "alto": 10.51,
+   "copa": 3.58,
+   "semilla": 0.704,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -39.64,
+    -87.17
+   ],
+   "alto": 11.71,
+   "copa": 3.91,
+   "semilla": 0.848,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -33.02,
+    -106.56
+   ],
+   "alto": 10.21,
+   "copa": 5.25,
+   "semilla": 0.135,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -36.06,
+    -81.15
+   ],
+   "alto": 13.55,
+   "copa": 4.83,
+   "semilla": 0.471,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -45.28,
+    -101.59
+   ],
+   "alto": 8.34,
+   "copa": 4.29,
+   "semilla": 0.967,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -39.0,
+    -104.4
+   ],
+   "alto": 12.96,
+   "copa": 2.81,
+   "semilla": 0.981,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -51.93,
+    -86.39
+   ],
+   "alto": 9.98,
+   "copa": 2.42,
+   "semilla": 0.467,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -45.12,
+    -107.8
+   ],
+   "alto": 10.0,
+   "copa": 2.41,
+   "semilla": 0.405,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -35.98,
+    -99.27
+   ],
+   "alto": 8.76,
+   "copa": 4.09,
+   "semilla": 0.395,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -44.34,
+    -91.15
+   ],
+   "alto": 10.44,
+   "copa": 4.59,
+   "semilla": 0.772,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    46.73,
+    -72.2
+   ],
+   "alto": 11.1,
+   "copa": 2.36,
+   "semilla": 0.354,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    44.69,
+    -104.34
+   ],
+   "alto": 11.05,
+   "copa": 4.97,
+   "semilla": 0.066,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    46.06,
+    -77.95
+   ],
+   "alto": 10.37,
+   "copa": 4.08,
+   "semilla": 0.012,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    44.05,
+    -88.81
+   ],
+   "alto": 12.08,
+   "copa": 4.01,
+   "semilla": 0.756,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    16.46,
+    -81.35
+   ],
+   "alto": 13.39,
+   "copa": 4.76,
+   "semilla": 0.49,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    47.81,
+    -109.27
    ],
    "alto": 10.03,
    "copa": 4.03,
@@ -1007,2765 +1971,1053 @@
   },
   {
    "p": [
-    51.19,
-    -53.88
+    38.15,
+    -109.53
    ],
-   "alto": 9.67,
-   "copa": 4.16,
-   "semilla": 0.282,
+   "alto": 11.02,
+   "copa": 5.39,
+   "semilla": 0.354,
    "tipo": "frondoso"
   },
   {
    "p": [
-    51.26,
-    -22.89
+    16.02,
+    -87.1
    ],
-   "alto": 13.37,
-   "copa": 5.07,
-   "semilla": 0.45,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    39.38,
-    36.25
-   ],
-   "alto": 13.36,
-   "copa": 4.98,
-   "semilla": 0.783,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    39.16,
-    -40.27
-   ],
-   "alto": 10.33,
-   "copa": 4.29,
-   "semilla": 0.296,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    50.87,
-    3.75
-   ],
-   "alto": 11.74,
-   "copa": 4.52,
-   "semilla": 0.466,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    39.83,
-    -11.86
-   ],
-   "alto": 8.8,
-   "copa": 4.98,
-   "semilla": 0.523,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    39.49,
-    -75.73
-   ],
-   "alto": 11.66,
-   "copa": 3.65,
-   "semilla": 0.341,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -38.79,
-    -86.97
-   ],
-   "alto": 13.82,
-   "copa": 3.82,
-   "semilla": 0.677,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    14.5,
-    -93.78
-   ],
-   "alto": 13.16,
-   "copa": 2.96,
-   "semilla": 0.791,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -32.33,
-    -91.81
-   ],
-   "alto": 10.43,
-   "copa": 3.78,
-   "semilla": 0.118,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -8.39,
-    -99.13
-   ],
-   "alto": 13.16,
-   "copa": 3.62,
-   "semilla": 0.915,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -13.74,
-    -93.53
-   ],
-   "alto": 13.97,
-   "copa": 5.03,
-   "semilla": 0.458,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    33.13,
-    -93.79
-   ],
-   "alto": 9.65,
-   "copa": 3.51,
-   "semilla": 0.054,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    3.65,
-    -89.8
-   ],
-   "alto": 15.0,
-   "copa": 2.95,
-   "semilla": 0.023,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -16.96,
-    -88.07
-   ],
-   "alto": 10.19,
-   "copa": 3.94,
-   "semilla": 0.697,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -1.62,
-    -86.37
-   ],
-   "alto": 11.03,
-   "copa": 4.9,
-   "semilla": 0.665,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    23.42,
-    -89.22
-   ],
-   "alto": 13.69,
-   "copa": 2.54,
-   "semilla": 0.285,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    9.75,
-    -94.77
-   ],
-   "alto": 12.79,
-   "copa": 4.28,
-   "semilla": 0.409,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    27.89,
-    -96.4
-   ],
-   "alto": 12.0,
-   "copa": 4.39,
-   "semilla": 0.089,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -5.59,
-    -95.53
-   ],
-   "alto": 12.15,
-   "copa": 4.51,
-   "semilla": 0.701,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -22.64,
-    -99.05
-   ],
-   "alto": 10.08,
-   "copa": 4.71,
-   "semilla": 0.253,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    8.97,
-    -99.76
-   ],
-   "alto": 8.54,
-   "copa": 3.79,
-   "semilla": 0.348,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    30.97,
-    -100.24
-   ],
-   "alto": 8.6,
-   "copa": 4.78,
-   "semilla": 0.125,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    0.03,
-    -97.45
-   ],
-   "alto": 9.38,
-   "copa": 5.47,
-   "semilla": 0.815,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -34.92,
-    -98.23
-   ],
-   "alto": 12.01,
-   "copa": 2.53,
-   "semilla": 0.853,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    8.57,
-    -86.05
-   ],
-   "alto": 11.55,
-   "copa": 2.59,
-   "semilla": 0.398,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    36.65,
-    -97.97
-   ],
-   "alto": 13.52,
-   "copa": 2.34,
-   "semilla": 0.053,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    14.65,
-    -101.09
-   ],
-   "alto": 9.63,
-   "copa": 4.08,
-   "semilla": 0.08,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -14.89,
-    -101.22
-   ],
-   "alto": 11.6,
-   "copa": 5.42,
-   "semilla": 0.441,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    15.49,
-    -87.76
-   ],
-   "alto": 11.32,
-   "copa": 3.71,
-   "semilla": 0.647,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -0.67,
-    -91.42
-   ],
-   "alto": 12.45,
-   "copa": 4.34,
-   "semilla": 0.407,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -22.02,
-    -93.4
-   ],
-   "alto": 11.5,
-   "copa": 3.75,
-   "semilla": 0.685,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -29.56,
-    -98.34
-   ],
-   "alto": 13.41,
-   "copa": 4.83,
-   "semilla": 0.645,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -21.9,
-    -88.43
-   ],
-   "alto": 13.32,
-   "copa": 2.75,
-   "semilla": 0.974,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -11.55,
-    -89.06
-   ],
-   "alto": 12.27,
-   "copa": 3.54,
-   "semilla": 0.943,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -27.14,
-    -88.75
-   ],
-   "alto": 12.54,
-   "copa": 4.47,
-   "semilla": 0.477,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    3.16,
-    -101.14
-   ],
-   "alto": 12.78,
-   "copa": 4.05,
-   "semilla": 0.479,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    19.67,
-    -93.02
-   ],
-   "alto": 10.26,
-   "copa": 4.11,
-   "semilla": 0.57,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -38.41,
-    -92.73
-   ],
-   "alto": 12.57,
-   "copa": 4.38,
-   "semilla": 0.847,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    29.66,
-    -88.02
-   ],
-   "alto": 11.63,
-   "copa": 5.12,
-   "semilla": 0.367,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -39.44,
-    -100.93
-   ],
-   "alto": 13.67,
-   "copa": 4.86,
-   "semilla": 0.19,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    23.03,
-    -99.55
-   ],
-   "alto": 8.1,
-   "copa": 3.77,
-   "semilla": 0.018,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    34.23,
-    -87.4
-   ],
-   "alto": 10.13,
-   "copa": 5.43,
-   "semilla": 0.275,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -26.95,
-    -94.32
-   ],
-   "alto": 10.09,
-   "copa": 3.74,
-   "semilla": 0.927,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -3.65,
-    -100.34
-   ],
-   "alto": 12.31,
-   "copa": 4.03,
-   "semilla": 0.737,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -7.35,
-    -86.85
-   ],
-   "alto": 11.65,
-   "copa": 5.4,
-   "semilla": 0.172,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -26.59,
-    -101.73
-   ],
-   "alto": 8.8,
-   "copa": 4.5,
-   "semilla": 0.749,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -9.03,
-    34.46
-   ],
-   "alto": 12.29,
+   "alto": 11.97,
    "copa": 5.28,
-   "semilla": 0.393,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -19.24,
-    30.15
-   ],
-   "alto": 13.19,
-   "copa": 4.52,
-   "semilla": 0.11,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -29.03,
-    33.77
-   ],
-   "alto": 13.39,
-   "copa": 4.81,
-   "semilla": 0.04,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    33.4,
-    37.41
-   ],
-   "alto": 11.4,
-   "copa": 2.28,
-   "semilla": 0.506,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    20.83,
-    32.06
-   ],
-   "alto": 10.18,
-   "copa": 4.14,
-   "semilla": 0.002,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -34.52,
-    31.12
-   ],
-   "alto": 9.7,
-   "copa": 5.31,
-   "semilla": 0.509,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -18.96,
-    40.78
-   ],
-   "alto": 9.82,
-   "copa": 4.48,
-   "semilla": 0.373,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -24.58,
-    39.92
-   ],
-   "alto": 12.58,
-   "copa": 4.45,
-   "semilla": 0.814,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    34.14,
-    32.11
-   ],
-   "alto": 10.35,
-   "copa": 5.12,
-   "semilla": 0.539,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -1.95,
-    33.99
-   ],
-   "alto": 9.27,
-   "copa": 2.35,
-   "semilla": 0.298,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -16.79,
-    35.58
-   ],
-   "alto": 11.14,
-   "copa": 4.4,
-   "semilla": 0.367,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    9.8,
-    30.78
-   ],
-   "alto": 11.64,
-   "copa": 4.97,
-   "semilla": 0.953,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    27.57,
-    35.0
-   ],
-   "alto": 12.75,
-   "copa": 4.52,
-   "semilla": 0.509,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -22.21,
-    33.84
-   ],
-   "alto": 11.01,
-   "copa": 5.19,
-   "semilla": 0.909,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -34.99,
-    40.4
-   ],
-   "alto": 13.14,
-   "copa": 2.77,
-   "semilla": 0.133,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    27.5,
-    40.4
-   ],
-   "alto": 14.14,
-   "copa": 2.34,
-   "semilla": 0.884,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    16.26,
-    38.15
-   ],
-   "alto": 12.32,
-   "copa": 2.84,
-   "semilla": 0.949,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    25.59,
-    30.51
-   ],
-   "alto": 13.05,
-   "copa": 3.68,
-   "semilla": 0.81,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    6.79,
-    35.89
-   ],
-   "alto": 8.42,
-   "copa": 4.18,
-   "semilla": 0.121,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -13.16,
-    41.28
-   ],
-   "alto": 12.31,
-   "copa": 2.71,
-   "semilla": 0.526,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -24.87,
-    29.97
-   ],
-   "alto": 9.58,
-   "copa": 4.53,
-   "semilla": 0.831,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    4.27,
-    30.41
-   ],
-   "alto": 11.65,
-   "copa": 2.58,
-   "semilla": 0.593,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -12.25,
-    30.14
-   ],
-   "alto": 8.92,
-   "copa": 4.42,
-   "semilla": 0.234,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -3.89,
-    39.8
-   ],
-   "alto": 9.77,
-   "copa": 2.77,
-   "semilla": 0.174,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    10.58,
-    39.12
-   ],
-   "alto": 13.58,
-   "copa": 5.14,
-   "semilla": 0.62,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    14.37,
-    31.92
-   ],
-   "alto": 10.79,
-   "copa": 3.1,
-   "semilla": 0.319,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    1.94,
-    41.48
-   ],
-   "alto": 10.35,
-   "copa": 4.16,
-   "semilla": 0.74,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -5.53,
-    29.7
-   ],
-   "alto": 12.17,
-   "copa": 3.89,
-   "semilla": 0.886,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -30.18,
-    41.65
-   ],
-   "alto": 12.92,
-   "copa": 5.09,
-   "semilla": 0.158,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    34.67,
-    41.8
-   ],
-   "alto": 10.4,
-   "copa": 4.89,
-   "semilla": 0.351,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    20.14,
-    41.71
-   ],
-   "alto": 11.39,
-   "copa": 3.97,
-   "semilla": 0.78,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -41.66,
-    40.33
-   ],
-   "alto": 9.37,
-   "copa": 2.61,
-   "semilla": 0.591,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -78.71,
-    4.67
-   ],
-   "alto": 13.9,
-   "copa": 5.5,
-   "semilla": 0.11,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -77.24,
-    11.28
-   ],
-   "alto": 10.19,
-   "copa": 3.04,
-   "semilla": 0.775,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -79.93,
-    45.39
-   ],
-   "alto": 9.6,
-   "copa": 3.54,
-   "semilla": 0.344,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -81.86,
-    9.59
-   ],
-   "alto": 11.96,
-   "copa": 5.33,
-   "semilla": 0.539,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -103.22,
-    -44.39
-   ],
-   "alto": 10.08,
-   "copa": 4.64,
-   "semilla": 0.005,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -100.7,
-    0.93
-   ],
-   "alto": 14.04,
-   "copa": 2.83,
-   "semilla": 0.247,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -101.15,
-    -81.65
-   ],
-   "alto": 13.26,
-   "copa": 5.13,
-   "semilla": 0.393,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -100.96,
-    -18.85
-   ],
-   "alto": 10.97,
-   "copa": 5.48,
-   "semilla": 0.123,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -102.13,
-    -31.59
-   ],
-   "alto": 13.87,
-   "copa": 4.32,
-   "semilla": 0.134,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -102.35,
-    -59.85
-   ],
-   "alto": 12.0,
-   "copa": 5.43,
-   "semilla": 0.561,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -101.3,
-    68.3
-   ],
-   "alto": 11.12,
-   "copa": 3.71,
-   "semilla": 0.372,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -101.3,
-    -24.56
-   ],
-   "alto": 9.61,
-   "copa": 4.41,
-   "semilla": 0.362,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -103.15,
-    27.52
-   ],
-   "alto": 10.15,
-   "copa": 4.96,
-   "semilla": 0.057,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -101.58,
-    60.46
-   ],
-   "alto": 9.61,
-   "copa": 4.0,
-   "semilla": 0.566,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -100.55,
-    -50.97
-   ],
-   "alto": 10.94,
-   "copa": 2.91,
-   "semilla": 0.072,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -101.81,
-    -11.82
-   ],
-   "alto": 10.48,
-   "copa": 3.0,
-   "semilla": 0.754,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -102.57,
-    -92.56
-   ],
-   "alto": 13.68,
-   "copa": 4.41,
-   "semilla": 0.135,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -102.71,
-    -99.58
-   ],
-   "alto": 11.95,
-   "copa": 4.96,
-   "semilla": 0.177,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -102.89,
-    55.23
-   ],
-   "alto": 12.14,
-   "copa": 5.06,
-   "semilla": 0.206,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -100.67,
-    -65.34
-   ],
-   "alto": 13.32,
-   "copa": 2.87,
-   "semilla": 0.616,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -102.42,
-    45.27
-   ],
-   "alto": 9.13,
-   "copa": 2.28,
    "semilla": 0.573,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -102.24,
-    17.47
-   ],
-   "alto": 12.89,
-   "copa": 5.45,
-   "semilla": 0.495,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -79.66,
-    -75.95
+    47.59,
+    -84.44
    ],
    "alto": 13.76,
    "copa": 3.79,
-   "semilla": 0.862,
+   "semilla": 0.618,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -50.07,
-    -49.86
+    48.87,
+    -93.86
    ],
-   "alto": 12.54,
-   "copa": 5.37,
-   "semilla": 0.286,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -71.93,
-    -60.59
-   ],
-   "alto": 13.53,
-   "copa": 4.32,
-   "semilla": 0.82,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -88.97,
-    -62.55
-   ],
-   "alto": 9.6,
-   "copa": 5.2,
-   "semilla": 0.748,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -47.21,
-    -56.9
-   ],
-   "alto": 8.98,
-   "copa": 3.54,
-   "semilla": 0.436,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -91.57,
-    -71.43
-   ],
-   "alto": 10.66,
-   "copa": 2.74,
-   "semilla": 0.276,
+   "alto": 11.11,
+   "copa": 2.37,
+   "semilla": 0.532,
    "tipo": "cipres"
   },
   {
    "p": [
-    -56.91,
-    -69.87
+    43.09,
+    35.36
    ],
-   "alto": 10.78,
-   "copa": 2.7,
-   "semilla": 0.203,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -81.67,
-    -46.92
-   ],
-   "alto": 11.82,
-   "copa": 3.06,
-   "semilla": 0.765,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -44.55,
-    -69.94
-   ],
-   "alto": 12.19,
-   "copa": 3.02,
-   "semilla": 0.3,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -71.93,
-    -66.72
-   ],
-   "alto": 9.75,
-   "copa": 3.1,
-   "semilla": 0.435,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -52.14,
-    -61.9
-   ],
-   "alto": 14.31,
-   "copa": 3.06,
-   "semilla": 0.274,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -87.24,
-    -74.43
-   ],
-   "alto": 10.1,
-   "copa": 3.81,
-   "semilla": 0.665,
+   "alto": 9.01,
+   "copa": 3.75,
+   "semilla": 0.432,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -44.35,
-    -74.92
+    35.64,
+    59.19
    ],
-   "alto": 13.35,
-   "copa": 5.09,
-   "semilla": 0.602,
+   "alto": 13.86,
+   "copa": 3.83,
+   "semilla": 0.835,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -72.18,
-    -48.95
+    28.93,
+    44.93
    ],
-   "alto": 13.53,
-   "copa": 3.96,
-   "semilla": 0.285,
+   "alto": 9.03,
+   "copa": 4.63,
+   "semilla": 0.743,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -42.94,
-    -62.19
+    39.17,
+    56.36
    ],
-   "alto": 11.85,
-   "copa": 5.16,
-   "semilla": 0.169,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -37.86,
-    -54.59
-   ],
-   "alto": 8.57,
-   "copa": 4.74,
-   "semilla": 0.38,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -38.97,
-    -73.33
-   ],
-   "alto": 11.67,
-   "copa": 4.58,
-   "semilla": 0.66,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -38.22,
-    -62.9
-   ],
-   "alto": 11.91,
-   "copa": 3.12,
-   "semilla": 0.55,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -35.1,
-    -82.56
-   ],
-   "alto": 12.41,
-   "copa": 4.27,
-   "semilla": 0.8,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -40.66,
-    -58.26
-   ],
-   "alto": 10.15,
-   "copa": 2.29,
-   "semilla": 0.133,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -43.82,
-    -86.26
-   ],
-   "alto": 10.65,
+   "alto": 14.77,
    "copa": 2.33,
-   "semilla": 0.827,
+   "semilla": 0.749,
    "tipo": "cipres"
   },
   {
    "p": [
-    -39.87,
-    -67.72
+    44.17,
+    42.49
    ],
-   "alto": 9.89,
-   "copa": 2.26,
-   "semilla": 0.547,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -43.2,
-    -91.58
-   ],
-   "alto": 9.27,
-   "copa": 2.6,
-   "semilla": 0.891,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -41.05,
-    -81.76
-   ],
-   "alto": 9.99,
-   "copa": 4.9,
-   "semilla": 0.47,
+   "alto": 10.95,
+   "copa": 3.84,
+   "semilla": 0.385,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -43.31,
-    -97.21
+    32.79,
+    68.71
    ],
-   "alto": 9.07,
-   "copa": 5.37,
-   "semilla": 0.018,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -38.13,
-    -78.24
-   ],
-   "alto": 10.13,
-   "copa": 5.38,
-   "semilla": 0.796,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    76.28,
-    -89.29
-   ],
-   "alto": 12.95,
-   "copa": 3.71,
-   "semilla": 0.703,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    78.68,
-    -105.91
-   ],
-   "alto": 8.03,
-   "copa": 5.06,
-   "semilla": 0.226,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    78.18,
-    48.62
-   ],
-   "alto": 11.23,
-   "copa": 5.21,
-   "semilla": 0.564,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    72.89,
-    -46.98
-   ],
-   "alto": 10.06,
-   "copa": 4.07,
-   "semilla": 0.676,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    65.52,
-    -106.56
-   ],
-   "alto": 12.69,
-   "copa": 2.72,
-   "semilla": 0.931,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    70.91,
-    16.43
-   ],
-   "alto": 12.7,
-   "copa": 5.46,
-   "semilla": 0.698,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    64.03,
-    -0.63
-   ],
-   "alto": 9.66,
-   "copa": 3.05,
-   "semilla": 0.728,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    73.0,
-    -34.27
-   ],
-   "alto": 13.89,
-   "copa": 4.96,
-   "semilla": 0.361,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    78.78,
-    29.28
-   ],
-   "alto": 10.43,
-   "copa": 3.89,
-   "semilla": 0.424,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    71.26,
-    33.11
-   ],
-   "alto": 12.02,
-   "copa": 5.46,
-   "semilla": 0.686,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    71.56,
-    -61.14
-   ],
-   "alto": 9.52,
-   "copa": 4.28,
+   "alto": 8.59,
+   "copa": 4.89,
    "semilla": 0.217,
    "tipo": "frondoso"
   },
   {
    "p": [
-    66.84,
-    -37.89
+    50.91,
+    77.39
    ],
-   "alto": 11.77,
-   "copa": 4.74,
-   "semilla": 0.569,
+   "alto": 9.55,
+   "copa": 3.51,
+   "semilla": 0.858,
    "tipo": "frondoso"
   },
   {
    "p": [
-    72.84,
-    23.34
+    23.51,
+    56.58
    ],
-   "alto": 9.53,
-   "copa": 4.42,
-   "semilla": 0.78,
+   "alto": 9.72,
+   "copa": 3.57,
+   "semilla": 0.904,
    "tipo": "frondoso"
   },
   {
    "p": [
-    77.17,
-    -20.84
+    44.7,
+    50.92
    ],
-   "alto": 10.05,
-   "copa": 4.19,
-   "semilla": 0.564,
+   "alto": 13.51,
+   "copa": 3.56,
+   "semilla": 0.631,
    "tipo": "frondoso"
   },
   {
    "p": [
-    66.23,
-    28.46
+    55.03,
+    67.11
    ],
-   "alto": 8.86,
-   "copa": 4.62,
-   "semilla": 0.775,
+   "alto": 8.67,
+   "copa": 5.1,
+   "semilla": 0.064,
    "tipo": "frondoso"
   },
   {
    "p": [
-    67.53,
-    46.29
+    50.34,
+    59.93
    ],
-   "alto": 13.66,
-   "copa": 3.55,
-   "semilla": 0.542,
+   "alto": 12.1,
+   "copa": 4.61,
+   "semilla": 0.833,
    "tipo": "frondoso"
   },
   {
    "p": [
-    60.61,
-    -21.18
+    52.13,
+    81.8
    ],
-   "alto": 13.06,
-   "copa": 4.4,
-   "semilla": 0.554,
+   "alto": 10.53,
+   "copa": 5.34,
+   "semilla": 0.015,
    "tipo": "frondoso"
   },
   {
    "p": [
-    72.95,
-    -24.97
+    22.92,
+    69.12
    ],
-   "alto": 13.63,
-   "copa": 4.52,
-   "semilla": 0.832,
+   "alto": 12.99,
+   "copa": 4.92,
+   "semilla": 0.945,
    "tipo": "frondoso"
   },
   {
    "p": [
-    70.22,
-    0.1
+    56.32,
+    52.44
    ],
-   "alto": 11.53,
-   "copa": 4.62,
-   "semilla": 0.191,
+   "alto": 9.61,
+   "copa": 2.55,
+   "semilla": 0.488,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    48.84,
+    48.61
+   ],
+   "alto": 8.8,
+   "copa": 3.64,
+   "semilla": 0.669,
    "tipo": "frondoso"
   },
   {
    "p": [
-    76.65,
-    -27.87
+    48.97,
+    86.5
    ],
-   "alto": 13.9,
-   "copa": 4.19,
-   "semilla": 0.207,
+   "alto": 13.02,
+   "copa": 5.39,
+   "semilla": 0.842,
    "tipo": "frondoso"
   },
   {
    "p": [
-    12.52,
-    73.22
+    41.51,
+    64.65
+   ],
+   "alto": 12.43,
+   "copa": 4.07,
+   "semilla": 0.604,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    30.06,
+    37.88
+   ],
+   "alto": 9.33,
+   "copa": 4.75,
+   "semilla": 0.215,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    40.68,
+    107.46
+   ],
+   "alto": 9.91,
+   "copa": 5.49,
+   "semilla": 0.418,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    26.69,
+    102.78
+   ],
+   "alto": 12.31,
+   "copa": 3.52,
+   "semilla": 0.582,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    75.59,
+    104.56
+   ],
+   "alto": 10.22,
+   "copa": 4.54,
+   "semilla": 0.354,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    43.87,
+    118.23
+   ],
+   "alto": 10.97,
+   "copa": 2.73,
+   "semilla": 0.323,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    63.31,
+    85.58
+   ],
+   "alto": 13.85,
+   "copa": 4.91,
+   "semilla": 0.262,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    55.91,
+    99.99
+   ],
+   "alto": 10.97,
+   "copa": 4.22,
+   "semilla": 0.41,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    59.15,
+    89.23
+   ],
+   "alto": 11.87,
+   "copa": 4.58,
+   "semilla": 0.121,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    36.31,
+    91.52
+   ],
+   "alto": 12.67,
+   "copa": 3.11,
+   "semilla": 0.923,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    31.36,
+    83.46
+   ],
+   "alto": 10.71,
+   "copa": 4.27,
+   "semilla": 0.674,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    63.88,
+    105.36
+   ],
+   "alto": 11.4,
+   "copa": 4.58,
+   "semilla": 0.308,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    64.64,
+    113.25
+   ],
+   "alto": 11.59,
+   "copa": 2.27,
+   "semilla": 0.827,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    56.27,
+    111.25
+   ],
+   "alto": 14.47,
+   "copa": 2.63,
+   "semilla": 0.635,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    43.05,
+    92.36
+   ],
+   "alto": 9.13,
+   "copa": 4.67,
+   "semilla": 0.856,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    48.15,
+    114.73
    ],
    "alto": 10.1,
-   "copa": 4.03,
-   "semilla": 0.747,
+   "copa": 4.38,
+   "semilla": 0.113,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -2.84,
-    84.12
+    34.7,
+    99.5
    ],
-   "alto": 9.9,
-   "copa": 4.66,
-   "semilla": 0.839,
+   "alto": 9.02,
+   "copa": 3.79,
+   "semilla": 0.98,
    "tipo": "frondoso"
   },
   {
    "p": [
-    13.93,
-    83.13
+    72.78,
+    90.47
    ],
-   "alto": 11.36,
-   "copa": 5.11,
-   "semilla": 0.433,
+   "alto": 11.29,
+   "copa": 3.76,
+   "semilla": 0.984,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -1.75,
-    73.86
+    -259.25,
+    -141.39
    ],
-   "alto": 13.38,
-   "copa": 4.95,
-   "semilla": 0.779,
+   "alto": 11.8,
+   "copa": 5.24,
+   "semilla": 0.598,
    "tipo": "frondoso"
   },
   {
    "p": [
-    36.67,
-    69.88
+    -253.74,
+    -109.24
    ],
-   "alto": 8.93,
-   "copa": 4.55,
-   "semilla": 0.813,
+   "alto": 10.22,
+   "copa": 4.58,
+   "semilla": 0.58,
    "tipo": "frondoso"
   },
   {
    "p": [
-    43.22,
-    76.37
+    -254.01,
+    -179.83
    ],
-   "alto": 9.04,
-   "copa": 3.73,
-   "semilla": 0.244,
+   "alto": 11.86,
+   "copa": 3.65,
+   "semilla": 0.284,
    "tipo": "frondoso"
   },
   {
    "p": [
-    32.01,
-    66.36
+    -264.73,
+    -138.69
    ],
-   "alto": 11.63,
-   "copa": 5.05,
-   "semilla": 0.258,
+   "alto": 10.34,
+   "copa": 3.02,
+   "semilla": 0.422,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -265.41,
+    -27.89
+   ],
+   "alto": 12.03,
+   "copa": 4.01,
+   "semilla": 0.52,
    "tipo": "frondoso"
   },
   {
    "p": [
-    12.22,
-    64.46
+    -265.22,
+    -65.68
    ],
-   "alto": 8.44,
-   "copa": 4.56,
-   "semilla": 0.953,
+   "alto": 8.49,
+   "copa": 5.2,
+   "semilla": 0.762,
    "tipo": "frondoso"
   },
   {
    "p": [
-    42.71,
-    67.19
+    -254.2,
+    -20.27
    ],
-   "alto": 10.58,
-   "copa": 4.81,
-   "semilla": 0.891,
+   "alto": 9.81,
+   "copa": 3.95,
+   "semilla": 0.217,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -13.01,
-    63.16
+    -251.13,
+    -122.4
    ],
-   "alto": 8.87,
-   "copa": 4.15,
-   "semilla": 0.136,
+   "alto": 10.84,
+   "copa": 2.81,
+   "semilla": 0.535,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -268.95,
+    -107.83
+   ],
+   "alto": 13.36,
+   "copa": 4.38,
+   "semilla": 0.72,
    "tipo": "frondoso"
   },
   {
    "p": [
-    35.96,
-    82.0
+    -265.82,
+    -201.77
    ],
-   "alto": 9.89,
-   "copa": 4.98,
+   "alto": 13.61,
+   "copa": 4.51,
+   "semilla": 0.68,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -253.93,
+    -102.84
+   ],
+   "alto": 8.62,
+   "copa": 4.3,
    "semilla": 0.635,
    "tipo": "frondoso"
   },
   {
    "p": [
-    48.69,
-    65.6
+    -253.2,
+    -77.87
    ],
-   "alto": 8.12,
-   "copa": 4.42,
-   "semilla": 0.788,
+   "alto": 8.44,
+   "copa": 4.12,
+   "semilla": 0.517,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -16.26,
-    71.15
+    -269.35,
+    -205.21
    ],
-   "alto": 8.16,
-   "copa": 5.34,
-   "semilla": 0.082,
+   "alto": 11.49,
+   "copa": 3.63,
+   "semilla": 0.292,
    "tipo": "frondoso"
   },
   {
    "p": [
-    1.67,
-    88.37
+    -253.99,
+    -53.53
    ],
-   "alto": 10.57,
-   "copa": 4.17,
-   "semilla": 0.18,
+   "alto": 13.38,
+   "copa": 4.04,
+   "semilla": 0.01,
    "tipo": "frondoso"
   },
   {
    "p": [
-    18.68,
-    63.44
+    -188.94,
+    222.42
    ],
-   "alto": 13.29,
-   "copa": 3.76,
-   "semilla": 0.83,
+   "alto": 8.91,
+   "copa": 3.65,
+   "semilla": 0.593,
    "tipo": "frondoso"
   },
   {
    "p": [
-    32.05,
-    88.39
+    -165.8,
+    214.22
    ],
-   "alto": 9.68,
-   "copa": 4.86,
-   "semilla": 0.862,
+   "alto": 13.83,
+   "copa": 5.4,
+   "semilla": 0.328,
    "tipo": "frondoso"
   },
   {
    "p": [
-    25.81,
-    68.95
+    -178.56,
+    216.71
+   ],
+   "alto": 12.31,
+   "copa": 4.73,
+   "semilla": 0.412,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -125.81,
+    218.84
+   ],
+   "alto": 8.71,
+   "copa": 5.33,
+   "semilla": 0.985,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -158.24,
+    216.06
+   ],
+   "alto": 10.11,
+   "copa": 5.47,
+   "semilla": 0.574,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -158.08,
+    228.93
+   ],
+   "alto": 8.61,
+   "copa": 4.15,
+   "semilla": 0.388,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -182.08,
+    207.16
+   ],
+   "alto": 8.79,
+   "copa": 4.88,
+   "semilla": 0.263,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -187.37,
+    214.25
+   ],
+   "alto": 9.04,
+   "copa": 3.9,
+   "semilla": 0.1,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -161.47,
+    209.51
+   ],
+   "alto": 13.52,
+   "copa": 3.61,
+   "semilla": 0.316,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -172.79,
+    214.73
+   ],
+   "alto": 8.46,
+   "copa": 5.49,
+   "semilla": 0.209,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -181.36,
+    220.38
+   ],
+   "alto": 11.81,
+   "copa": 4.98,
+   "semilla": 0.979,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -167.24,
+    219.74
+   ],
+   "alto": 12.68,
+   "copa": 5.07,
+   "semilla": 0.942,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    24.02,
+    36.76
+   ],
+   "alto": 14.9,
+   "copa": 2.58,
+   "semilla": 0.016,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -1.04,
+    33.19
    ],
    "alto": 9.6,
-   "copa": 3.56,
-   "semilla": 0.036,
+   "copa": 3.51,
+   "semilla": 0.391,
    "tipo": "frondoso"
   },
   {
    "p": [
-    -22.51,
-    85.34
+    50.32,
+    25.41
    ],
-   "alto": 13.46,
-   "copa": 2.82,
+   "alto": 12.0,
+   "copa": 5.06,
+   "semilla": 0.408,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -14.7,
+    36.1
+   ],
+   "alto": 10.18,
+   "copa": 3.83,
+   "semilla": 0.727,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -78.69,
+    -151.39
+   ],
+   "alto": 12.23,
+   "copa": 5.43,
+   "semilla": 0.13,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -72.6,
+    -110.48
+   ],
+   "alto": 11.26,
+   "copa": 3.77,
+   "semilla": 0.067,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -65.51,
+    -157.17
+   ],
+   "alto": 9.12,
+   "copa": 4.73,
+   "semilla": 0.482,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -69.77,
+    -114.07
+   ],
+   "alto": 9.31,
+   "copa": 4.39,
+   "semilla": 0.565,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -76.21,
+    -114.75
+   ],
+   "alto": 13.87,
+   "copa": 3.58,
+   "semilla": 0.465,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    -70.06,
+    -156.69
+   ],
+   "alto": 8.83,
+   "copa": 4.77,
+   "semilla": 0.078,
+   "tipo": "frondoso"
+  },
+  {
+   "p": [
+    57.37,
+    -16.52
+   ],
+   "alto": 9.84,
+   "copa": 2.44,
+   "semilla": 0.696,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    55.59,
+    46.42
+   ],
+   "alto": 14.99,
+   "copa": 3.02,
+   "semilla": 0.625,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    54.61,
+    -60.07
+   ],
+   "alto": 11.47,
+   "copa": 2.79,
+   "semilla": 0.666,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    52.84,
+    -20.01
+   ],
+   "alto": 14.9,
+   "copa": 3.2,
+   "semilla": 0.11,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    63.06,
+    -10.24
+   ],
+   "alto": 13.69,
+   "copa": 2.26,
+   "semilla": 0.668,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    60.49,
+    59.15
+   ],
+   "alto": 14.57,
+   "copa": 3.16,
+   "semilla": 0.607,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    56.54,
+    25.26
+   ],
+   "alto": 11.32,
+   "copa": 2.99,
+   "semilla": 0.094,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    53.87,
+    14.03
+   ],
+   "alto": 10.79,
+   "copa": 2.56,
+   "semilla": 0.933,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    62.91,
+    -66.99
+   ],
+   "alto": 12.71,
+   "copa": 3.11,
+   "semilla": 0.592,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    64.12,
+    11.77
+   ],
+   "alto": 12.9,
+   "copa": 2.77,
+   "semilla": 0.035,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    61.29,
+    15.38
+   ],
+   "alto": 9.95,
+   "copa": 2.77,
    "semilla": 0.844,
    "tipo": "cipres"
   },
   {
    "p": [
-    -21.51,
-    75.49
+    59.16,
+    9.77
    ],
-   "alto": 13.44,
-   "copa": 4.93,
-   "semilla": 0.986,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    23.56,
-    76.53
-   ],
-   "alto": 10.43,
-   "copa": 4.18,
-   "semilla": 0.88,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -29.98,
-    82.75
-   ],
-   "alto": 9.51,
-   "copa": 4.86,
-   "semilla": 0.188,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    8.0,
-    86.52
-   ],
-   "alto": 13.14,
-   "copa": 4.87,
-   "semilla": 0.436,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -18.03,
-    83.29
-   ],
-   "alto": 11.25,
-   "copa": 5.43,
-   "semilla": 0.959,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    2.01,
-    79.87
-   ],
-   "alto": 10.54,
-   "copa": 4.94,
-   "semilla": 0.794,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    42.01,
-    89.68
-   ],
-   "alto": 10.64,
-   "copa": 4.26,
-   "semilla": 0.781,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -122.57,
-    70.37
-   ],
-   "alto": 9.31,
-   "copa": 5.0,
-   "semilla": 0.633,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -165.66,
-    31.05
-   ],
-   "alto": 9.5,
-   "copa": 5.36,
-   "semilla": 0.496,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -118.13,
-    72.72
-   ],
-   "alto": 10.26,
-   "copa": 5.28,
-   "semilla": 0.55,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -183.21,
-    -12.93
-   ],
-   "alto": 12.48,
-   "copa": 3.83,
-   "semilla": 0.056,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -158.34,
-    51.06
-   ],
-   "alto": 14.02,
-   "copa": 2.55,
-   "semilla": 0.915,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -122.49,
-    27.1
-   ],
-   "alto": 9.34,
-   "copa": 5.37,
-   "semilla": 0.925,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -185.93,
-    -73.4
-   ],
-   "alto": 11.05,
-   "copa": 5.45,
-   "semilla": 0.319,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -115.35,
-    -67.57
-   ],
-   "alto": 13.38,
-   "copa": 4.59,
-   "semilla": 0.271,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -142.73,
-    87.78
-   ],
-   "alto": 9.64,
-   "copa": 5.06,
-   "semilla": 0.952,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -162.53,
-    -88.04
-   ],
-   "alto": 13.63,
-   "copa": 3.16,
-   "semilla": 0.406,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -144.83,
-    -5.72
-   ],
-   "alto": 8.16,
-   "copa": 4.27,
-   "semilla": 0.951,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -153.43,
-    3.54
-   ],
-   "alto": 13.8,
-   "copa": 5.03,
-   "semilla": 0.111,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -141.37,
-    -50.64
-   ],
-   "alto": 12.2,
-   "copa": 5.13,
-   "semilla": 0.225,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -133.21,
-    -75.48
-   ],
-   "alto": 11.64,
-   "copa": 5.22,
-   "semilla": 0.148,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -142.85,
-    27.77
-   ],
-   "alto": 13.8,
-   "copa": 4.83,
-   "semilla": 0.297,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -133.08,
-    -8.18
-   ],
-   "alto": 9.08,
-   "copa": 2.88,
-   "semilla": 0.119,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -170.74,
-    -68.32
-   ],
-   "alto": 10.59,
-   "copa": 3.85,
-   "semilla": 0.33,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -157.67,
-    -72.19
-   ],
-   "alto": 9.97,
-   "copa": 4.81,
-   "semilla": 0.409,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -145.72,
-    -25.91
-   ],
-   "alto": 10.79,
-   "copa": 5.05,
-   "semilla": 0.361,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -184.89,
-    16.53
-   ],
-   "alto": 12.09,
-   "copa": 5.3,
-   "semilla": 0.046,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -137.47,
-    -5.16
-   ],
-   "alto": 10.17,
-   "copa": 2.89,
-   "semilla": 0.375,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -124.36,
-    98.99
-   ],
-   "alto": 10.75,
-   "copa": 3.09,
-   "semilla": 0.156,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -153.59,
-    -28.91
-   ],
-   "alto": 10.5,
-   "copa": 4.77,
-   "semilla": 0.883,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -181.01,
-    90.1
-   ],
-   "alto": 11.73,
-   "copa": 4.68,
-   "semilla": 0.369,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -134.68,
-    -99.66
-   ],
-   "alto": 14.1,
-   "copa": 2.92,
-   "semilla": 0.448,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -170.99,
-    78.24
-   ],
-   "alto": 10.16,
-   "copa": 2.73,
-   "semilla": 0.932,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -112.72,
-    87.93
-   ],
-   "alto": 13.01,
-   "copa": 3.72,
-   "semilla": 0.69,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -138.85,
-    25.66
-   ],
-   "alto": 10.86,
-   "copa": 2.8,
-   "semilla": 0.695,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -176.91,
-    38.18
-   ],
-   "alto": 11.75,
-   "copa": 5.25,
-   "semilla": 0.107,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -165.98,
-    -16.66
-   ],
-   "alto": 8.08,
-   "copa": 4.41,
-   "semilla": 0.611,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -121.05,
-    -3.86
-   ],
-   "alto": 11.19,
-   "copa": 3.69,
-   "semilla": 0.909,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -147.34,
-    74.84
-   ],
-   "alto": 13.1,
-   "copa": 5.32,
-   "semilla": 0.839,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -147.95,
-    1.06
-   ],
-   "alto": 13.08,
-   "copa": 5.44,
-   "semilla": 0.423,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -167.18,
-    68.59
-   ],
-   "alto": 13.3,
-   "copa": 4.45,
-   "semilla": 0.752,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -183.33,
-    -31.59
-   ],
-   "alto": 13.14,
-   "copa": 4.58,
-   "semilla": 0.839,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -146.11,
-    -53.65
-   ],
-   "alto": 9.41,
-   "copa": 4.7,
-   "semilla": 0.376,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -146.03,
-    -69.8
-   ],
-   "alto": 9.55,
-   "copa": 4.28,
-   "semilla": 0.798,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -118.2,
-    -71.47
-   ],
-   "alto": 9.27,
-   "copa": 3.63,
-   "semilla": 0.519,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -176.06,
-    23.81
-   ],
-   "alto": 11.71,
-   "copa": 4.25,
-   "semilla": 0.077,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -180.46,
-    -22.63
-   ],
-   "alto": 11.82,
-   "copa": 4.67,
-   "semilla": 0.633,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -150.0,
-    -33.59
-   ],
-   "alto": 11.96,
-   "copa": 3.9,
-   "semilla": 0.157,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -159.41,
-    7.27
-   ],
-   "alto": 11.75,
-   "copa": 3.94,
-   "semilla": 0.755,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -162.07,
-    38.93
-   ],
-   "alto": 14.17,
-   "copa": 3.19,
-   "semilla": 0.351,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -149.44,
-    33.76
-   ],
-   "alto": 11.96,
-   "copa": 4.25,
-   "semilla": 0.61,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -131.74,
-    62.39
-   ],
-   "alto": 11.07,
-   "copa": 4.83,
-   "semilla": 0.462,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -170.57,
-    41.96
-   ],
-   "alto": 8.24,
-   "copa": 4.91,
-   "semilla": 0.936,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -159.59,
-    -28.71
-   ],
-   "alto": 10.89,
-   "copa": 4.87,
-   "semilla": 0.577,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -140.24,
-    -98.37
-   ],
-   "alto": 12.41,
-   "copa": 4.8,
-   "semilla": 0.163,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -139.16,
-    77.59
-   ],
-   "alto": 9.65,
-   "copa": 2.6,
-   "semilla": 0.202,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -119.9,
-    -11.01
-   ],
-   "alto": 9.52,
-   "copa": 2.21,
-   "semilla": 0.37,
-   "tipo": "cipres"
-  },
-  {
-   "p": [
-    -121.82,
-    -99.35
-   ],
-   "alto": 11.28,
-   "copa": 3.65,
-   "semilla": 0.483,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -145.08,
-    -47.29
-   ],
-   "alto": 13.62,
+   "alto": 10.04,
    "copa": 2.25,
-   "semilla": 0.624,
+   "semilla": 0.199,
    "tipo": "cipres"
   },
   {
    "p": [
-    -142.95,
-    -18.32
+    62.68,
+    33.34
    ],
-   "alto": 12.86,
-   "copa": 4.43,
-   "semilla": 0.159,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -129.84,
-    30.85
-   ],
-   "alto": 12.28,
-   "copa": 3.55,
-   "semilla": 0.779,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -128.64,
-    55.17
-   ],
-   "alto": 9.5,
-   "copa": 4.51,
-   "semilla": 0.997,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -172.45,
-    -64.15
-   ],
-   "alto": 9.22,
-   "copa": 4.42,
-   "semilla": 0.065,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -161.76,
-    82.43
-   ],
-   "alto": 12.48,
-   "copa": 4.37,
-   "semilla": 0.981,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -174.53,
-    -55.55
-   ],
-   "alto": 13.93,
-   "copa": 3.2,
-   "semilla": 0.3,
+   "alto": 9.04,
+   "copa": 2.64,
+   "semilla": 0.124,
    "tipo": "cipres"
   },
   {
    "p": [
-    -138.44,
-    -90.08
+    59.07,
+    -34.21
    ],
-   "alto": 12.69,
-   "copa": 5.21,
-   "semilla": 0.774,
-   "tipo": "frondoso"
+   "alto": 14.91,
+   "copa": 2.45,
+   "semilla": 0.266,
+   "tipo": "cipres"
   },
   {
    "p": [
-    -176.73,
-    94.4
+    -40.79,
+    -51.33
    ],
-   "alto": 12.25,
-   "copa": 4.58,
-   "semilla": 0.427,
-   "tipo": "frondoso"
+   "alto": 9.11,
+   "copa": 2.33,
+   "semilla": 0.788,
+   "tipo": "cipres"
   },
   {
    "p": [
-    -163.23,
-    -49.07
+    -39.73,
+    -15.77
    ],
-   "alto": 9.63,
+   "alto": 12.24,
    "copa": 2.55,
-   "semilla": 0.672,
+   "semilla": 0.203,
    "tipo": "cipres"
   },
   {
    "p": [
-    -161.92,
-    91.65
+    -40.0,
+    -22.46
    ],
-   "alto": 11.14,
-   "copa": 4.9,
-   "semilla": 0.133,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -161.99,
-    -54.68
-   ],
-   "alto": 13.53,
-   "copa": 4.77,
-   "semilla": 0.255,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -120.29,
-    3.06
-   ],
-   "alto": 9.78,
-   "copa": 4.76,
-   "semilla": 0.348,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -139.26,
-    48.84
-   ],
-   "alto": 9.97,
-   "copa": 3.99,
-   "semilla": 0.932,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -118.69,
-    79.68
-   ],
-   "alto": 13.32,
-   "copa": 2.26,
-   "semilla": 0.784,
+   "alto": 14.12,
+   "copa": 2.9,
+   "semilla": 0.706,
    "tipo": "cipres"
   },
   {
    "p": [
-    -129.4,
-    94.74
+    -42.11,
+    -56.85
    ],
-   "alto": 11.35,
-   "copa": 4.37,
-   "semilla": 0.33,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -117.83,
-    -78.59
-   ],
-   "alto": 9.22,
-   "copa": 4.53,
-   "semilla": 0.422,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -169.4,
-    1.57
-   ],
-   "alto": 10.07,
-   "copa": 4.7,
-   "semilla": 0.46,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    -189.77,
-    -35.53
-   ],
-   "alto": 12.3,
-   "copa": 5.39,
-   "semilla": 0.525,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    108.86,
-    127.89
-   ],
-   "alto": 9.59,
-   "copa": 2.93,
-   "semilla": 0.15,
+   "alto": 13.52,
+   "copa": 3.15,
+   "semilla": 0.461,
    "tipo": "cipres"
   },
   {
    "p": [
-    93.87,
-    94.18
+    -42.19,
+    -61.94
    ],
-   "alto": 13.25,
-   "copa": 3.69,
-   "semilla": 0.22,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    85.18,
-    129.18
-   ],
-   "alto": 13.47,
-   "copa": 2.59,
-   "semilla": 0.415,
+   "alto": 12.63,
+   "copa": 2.5,
+   "semilla": 0.234,
    "tipo": "cipres"
   },
   {
    "p": [
-    87.41,
-    88.72
+    -46.0,
+    -37.54
    ],
-   "alto": 11.81,
-   "copa": 2.37,
-   "semilla": 0.879,
+   "alto": 9.38,
+   "copa": 3.0,
+   "semilla": 0.233,
    "tipo": "cipres"
   },
   {
    "p": [
-    101.02,
-    111.62
+    -46.09,
+    -10.11
    ],
-   "alto": 9.29,
-   "copa": 5.31,
-   "semilla": 0.053,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    80.02,
-    126.93
-   ],
-   "alto": 8.98,
-   "copa": 5.49,
-   "semilla": 0.881,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    93.1,
-    129.99
-   ],
-   "alto": 10.9,
-   "copa": 4.5,
-   "semilla": 0.243,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    111.77,
-    73.59
-   ],
-   "alto": 10.74,
-   "copa": 5.38,
-   "semilla": 0.238,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    76.26,
-    115.71
-   ],
-   "alto": 10.6,
-   "copa": 3.13,
-   "semilla": 0.191,
+   "alto": 10.46,
+   "copa": 2.29,
+   "semilla": 0.429,
    "tipo": "cipres"
   },
   {
    "p": [
-    89.01,
-    109.76
+    -41.58,
+    -36.13
    ],
-   "alto": 13.08,
-   "copa": 4.33,
-   "semilla": 0.483,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    77.71,
-    95.17
-   ],
-   "alto": 12.07,
-   "copa": 4.71,
-   "semilla": 0.823,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    78.65,
-    88.13
-   ],
-   "alto": 9.88,
-   "copa": 3.11,
-   "semilla": 0.685,
+   "alto": 14.6,
+   "copa": 2.51,
+   "semilla": 0.92,
    "tipo": "cipres"
   },
   {
    "p": [
-    99.4,
-    75.44
+    -37.55,
+    -39.63
    ],
-   "alto": 12.67,
-   "copa": 5.12,
-   "semilla": 0.037,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    62.8,
-    72.94
-   ],
-   "alto": 12.09,
-   "copa": 3.63,
-   "semilla": 0.107,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    99.63,
-    98.78
-   ],
-   "alto": 10.22,
-   "copa": 4.52,
-   "semilla": 0.384,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    108.89,
-    103.74
-   ],
-   "alto": 9.69,
-   "copa": 4.53,
-   "semilla": 0.824,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    61.3,
-    97.75
-   ],
-   "alto": 8.78,
-   "copa": 5.0,
-   "semilla": 0.128,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    72.15,
-    72.22
-   ],
-   "alto": 11.02,
-   "copa": 3.99,
-   "semilla": 0.017,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    96.87,
-    85.5
-   ],
-   "alto": 12.0,
-   "copa": 4.36,
-   "semilla": 0.35,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    118.88,
-    128.85
-   ],
-   "alto": 9.18,
-   "copa": 4.2,
-   "semilla": 0.847,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    100.37,
-    135.2
-   ],
-   "alto": 11.31,
-   "copa": 4.72,
-   "semilla": 0.091,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    108.39,
-    99.17
-   ],
-   "alto": 10.1,
-   "copa": 4.55,
-   "semilla": 0.146,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    108.26,
-    133.22
-   ],
-   "alto": 9.36,
-   "copa": 5.2,
-   "semilla": 0.994,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    79.52,
-    81.95
-   ],
-   "alto": 10.02,
-   "copa": 3.55,
-   "semilla": 0.475,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    72.31,
-    139.28
-   ],
-   "alto": 9.88,
-   "copa": 4.87,
-   "semilla": 0.445,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    65.35,
-    78.27
-   ],
-   "alto": 9.25,
-   "copa": 3.58,
-   "semilla": 0.528,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    62.81,
-    122.59
-   ],
-   "alto": 8.05,
-   "copa": 4.25,
-   "semilla": 0.958,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    92.75,
-    123.8
-   ],
-   "alto": 12.45,
-   "copa": 4.99,
-   "semilla": 0.31,
-   "tipo": "frondoso"
-  },
-  {
-   "p": [
-    104.48,
-    88.4
-   ],
-   "alto": 12.44,
-   "copa": 2.48,
-   "semilla": 0.483,
+   "alto": 13.81,
+   "copa": 2.36,
+   "semilla": 0.201,
    "tipo": "cipres"
   },
   {
    "p": [
-    61.87,
-    89.28
+    -43.62,
+    -19.5
    ],
-   "alto": 10.31,
-   "copa": 5.3,
-   "semilla": 0.635,
-   "tipo": "frondoso"
+   "alto": 10.24,
+   "copa": 2.63,
+   "semilla": 0.456,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -40.93,
+    -66.71
+   ],
+   "alto": 9.28,
+   "copa": 2.71,
+   "semilla": 0.193,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -42.5,
+    -28.84
+   ],
+   "alto": 10.24,
+   "copa": 2.89,
+   "semilla": 0.988,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -45.73,
+    -43.65
+   ],
+   "alto": 14.7,
+   "copa": 2.42,
+   "semilla": 0.585,
+   "tipo": "cipres"
+  },
+  {
+   "p": [
+    -37.86,
+    -45.89
+   ],
+   "alto": 13.58,
+   "copa": 2.44,
+   "semilla": 0.205,
+   "tipo": "cipres"
   }
  ],
  "carros": [
   {
    "p": [
-    -94.74,
-    -67.54
+    -91.67,
+    -67.59
    ],
    "rot": 90.0,
    "color": [
-    0.8,
-    0.8,
-    0.8
+    0.45,
+    0.46,
+    0.48
    ]
   },
   {
    "p": [
-    -91.16,
-    -67.57
+    -84.41,
+    -67.77
    ],
    "rot": 90.0,
    "color": [
-    0.04,
-    0.12,
-    0.45
+    0.55,
+    0.03,
+    0.03
    ]
   },
   {
    "p": [
-    -80.3,
-    -67.58
-   ],
-   "rot": 90.0,
-   "color": [
-    0.8,
-    0.8,
-    0.8
-   ]
-  },
-  {
-   "p": [
-    -76.75,
+    -70.05,
     -67.71
    ],
    "rot": 90.0,
@@ -3777,34 +3029,22 @@
   },
   {
    "p": [
-    -73.18,
-    -67.57
+    -80.86,
+    -61.97
    ],
-   "rot": 90.0,
+   "rot": 270.0,
    "color": [
-    0.8,
-    0.8,
-    0.8
+    0.02,
+    0.02,
+    0.025
    ]
   },
   {
    "p": [
-    -69.58,
-    -67.46
+    -59.13,
+    -62.07
    ],
-   "rot": 90.0,
-   "color": [
-    0.45,
-    0.46,
-    0.48
-   ]
-  },
-  {
-   "p": [
-    -65.78,
-    -67.57
-   ],
-   "rot": 90.0,
+   "rot": 270.0,
    "color": [
     0.04,
     0.12,
@@ -3813,43 +3053,7 @@
   },
   {
    "p": [
-    -62.33,
-    -67.57
-   ],
-   "rot": 90.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
-  },
-  {
-   "p": [
-    -51.37,
-    -67.55
-   ],
-   "rot": 90.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -47.83,
-    -67.67
-   ],
-   "rot": 90.0,
-   "color": [
-    0.04,
-    0.12,
-    0.45
-   ]
-  },
-  {
-   "p": [
-    -94.66,
+    -55.56,
     -62.1
    ],
    "rot": 270.0,
@@ -3861,7 +3065,7 @@
   },
   {
    "p": [
-    -91.1,
+    -52.0,
     -61.97
    ],
    "rot": 270.0,
@@ -3873,22 +3077,10 @@
   },
   {
    "p": [
-    -87.46,
-    -62.02
+    -66.47,
+    -56.38
    ],
-   "rot": 270.0,
-   "color": [
-    0.04,
-    0.12,
-    0.45
-   ]
-  },
-  {
-   "p": [
-    -83.95,
-    -62.03
-   ],
-   "rot": 270.0,
+   "rot": 90.0,
    "color": [
     0.15,
     0.15,
@@ -3897,8 +3089,44 @@
   },
   {
    "p": [
-    -80.03,
-    -62.03
+    -62.77,
+    -56.32
+   ],
+   "rot": 90.0,
+   "color": [
+    0.04,
+    0.12,
+    0.45
+   ]
+  },
+  {
+   "p": [
+    -55.67,
+    -56.56
+   ],
+   "rot": 90.0,
+   "color": [
+    0.45,
+    0.46,
+    0.48
+   ]
+  },
+  {
+   "p": [
+    -48.48,
+    -56.32
+   ],
+   "rot": 90.0,
+   "color": [
+    0.9,
+    0.9,
+    0.9
+   ]
+  },
+  {
+   "p": [
+    -95.12,
+    -50.71
    ],
    "rot": 270.0,
    "color": [
@@ -3909,8 +3137,8 @@
   },
   {
    "p": [
-    -65.86,
-    -62.06
+    -87.96,
+    -50.76
    ],
    "rot": 270.0,
    "color": [
@@ -3921,8 +3149,32 @@
   },
   {
    "p": [
-    -62.22,
-    -61.86
+    -80.85,
+    -50.9
+   ],
+   "rot": 270.0,
+   "color": [
+    0.55,
+    0.03,
+    0.03
+   ]
+  },
+  {
+   "p": [
+    -77.1,
+    -50.93
+   ],
+   "rot": 270.0,
+   "color": [
+    0.55,
+    0.03,
+    0.03
+   ]
+  },
+  {
+   "p": [
+    -69.77,
+    -50.65
    ],
    "rot": 270.0,
    "color": [
@@ -3933,20 +3185,8 @@
   },
   {
    "p": [
-    -58.53,
-    -62.18
-   ],
-   "rot": 270.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
-  },
-  {
-   "p": [
-    -54.97,
-    -61.93
+    -66.11,
+    -50.73
    ],
    "rot": 270.0,
    "color": [
@@ -3957,152 +3197,8 @@
   },
   {
    "p": [
-    -51.45,
-    -61.93
-   ],
-   "rot": 270.0,
-   "color": [
-    0.8,
-    0.8,
-    0.8
-   ]
-  },
-  {
-   "p": [
-    -47.86,
-    -61.96
-   ],
-   "rot": 270.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -91.15,
-    -56.5
-   ],
-   "rot": 90.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -87.4,
-    -56.53
-   ],
-   "rot": 90.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -83.65,
-    -56.27
-   ],
-   "rot": 90.0,
-   "color": [
-    0.15,
-    0.15,
-    0.17
-   ]
-  },
-  {
-   "p": [
-    -80.12,
-    -56.21
-   ],
-   "rot": 90.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
-  },
-  {
-   "p": [
-    -76.42,
-    -56.54
-   ],
-   "rot": 90.0,
-   "color": [
-    0.02,
-    0.02,
-    0.025
-   ]
-  },
-  {
-   "p": [
-    -62.33,
-    -56.49
-   ],
-   "rot": 90.0,
-   "color": [
-    0.02,
-    0.02,
-    0.025
-   ]
-  },
-  {
-   "p": [
-    -58.65,
-    -56.37
-   ],
-   "rot": 90.0,
-   "color": [
-    0.02,
-    0.02,
-    0.025
-   ]
-  },
-  {
-   "p": [
-    -54.99,
-    -56.35
-   ],
-   "rot": 90.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
-  },
-  {
-   "p": [
-    -51.42,
-    -56.25
-   ],
-   "rot": 90.0,
-   "color": [
-    0.15,
-    0.15,
-    0.17
-   ]
-  },
-  {
-   "p": [
-    -47.78,
-    -56.44
-   ],
-   "rot": 90.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -91.18,
-    -50.97
+    -62.84,
+    -50.93
    ],
    "rot": 270.0,
    "color": [
@@ -4113,67 +3209,7 @@
   },
   {
    "p": [
-    -87.56,
-    -50.76
-   ],
-   "rot": 270.0,
-   "color": [
-    0.8,
-    0.8,
-    0.8
-   ]
-  },
-  {
-   "p": [
-    -73.19,
-    -50.65
-   ],
-   "rot": 270.0,
-   "color": [
-    0.04,
-    0.12,
-    0.45
-   ]
-  },
-  {
-   "p": [
-    -69.35,
-    -50.62
-   ],
-   "rot": 270.0,
-   "color": [
-    0.04,
-    0.12,
-    0.45
-   ]
-  },
-  {
-   "p": [
-    -65.95,
-    -50.66
-   ],
-   "rot": 270.0,
-   "color": [
-    0.55,
-    0.03,
-    0.03
-   ]
-  },
-  {
-   "p": [
-    -62.28,
-    -50.94
-   ],
-   "rot": 270.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
-  },
-  {
-   "p": [
-    -58.69,
+    -59.3,
     -50.67
    ],
    "rot": 270.0,
@@ -4182,132 +3218,61 @@
     0.02,
     0.025
    ]
-  },
-  {
-   "p": [
-    -55.12,
-    -50.62
-   ],
-   "rot": 270.0,
-   "color": [
-    0.45,
-    0.46,
-    0.48
-   ]
-  },
-  {
-   "p": [
-    -47.99,
-    -50.79
-   ],
-   "rot": 270.0,
-   "color": [
-    0.9,
-    0.9,
-    0.9
-   ]
   }
  ],
  "cerros": [
   {
    "centro": [
-    1300.0,
-    -700.0
+    2800.0,
+    -400.0
    ],
    "radio": [
-    900.0,
-    600.0
-   ],
-   "alto": 520.0
-  },
-  {
-   "centro": [
-    1250.0,
-    100.0
-   ],
-   "radio": [
-    900.0,
-    700.0
-   ],
-   "alto": 620.0
-  },
-  {
-   "centro": [
-    1200.0,
-    850.0
-   ],
-   "radio": [
-    850.0,
-    600.0
-   ],
-   "alto": 480.0
-  },
-  {
-   "centro": [
-    600.0,
-    1500.0
-   ],
-   "radio": [
-    800.0,
-    500.0
-   ],
-   "alto": 260.0
-  },
-  {
-   "centro": [
-    -900.0,
-    1400.0
-   ],
-   "radio": [
-    700.0,
-    500.0
-   ],
-   "alto": 220.0
-  },
-  {
-   "centro": [
-    -1500.0,
-    -200.0
-   ],
-   "radio": [
-    700.0,
-    800.0
-   ],
-   "alto": 200.0
-  },
-  {
-   "centro": [
-    -700.0,
-    -1500.0
-   ],
-   "radio": [
-    800.0,
-    500.0
-   ],
-   "alto": 240.0
-  },
-  {
-   "centro": [
-    400.0,
-    -1600.0
-   ],
-   "radio": [
-    900.0,
-    500.0
+    1400.0,
+    1000.0
    ],
    "alto": 300.0
+  },
+  {
+   "centro": [
+    2700.0,
+    1100.0
+   ],
+   "radio": [
+    1300.0,
+    800.0
+   ],
+   "alto": 340.0
+  },
+  {
+   "centro": [
+    2600.0,
+    -1700.0
+   ],
+   "radio": [
+    1300.0,
+    800.0
+   ],
+   "alto": 260.0
   }
  ],
  "extras": [
   {
    "nombre": "motor_de_avion",
    "p": [
-    -51.0,
-    0.0
+    -86.0,
+    12.0
    ],
    "rot": 20.0
   }
  ],
+ "avion": {
+  "nombre": "avion_searca",
+  "p": [
+   -98.0,
+   9.0
+  ],
+  "rot": 0.0
+ },
  "poses": {
   "campo": {
    "nombre": "Cancha de fútbol (zona de IA)",
@@ -4325,13 +3290,13 @@
   "cancha_cerrada": {
    "nombre": "Cancha cerrada (tenis y múltiple)",
    "pos": [
-    -28.0,
-    -6.0,
+    -38.0,
+    -2.0,
     13.0
    ],
    "mira": [
-    -54.0,
-    22.0,
+    -60.0,
+    28.0,
     1.5
    ]
   },

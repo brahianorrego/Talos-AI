@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import urllib.parse
+import urllib.request
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SIM = os.path.normpath(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL"))
@@ -56,7 +57,43 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
+    def tesela(self):
+        """/tiles/<z>/<x>/<y>.jpg: teselas satelitales de Esri World Imagery con caché en disco (mapa/teselas/). Sin internet entrega las ya guardadas
+        (mapa/precargar_teselas.py baja el campus antes de salir); si falta una, 404 y el mapa deja ese cuadro vacío."""
+        try:
+            z, x, y = (int(v) for v in os.path.splitext(self.path.split("?")[0])[0].split("/")[2:5])
+            if not (10 <= z <= 20 and 0 <= x < 2 ** z and 0 <= y < 2 ** z):
+                raise ValueError
+        except ValueError:
+            self.send_error(404)
+            return
+        ruta = os.path.join(AQUI, "mapa", "teselas", str(z), str(x), f"{y}.jpg")
+        datos = None
+        if os.path.isfile(ruta):
+            datos = open(ruta, "rb").read()
+        else:
+            try:
+                req = urllib.request.Request(f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                                             headers={"User-Agent": "TALOS-AI-estacion/1.0 (proyecto de grado, uso academico)"})
+                datos = urllib.request.urlopen(req, timeout=6).read()
+                os.makedirs(os.path.dirname(ruta), exist_ok=True)
+                with open(ruta, "wb") as f:
+                    f.write(datos)
+            except OSError:
+                datos = None
+        if not datos:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "image/jpeg")
+        self.send_header("Cache-Control", "max-age=86400")
+        self.send_header("Content-Length", str(len(datos)))
+        self.end_headers()
+        self.wfile.write(datos)
+
     def do_GET(self):
+        if self.path.startswith("/tiles/"):
+            return self.tesela()
         if self.path.startswith("/unreal_cam/"):                  # lo que ven las cámaras del dron en Unreal (unreal/vivo_unreal.py las guarda como JPG ~10 Hz)
             nombre = os.path.basename(self.path.split("?")[0])
             ruta = os.path.join(AQUI, "..", "unreal", "_cache", "cam", nombre)

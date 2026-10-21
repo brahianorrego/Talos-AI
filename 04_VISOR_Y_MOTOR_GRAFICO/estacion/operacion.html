@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Estación de tierra</title>
+<link rel="stylesheet" href="mapa/leaflet/leaflet.css">
 <link rel="stylesheet" href="operacion.css">
 </head>
 <body>
@@ -43,6 +44,8 @@
         <div id="sinvideo"><div>SIN SEÑAL DE VIDEO</div></div>
         <canvas id="hud"></canvas>
         <canvas id="mapa"></canvas>
+        <div id="sat"></div>
+        <div id="ent"></div>
         <div id="barramapa">
           <button id="mIr">Ir</button><button id="mParar">Parar</button><button id="mUltimo">Borrar último</button><button id="mTodos">Borrar todos</button>
           <span class="txt">Clic en el mapa: punto de paso · arrastre el círculo para girar la flecha</span>
@@ -82,6 +85,9 @@
 
 <div id="aviso"></div>
 <div id="menu"><div id="menuCaja"></div></div>
+<script src="mapa/leaflet/leaflet.js"></script>
+<script src="satelite.js"></script>
+<script src="entrenamiento.js"></script>
 <script src="operacion.js"></script>
 </body>
 </html>

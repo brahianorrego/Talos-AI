@@ -66,3 +66,7 @@ desktop.ini
 04_VISOR_Y_MOTOR_GRAFICO/estacion/mision_letreros.json
 03_SIMULACION_RL/demos_brahian/
 04_VISOR_Y_MOTOR_GRAFICO/assets_polyhaven/
+
+# --- Teselas satelitales de la estación (Esri; caché local, no se redistribuyen) ---
+04_VISOR_Y_MOTOR_GRAFICO/estacion/mapa/teselas/
+04_VISOR_Y_MOTOR_GRAFICO/entorno/texturas/
