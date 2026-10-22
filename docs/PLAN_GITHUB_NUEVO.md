@@ -1,4 +1,6 @@
-# Plan del repositorio nuevo en GitHub (Fase E) · SOLO PLAN
+# Plan del repositorio nuevo en GitHub (Fase E)
+
+> **Resuelto (22-oct-2026):** el repositorio se publicó como `Dron-IA-Vigilancia` y Brahian lo renombró a **`Talos-AI`** (`github.com/brahianorrego/Talos-AI`). El resto de este plan es el original del 16-oct.
 
 Preparado el 2026-10-16. **No se crea ni se sube nada sin que Brahian lo confirme en el chat.** El repo es público.
 

@@ -5,7 +5,7 @@ Mapa de archivos: @GUIA_DE_ARCHIVOS.md · Nombres viejos → nuevos: `INDICE_NOM
 
 Esta carpeta se armó el 2026-10-16 **copiando** (no moviendo) `Desktop\Claude\Tesis-IA-Drone`, que queda intacta
 como respaldo y archivo histórico (repositorio viejo `Tesis-IA-Drone`). Esta carpeta es el repositorio
-**`Dron-IA-Vigilancia`** (por ahora solo local; plan en `docs/PLAN_GITHUB_NUEVO.md`).
+**`Talos-AI`** (publicado en GitHub: `brahianorrego/Talos-AI`; hasta el 22-oct se llamó `Dron-IA-Vigilancia`; plan en `docs/PLAN_GITHUB_NUEVO.md`).
 
 ## División del trabajo (desde 2026-10-16)
 

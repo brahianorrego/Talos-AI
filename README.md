@@ -22,7 +22,7 @@
 > milisegundos si hay que **frenar y subir a 3.30 m** para no chocar con una persona o un obstáculo. Las reglas de
 > seguridad y el piloto siempre tienen la última palabra.
 >
-> El dron se llama **TALOS-AI** (la estación de tierra lleva ese nombre); el repositorio conserva el nombre `Dron-IA-Vigilancia`.
+> El dron y este repositorio se llaman **Talos-AI** (la estación de tierra lleva ese nombre). Hasta el 22-oct el repositorio se llamó `Dron-IA-Vigilancia`: GitHub redirige los enlaces viejos.
 
 <div align="center">
 
