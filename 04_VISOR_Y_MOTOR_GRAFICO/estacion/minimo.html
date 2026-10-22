@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estación de tierra · Mínimo</title>
+<link rel="stylesheet" href="operacion.css">
+<link rel="stylesheet" href="mapa/leaflet/leaflet.css">
+<link rel="stylesheet" href="minimo.css">
+</head>
+<body>
+<!-- Estación de tierra del MÍNIMO INDISPENSABLE: la misma interfaz de operación (operacion.css) conectada al panel de campo de la Jetson
+     (02_JETSON_MINIMO/panel_campo.py) a través del servidor de la estación (/jetson/...). Datos y video REALES, nada simulado. -->
+<div id="app">
+  <header id="barra">
+    <div class="marca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2fa4e7" stroke-width="1.8"><path d="M12 2.5 21 7.5v9L12 21.5 3 16.5v-9z"/><path d="M12 7v10M7.5 9.5 12 12l4.5-2.5" stroke-width="1.5"/></svg>
+      <div><b id="nombreDron">TALOS-AI</b><small>Estación de tierra · Mínimo</small></div>
+    </div>
+    <div class="chip"><span>Jetson</span><b id="bJetson">–</b></div>
+    <div class="chip"><span>Pixhawk</span><b id="bPix">–</b></div>
+    <div class="chip"><span>Armado</span><b id="bArmado">–</b></div>
+    <div class="chip"><span>Batería</span><b id="bBat">–</b></div>
+    <div class="chip"><span>LiDAR</span><b id="bLidar">–</b></div>
+    <div class="chip"><span>Nivel del dron</span><b id="bNivel">–</b></div>
+    <div class="chip bajo1600"><span>Visión</span><b id="bVision">–</b></div>
+    <div class="chip"><span>Toma</span><b id="bToma">–</b></div>
+    <div class="der">
+      <div class="reloj"><span id="bHora">–</span><small id="bFecha">–</small></div>
+      <label class="calid" title="Calidad del video: Normal es la más liviana; Alta y Máxima usan más WiFi"><span>Video</span><select id="selRes"><option value="normal">Normal 640×480</option><option value="alta">Alta 960×720</option><option value="maxima">Máxima 1280×960</option></select></label>
+      <button id="bAlinear" title="Marcar dónde pega el LiDAR en la imagen">Alinear LiDAR</button>
+      <button id="bCalibrar" title="Calibración del montaje: campo de visión, inclinación de la cámara y del LiDAR, con la Pixhawk">Calibrar montaje</button>
+    </div>
+  </header>
+
+  <div id="modalJ"><div id="modalBarra"><b id="modalTitulo"></b><span class="k">el video de la estación se pausa mientras tanto</span><button id="modalCerrar">✕ cerrar</button></div><iframe id="modalFrame" title="Página de la Jetson"></iframe></div>
+  <div id="enlaceBanner"><b>No encuentro la Jetson.</b> Revisa que la Jetson esté encendida y en el mismo hotspot. <button id="bBuscar">Buscar Jetson</button> o escribe su dirección: <input id="inHost" placeholder="192.168.x.x:8080"><button id="bUsar">Usar</button><span id="msgHost"></span></div>
+
+  <main id="cuerpo">
+    <section id="izqCol">
+      <div id="izq">
+        <img id="cam0" alt="">
+        <div id="sinvideo"><div id="sinvideoTxt">CONECTANDO CON LA JETSON…</div></div>
+        <canvas id="hud"></canvas>
+
+      </div>
+    </section>
+
+    <aside id="der">
+      <div class="casilla" id="tomas">
+        <div class="cab"><h4>Tomas del paso 4</h4><span class="acc"><button class="mini" id="bSonido" title="El computador dice y pita lo que la persona debe hacer (como el celular)">🔈 Sonido: apagado</button><span class="est" id="estToma">LISTO</span></span></div>
+        <div class="cont" id="tomasCont">
+          <div id="tForm">
+            <label>Escenario<select id="t_esc"></select></label>
+            <label>Repetición<input id="t_rep" type="number" min="1" max="99"></label>
+            <label>Altura del lente (m)<input id="t_alt" type="number" min="0" max="5" step="0.01"></label>
+            <label id="f_dist">Línea E4 (m)<select id="t_dist"><option value="">--</option><option>5</option><option>8</option><option>12</option></select></label>
+            <label id="f_mon">Montaje<select id="t_mon"></select></label>
+            <label id="f_nota">Nota<input id="t_nota" type="text" maxlength="40" placeholder="camina / trota"></label>
+          </div>
+          <div id="tAcc"><button id="bIniciar" class="grande">INICIAR</button><button id="bCancelar">CANCELAR</button><span id="tMsg"></span></div>
+          <div id="tEstado"></div>
+          <div id="tGuia"></div>
+          <div id="tHist"></div>
+        </div>
+      </div>
+      <div class="casilla" id="tel">
+        <div class="cab"><h4>Telemetría</h4><span class="est ok" id="estTel">NOMINAL</span></div>
+        <div id="rejilla">
+          <div class="t s2"><label>Distancia LiDAR</label><div class="cifra"><span id="vLid">–</span><small>m</small></div><div class="barra-h"><u id="bLid"></u></div><div class="sub" id="sLid">–</div></div>
+          <div class="t s2"><label>Batería</label><div class="cifra"><span id="vBat">–</span><small>V</small></div><div class="barra-h"><u id="bBatBarra"></u></div><div class="sub" id="sBat">–</div></div>
+          <div class="t s2"><label>Modo de vuelo</label><div class="etiquetas"><span class="etq acento" id="eModo">–</span><span class="etq" id="eArm">–</span></div><div class="sub" id="sModo">Altura –</div></div>
+
+          <div class="t s3"><label>Velocidades (Pixhawk)</label>
+            <div class="fila"><span>Avance (sobre el suelo)</span><b id="vSuelo">–</b></div>
+            <div class="fila"><span>Ascenso (+ sube / − baja)</span><b id="vAsc">–</b></div>
+            <div class="fila"><span>Altura sobre el punto de partida</span><b id="vAltR">–</b></div>
+            <div class="fila"><span>Rumbo (brújula)</span><b id="vRum">–</b></div>
+            <div class="sub" id="sVel">–</div></div>
+          <div class="t s3"><label>GPS</label>
+            <div class="fila"><span>Tipo de fijación</span><b id="gFix">–</b></div>
+            <div class="fila"><span>Satélites</span><b id="gSats">–</b></div>
+            <div class="fila"><span>HDOP (menos es mejor)</span><b id="gHdop">–</b></div>
+            <div class="fila"><span>Latitud · longitud</span><b id="gLL">–</b></div>
+            <div class="sub" id="gEst">–</div></div>
+
+          <div class="t s3 visual"><label>Inclinación del dron</label><canvas id="actitud"></canvas><div id="actTxt"></div></div>
+          <div class="t s3"><label>Rayo del LiDAR y el suelo</label>
+            <div class="fila"><span>Altura del LiDAR (m)</span><input id="hLidar" type="number" min="0" max="5" step="0.01" placeholder="medir"></div>
+            <div class="fila"><span>Rayo (−6.7° + cabeceo)</span><b id="rElev">–</b></div>
+            <div class="fila"><span>Suelo esperado a</span><b id="rSuelo">–</b></div>
+            <div class="fila"><span>Toca a la persona desde</span><b id="rPers">–</b></div>
+            <div class="sub" id="rEst">–</div></div>
+
+          <div class="t s3"><label>Persona (la más grande)</label><div id="persona"><div class="sub">ninguna en cuadro</div></div></div>
+          <div class="t s3"><label>Imagen y enlace</label>
+            <div class="fila"><span>Exposición (gris medio)</span><b id="iMedia">–</b></div>
+            <div class="fila"><span>Quemado / oscuro</span><b id="iSat">–</b></div>
+            <div class="fila"><span>Cuadros · YOLO</span><b id="iFps">–</b></div>
+            <div class="fila"><span>Video · enlace</span><b id="iVid">–</b></div>
+            <div class="sub" id="iTemp">–</div></div>
+
+          <div class="t s3 visual"><label>LiDAR · últimos segundos</label><canvas id="lidarg"></canvas></div>
+          <div class="t s3"><label>Geometría cargada (medida el 20-oct)</label>
+            <div class="fila"><span>Campo de visión</span><b id="gFov">–</b></div>
+            <div class="fila"><span>Cámara / LiDAR</span><b id="gPit">–</b></div>
+            <div class="fila"><span>Punto del LiDAR en la imagen</span><b id="gPx">–</b></div>
+            <div class="sub">si algo no coincide con la realidad, se recalibra</div></div>
+
+          <div class="t s6"><label>Progreso de las tomas (hechas bien · meta corta / completa)</label><div id="progreso"></div></div>
+        </div>
+      </div>
+      <div class="casilla" id="logc">
+        <div id="log"><div class="cab"><h4>Registro de eventos</h4><span class="est" id="logEst">0</span></div><div id="logLista"></div></div>
+      </div>
+      <div id="miniFila">
+        <div id="mini" title="Clic para ampliar el mapa"><div id="miniMapa"></div><div id="miniInfo">sin GPS</div><button id="miniBtn" class="mini">⤢</button><button id="miniCentro" class="mini">Centrar</button></div>
+      </div>
+    </aside>
+  </main>
+  <footer id="pie"><span id="pieEstado">–</span><span class="firma">Brahian Andrés Orrego Osorio</span></footer>
+</div>
+<script src="mapa/leaflet/leaflet.js"></script>
+<script src="minimo.js"></script>
+</body>
+</html>

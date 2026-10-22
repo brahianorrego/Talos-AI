@@ -1,5 +1,5 @@
 flowchart TB
-    CAM["Cámara USB<br/>640×480 · 30 cuadros/s"] --> YOLO["<b>IA 1 · YOLO26n</b><br/>preentrenado (COCO)<br/>TensorRT FP16 · 9–11 ms"]
+    CAM["Cámara CSI (IMX219)<br/>640×480 · 25–30 cuadros/s"] --> YOLO["<b>IA 1 · YOLO26n</b><br/>preentrenado (COCO)<br/>TensorRT FP16 · ~22 ms"]
     LID["LiDAR TF03<br/>1 rayo · 100 Hz"]
     EKF["Pixhawk · EKF<br/>velocidad y altura"]
     YOLO --> ENT

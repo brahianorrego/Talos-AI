@@ -2,7 +2,10 @@
 """
 Sensores del mínimo indispensable (copia congelada de los modelos de la V15, 2026-10-10; independiente de entorno.py).
 
-  · Cámara + YOLO: detecta personas dentro del cuadro (HFOV 38.9°, VFOV 29.7°) con una probabilidad que cae con la
+  · GEOMETRÍA MEDIDA EL 20-OCT (dron real, sin gimbal ni cámara USB; docs/DECISIONES.md D-078): cámara CSI de 68.3° × 54.0°
+    fija al chasis a −2.4° y TF03 fijo al chasis a −6.7° (4.3° por debajo del eje de la cámara). Antes (congelado en
+    _antes_20oct/): USB de 38.9° × 29.7° y LiDAR por el eje de la cámara con el gimbal estabilizándolos a −5°.
+  · Cámara + YOLO: detecta personas dentro del cuadro (HFOV 68.3°, VFOV 54.0°) con una probabilidad que cae con la
     distancia, ruido en el rumbo y distancia por la altura de la caja suponiendo 1.72 m de estatura (si la persona real es
     más alta o más baja, o si la caja sale cortada por el borde de la imagen, la distancia sale sesgada, como en la Jetson).
   · LiDAR TF03 montado con la cámara: un solo rayo por el eje de la cámara, 0.1-30 m (objetivo oscuro a pleno sol),
@@ -12,7 +15,9 @@ Sensores del mínimo indispensable (copia congelada de los modelos de la V15, 20
 import numpy as np
 
 DT = 0.1
-HFOV, VFOV = 38.9, 29.7
+HFOV, VFOV = 68.3, 54.0          # MEDIDO 20-oct (antes 38.9, 29.7 de la cámara USB)
+CAM_PITCH_MONTAJE = -2.4            # MEDIDO: inclinación de la cámara respecto al chasis (sin gimbal)
+LIDAR_PITCH_MONTAJE = -6.7          # MEDIDO: inclinación del rayo del TF03 respecto al chasis
 RETARDO_PASOS = 1                  # 100 ms
 LIDAR_MIN, LIDAR_MAX, LIDAR_SIGMA = 0.1, 30.0, 0.02
 ALTURA_SUPUESTA = 1.72             # estatura que supone la Jetson para la distancia por la caja
@@ -91,10 +96,10 @@ def caja(rng, dx, dy, dz, psi, pitch_cam, px, py, estatura, frac, det):
     return np.where(det, alto, 0.0), np.where(det, ancho, 0.0), np.where(det, conf, 0.0)
 
 
-def lidar(rng, dx, dy, dz, psi, pitch_cam, px, py, estatura, activa, paneles, cond=NOMINAL, rng_deg=None):
-    """Rayo del TF03 por el eje de la cámara. Devuelve (distancia medida, distancia real, qué tocó: 0 nada, 1 suelo,
-    2 panel, 3 persona)."""
-    g = np.radians(pitch_cam)
+def lidar(rng, dx, dy, dz, psi, pitch_cam, px, py, estatura, activa, paneles, cond=NOMINAL, rng_deg=None, pitch_lidar=None):
+    """Rayo del TF03: por el eje de la cámara si pitch_lidar es None (modelo anterior) o con su propia inclinación (modelo medido).
+    Devuelve (distancia medida, distancia real, qué tocó: 0 nada, 1 suelo, 2 panel, 3 persona)."""
+    g = np.radians(pitch_cam if pitch_lidar is None else pitch_lidar)
     c, s = np.cos(psi), np.sin(psi)
     tg = np.tan(g)
     rng_ = np.full(dx.shape, np.inf)

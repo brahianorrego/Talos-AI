@@ -366,6 +366,7 @@ const RESULTADOS = {
   "geocerca": ["MISIÓN FALLIDA · salida de la geocerca", COL.peligro, false],
   "tiempo": ["MISIÓN FALLIDA · 5 minutos sin rendición: gana el ladrón", COL.alerta, false],
   "a salvo": ["Criterio anterior (v4): dron a salvo", COL.suave, false],
+  "escenario": ["ESCENARIO TERMINADO · fin del vuelo de este escenario del mínimo indispensable", COL.ok, true],
 };
 // ¿el objetivo ya fue designado por el operador? (en repeticiones v4 no existe el modo)
 const fijado = c => c.fase === 2 && (c.modo !== undefined ? c.modo >= 2 : c.trk >= 1 && c.trk <= 4);
@@ -1196,6 +1197,12 @@ async function llenarSelector() {
     + `<option value="minimo_tesis/replay/replay_protocolo_ia.json">Mínimo indispensable · decisor: IA sola</option>`
     + `<option value="minimo_tesis/replay/replay_protocolo_ia_env.json">Mínimo indispensable · decisor: IA + envolvente</option>`
     + `<option value="minimo_tesis/replay/replay_protocolo_ia_env_estricta.json">Mínimo indispensable · decisor: IA + envolvente estricta</option></optgroup>`);
+  try {   // un escenario por opción (minimo_tesis/dividir_replays.py)
+    const L = await cargarJSON("minimo_tesis/replay/escenarios/lista.json"), porDec = {};
+    L.forEach(x => (porDec[x.decisor] = porDec[x.decisor] || []).push(x));
+    Object.keys(porDec).forEach(dec => grupos.push(`<optgroup label="Mínimo · por escenario · ${dec}">${porDec[dec].map(x =>
+      `<option value="minimo_tesis/replay/escenarios/${x.archivo}">${x.escenario.replace(/_/g, " ")} · ${x.texto} (${x.segundos} s)</option>`).join("")}</optgroup>`));
+  } catch (e) {}
   sel.innerHTML = grupos.join("");
   const valores = [...sel.querySelectorAll("option:not([disabled])")].map(o => o.value);
   if (actual && valores.includes(actual)) sel.value = actual;
@@ -1702,6 +1709,13 @@ function animarPersona(g, d, dtReal, ahora, aDron) {
   }
 }
 function mostrarResumen() {
+  if (partida.resultado === "escenario") {   // mínimo indispensable: un escenario por archivo
+    const t = partida.dt, N = partida.cuadros.length;
+    $("res-tag").textContent = "TERMINADO"; $("res-tag").style.color = COL.ok;
+    $("res-tabla").innerHTML = `<tr><td>Escenario</td><td>${(partida.escenarios || [""])[0]}</td></tr><tr><td>Versión</td><td>${partida.version}</td></tr><tr><td>Duración</td><td>${(N * t).toFixed(1)} s</td></tr>`;
+    $("resumen").classList.add("ver");
+    return;
+  }
   const C = partida.cuadros, f2 = C.filter(q => q.fase === 2), n1 = C.length - f2.length, t = partida.dt;
   const pv = f2.length ? f2.filter(q => q.vis).length / f2.length : 0;
   const kDes = f2.findIndex(q => q.op === 1 || (q.modo === undefined && q.trk === 1));

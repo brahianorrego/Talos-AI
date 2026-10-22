@@ -6,7 +6,7 @@ configuración actual (variante A) hasta terminar, y el TF03 y el gimbal no se t
 
 ## 0. Cambio de rumbo (D-072, 2026-10-20): ahora hay dos variantes que importan, G y H
 
-Brahian **quitó el gimbal y la cámara USB** (el sensor se dañó con el sol). Todo lo de abajo sobre gimbal, USB, BaseCam y las variantes **A a F queda
+Brahian **quitó el gimbal y la cámara USB** (la USB se sobreexpone al sol: su driver no deja bajar la exposición; no está dañada, sirve en interiores). Todo lo de abajo sobre gimbal, USB, BaseCam y las variantes **A a F queda
 DESCARTADO** y se conserva solo como historia y como referencia de cálculo. Hoy el dron es la **G** y la meta es la **H**. Archivos:
 `config_sim/variante_G.json` y `variante_H.json`; cobertura en `COBERTURA.md`.
 
@@ -57,6 +57,8 @@ las variantes G/H son de **62.2° × 48.8° nominal sin medir**; (2) falta `GIMB
 | Gimbal real | pitch tope ≈ −10°; el cable grueso del TF03 hace palanca (hipótesis de esa sesión; no se ha comprobado quitando el cable) | mismo archivo, 2026-10-11 |
 | BaseCam | 8 bits, firmware 2.2b2; pitch por PWM de AUX1; zona muerta puesta en 0; 30°/s | `hardware.md`, `jetson-conexion…` |
 | Sensores en la V16 | CAM_PISO IMX219 −90°, TF03 al chasis +1°, TF-Luna en el gimbal, `GIMBAL_TIPO` basecam/servo/mixto | `docs/PLAN_V16_REALISMO.md` §2, §6; `04_VISOR…/v16/docs/PROGRESO_V16.md` |
+
+*(Nota 20-oct: en la Jetson reinstalada con JetPack 6.2.1 `nvargus` sí funciona; la CSI da ≈30 FPS de captura y ≈25 con YOLO. El párrafo siguiente es de JetPack 7.)*
 
 **Cómo se evitó el problema del CSI** (pantallas verdes y `nvargus-daemon` bloqueado): no se arregló Argus. En JetPack 7
 (L4T R39) Argus da "No EGL device available". La solución fue **saltarse Argus**: se lee el sensor crudo (RAW10) por

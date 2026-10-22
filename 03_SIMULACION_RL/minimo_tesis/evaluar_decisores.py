@@ -423,8 +423,9 @@ def _justificacion(res, barr, prueba, escen, n):
 
 
 def _replay(dec, replay):
-    cuadros, nombres = [], []
+    cuadros, nombres, inicio = [], [], []
     for nom, cs in replay:
+        inicio.append(len(cuadros))
         if P.TODOS[nom][4]:
             for c in cs:
                 c["d"][1] = round(c["d"][1] + P.DY_PANEL, 3)
@@ -434,7 +435,7 @@ def _replay(dec, replay):
     datos = {"iteracion": 0, "pasos": 0, "adversaria": False, "mision": False, "guion": None, "resultado": "protocolo",
              "maniobras": 0, "dt": 0.1, "obst": [], "version": "Mínimo indispensable · decisor %s" % dec,
              "paneles": [[P.PANEL[0], P.PANEL[1] + P.DY_PANEL, P.PANEL[2], P.PANEL[3] + P.DY_PANEL, P.PANEL[4]]],
-             "autor": "Brahian Andrés Orrego Osorio", "escenarios": nombres, "cuadros": cuadros}
+             "autor": "Brahian Andrés Orrego Osorio", "escenarios": nombres, "inicio": inicio, "cuadros": cuadros}
     with open(os.path.join(D.AQUI, "replay", "replay_protocolo_%s.json" % dec), "w", encoding="utf-8") as fh:
         json.dump(datos, fh, ensure_ascii=False, separators=(",", ":"))
 

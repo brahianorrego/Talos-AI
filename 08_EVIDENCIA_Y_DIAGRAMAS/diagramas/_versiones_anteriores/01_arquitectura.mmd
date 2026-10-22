@@ -1,0 +1,11 @@
+flowchart TB
+    CAM["Cámara USB<br/>640×480 · 30 cuadros/s"] --> YOLO["<b>IA 1 · YOLO26n</b><br/>preentrenado (COCO)<br/>TensorRT FP16 · 9–11 ms"]
+    LID["LiDAR TF03<br/>1 rayo · 100 Hz"]
+    EKF["Pixhawk · EKF<br/>velocidad y altura"]
+    YOLO --> ENT
+    LID --> ENT
+    EKF --> ENT
+    ENT["<b>Jetson Orin Nano</b><br/>15 entradas: caja, LiDAR,<br/>velocidad, seguimiento"] --> MLP["<b>IA 2 · MLP 32-16</b><br/>P(riesgo en 3 s)"]
+    MLP -->|"P ≥ 0.7 en<br/>2 cuadros"| ENV(["<b>Envolvente de reglas</b><br/>LiDAR &lt; 3 m frena siempre<br/>árbitro autoriza el ascenso"])
+    ENV -->|"MAVLink 2 · TELEM2"| GUI["<b>Pixhawk · GUIDED</b><br/>v horizontal = 0<br/>subir a 3.30 m"]
+    RC["Piloto · radiocontrol<br/>CH5 modo · CH8 parada"] ==>|"siempre manda"| GUI

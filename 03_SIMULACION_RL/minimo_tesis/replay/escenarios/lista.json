@@ -1,0 +1,682 @@
+[
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "a_panel_1",
+  "texto": "Panel fijo, avance a 1 m/s",
+  "archivo": "comite/a_panel_1.json",
+  "segundos": 28.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "a_panel_2",
+  "texto": "Panel fijo, avance a 2 m/s",
+  "archivo": "comite/a_panel_2.json",
+  "segundos": 18.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "a_panel_3",
+  "texto": "Panel fijo, avance a 3 m/s",
+  "archivo": "comite/a_panel_3.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "a_panel_4",
+  "texto": "Panel fijo, avance a 4 m/s",
+  "archivo": "comite/a_panel_4.json",
+  "segundos": 13.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "b_quieta_1.5",
+  "texto": "Persona quieta, avance a 1.5 m/s",
+  "archivo": "comite/b_quieta_1.5.json",
+  "segundos": 21.3
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "b_quieta_3.0",
+  "texto": "Persona quieta, avance a 3.0 m/s",
+  "archivo": "comite/b_quieta_3.0.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "c_frente_camina",
+  "texto": "Persona de frente que camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "comite/c_frente_camina.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "c_frente_corre",
+  "texto": "Persona de frente que corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "comite/c_frente_corre.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "d_cruza_camina",
+  "texto": "Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "comite/d_cruza_camina.json",
+  "segundos": 19.1
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "d_cruza_corre",
+  "texto": "Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "comite/d_cruza_corre.json",
+  "segundos": 9.2
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "e_estatico_camina",
+  "texto": "Modo estático: persona que viene y camina (1.4 m/s)",
+  "archivo": "comite/e_estatico_camina.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "e_estatico_corre",
+  "texto": "Modo estático: persona que viene y corre (3.3 m/s)",
+  "archivo": "comite/e_estatico_corre.json",
+  "segundos": 11.0
+ },
+ {
+  "decisor": "reglas (protocolo del comité)",
+  "grupo": "comite",
+  "escenario": "e_estatico_lado",
+  "texto": "Modo estático: persona que pasa de lado a 5 m (1.4 m/s)",
+  "archivo": "comite/e_estatico_lado.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "a_panel_1",
+  "texto": "Panel fijo, avance a 1 m/s",
+  "archivo": "reglas/a_panel_1.json",
+  "segundos": 28.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "a_panel_2",
+  "texto": "Panel fijo, avance a 2 m/s",
+  "archivo": "reglas/a_panel_2.json",
+  "segundos": 18.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "a_panel_3",
+  "texto": "Panel fijo, avance a 3 m/s",
+  "archivo": "reglas/a_panel_3.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "a_panel_4",
+  "texto": "Panel fijo, avance a 4 m/s",
+  "archivo": "reglas/a_panel_4.json",
+  "segundos": 13.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "b_quieta_1.5",
+  "texto": "Persona quieta, avance a 1.5 m/s",
+  "archivo": "reglas/b_quieta_1.5.json",
+  "segundos": 21.3
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "b_quieta_3.0",
+  "texto": "Persona quieta, avance a 3.0 m/s",
+  "archivo": "reglas/b_quieta_3.0.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "c_frente_camina",
+  "texto": "Persona de frente que camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "reglas/c_frente_camina.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "c_frente_corre",
+  "texto": "Persona de frente que corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "reglas/c_frente_corre.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "d_cruza_camina",
+  "texto": "Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "reglas/d_cruza_camina.json",
+  "segundos": 19.1
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "d_cruza_corre",
+  "texto": "Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "reglas/d_cruza_corre.json",
+  "segundos": 9.2
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "e_estatico_camina",
+  "texto": "Modo estático: persona que viene y camina (1.4 m/s)",
+  "archivo": "reglas/e_estatico_camina.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "e_estatico_corre",
+  "texto": "Modo estático: persona que viene y corre (3.3 m/s)",
+  "archivo": "reglas/e_estatico_corre.json",
+  "segundos": 11.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "e_estatico_lado",
+  "texto": "Modo estático: persona que pasa de lado a 5 m (1.4 m/s)",
+  "archivo": "reglas/e_estatico_lado.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "f_cruza_delante",
+  "texto": "Cruza 3-4 m por delante del dron y sigue (no debe activarse)",
+  "archivo": "reglas/f_cruza_delante.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "f_cruza_a_tiempo",
+  "texto": "Cruza justo por donde pasa el dron (debe activarse)",
+  "archivo": "reglas/f_cruza_a_tiempo.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "f_paralela_3",
+  "texto": "Viene de frente, 3 m al costado de la trayectoria (no debe activarse)",
+  "archivo": "reglas/f_paralela_3.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "f_paralela_1",
+  "texto": "Viene de frente, 1 m al costado (debe activarse)",
+  "archivo": "reglas/f_paralela_1.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "reglas",
+  "grupo": "reglas",
+  "escenario": "f_aleja",
+  "texto": "Camina delante en el mismo sentido, más rápido que el dron (no debe activarse)",
+  "archivo": "reglas/f_aleja.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "a_panel_1",
+  "texto": "Panel fijo, avance a 1 m/s",
+  "archivo": "ia/a_panel_1.json",
+  "segundos": 28.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "a_panel_2",
+  "texto": "Panel fijo, avance a 2 m/s",
+  "archivo": "ia/a_panel_2.json",
+  "segundos": 18.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "a_panel_3",
+  "texto": "Panel fijo, avance a 3 m/s",
+  "archivo": "ia/a_panel_3.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "a_panel_4",
+  "texto": "Panel fijo, avance a 4 m/s",
+  "archivo": "ia/a_panel_4.json",
+  "segundos": 13.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "b_quieta_1.5",
+  "texto": "Persona quieta, avance a 1.5 m/s",
+  "archivo": "ia/b_quieta_1.5.json",
+  "segundos": 21.3
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "b_quieta_3.0",
+  "texto": "Persona quieta, avance a 3.0 m/s",
+  "archivo": "ia/b_quieta_3.0.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "c_frente_camina",
+  "texto": "Persona de frente que camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia/c_frente_camina.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "c_frente_corre",
+  "texto": "Persona de frente que corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia/c_frente_corre.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "d_cruza_camina",
+  "texto": "Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia/d_cruza_camina.json",
+  "segundos": 19.1
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "d_cruza_corre",
+  "texto": "Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia/d_cruza_corre.json",
+  "segundos": 9.2
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "e_estatico_camina",
+  "texto": "Modo estático: persona que viene y camina (1.4 m/s)",
+  "archivo": "ia/e_estatico_camina.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "e_estatico_corre",
+  "texto": "Modo estático: persona que viene y corre (3.3 m/s)",
+  "archivo": "ia/e_estatico_corre.json",
+  "segundos": 11.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "e_estatico_lado",
+  "texto": "Modo estático: persona que pasa de lado a 5 m (1.4 m/s)",
+  "archivo": "ia/e_estatico_lado.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "f_cruza_delante",
+  "texto": "Cruza 3-4 m por delante del dron y sigue (no debe activarse)",
+  "archivo": "ia/f_cruza_delante.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "f_cruza_a_tiempo",
+  "texto": "Cruza justo por donde pasa el dron (debe activarse)",
+  "archivo": "ia/f_cruza_a_tiempo.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "f_paralela_3",
+  "texto": "Viene de frente, 3 m al costado de la trayectoria (no debe activarse)",
+  "archivo": "ia/f_paralela_3.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "f_paralela_1",
+  "texto": "Viene de frente, 1 m al costado (debe activarse)",
+  "archivo": "ia/f_paralela_1.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA sola",
+  "grupo": "ia",
+  "escenario": "f_aleja",
+  "texto": "Camina delante en el mismo sentido, más rápido que el dron (no debe activarse)",
+  "archivo": "ia/f_aleja.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "a_panel_1",
+  "texto": "Panel fijo, avance a 1 m/s",
+  "archivo": "ia_env/a_panel_1.json",
+  "segundos": 28.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "a_panel_2",
+  "texto": "Panel fijo, avance a 2 m/s",
+  "archivo": "ia_env/a_panel_2.json",
+  "segundos": 18.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "a_panel_3",
+  "texto": "Panel fijo, avance a 3 m/s",
+  "archivo": "ia_env/a_panel_3.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "a_panel_4",
+  "texto": "Panel fijo, avance a 4 m/s",
+  "archivo": "ia_env/a_panel_4.json",
+  "segundos": 13.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "b_quieta_1.5",
+  "texto": "Persona quieta, avance a 1.5 m/s",
+  "archivo": "ia_env/b_quieta_1.5.json",
+  "segundos": 21.3
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "b_quieta_3.0",
+  "texto": "Persona quieta, avance a 3.0 m/s",
+  "archivo": "ia_env/b_quieta_3.0.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "c_frente_camina",
+  "texto": "Persona de frente que camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia_env/c_frente_camina.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "c_frente_corre",
+  "texto": "Persona de frente que corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia_env/c_frente_corre.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "d_cruza_camina",
+  "texto": "Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia_env/d_cruza_camina.json",
+  "segundos": 19.1
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "d_cruza_corre",
+  "texto": "Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia_env/d_cruza_corre.json",
+  "segundos": 9.2
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "e_estatico_camina",
+  "texto": "Modo estático: persona que viene y camina (1.4 m/s)",
+  "archivo": "ia_env/e_estatico_camina.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "e_estatico_corre",
+  "texto": "Modo estático: persona que viene y corre (3.3 m/s)",
+  "archivo": "ia_env/e_estatico_corre.json",
+  "segundos": 11.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "e_estatico_lado",
+  "texto": "Modo estático: persona que pasa de lado a 5 m (1.4 m/s)",
+  "archivo": "ia_env/e_estatico_lado.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "f_cruza_delante",
+  "texto": "Cruza 3-4 m por delante del dron y sigue (no debe activarse)",
+  "archivo": "ia_env/f_cruza_delante.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "f_cruza_a_tiempo",
+  "texto": "Cruza justo por donde pasa el dron (debe activarse)",
+  "archivo": "ia_env/f_cruza_a_tiempo.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "f_paralela_3",
+  "texto": "Viene de frente, 3 m al costado de la trayectoria (no debe activarse)",
+  "archivo": "ia_env/f_paralela_3.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "f_paralela_1",
+  "texto": "Viene de frente, 1 m al costado (debe activarse)",
+  "archivo": "ia_env/f_paralela_1.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA + envolvente",
+  "grupo": "ia_env",
+  "escenario": "f_aleja",
+  "texto": "Camina delante en el mismo sentido, más rápido que el dron (no debe activarse)",
+  "archivo": "ia_env/f_aleja.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "a_panel_1",
+  "texto": "Panel fijo, avance a 1 m/s",
+  "archivo": "ia_env_estricta/a_panel_1.json",
+  "segundos": 28.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "a_panel_2",
+  "texto": "Panel fijo, avance a 2 m/s",
+  "archivo": "ia_env_estricta/a_panel_2.json",
+  "segundos": 18.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "a_panel_3",
+  "texto": "Panel fijo, avance a 3 m/s",
+  "archivo": "ia_env_estricta/a_panel_3.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "a_panel_4",
+  "texto": "Panel fijo, avance a 4 m/s",
+  "archivo": "ia_env_estricta/a_panel_4.json",
+  "segundos": 13.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "b_quieta_1.5",
+  "texto": "Persona quieta, avance a 1.5 m/s",
+  "archivo": "ia_env_estricta/b_quieta_1.5.json",
+  "segundos": 21.3
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "b_quieta_3.0",
+  "texto": "Persona quieta, avance a 3.0 m/s",
+  "archivo": "ia_env_estricta/b_quieta_3.0.json",
+  "segundos": 14.6
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "c_frente_camina",
+  "texto": "Persona de frente que camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia_env_estricta/c_frente_camina.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "c_frente_corre",
+  "texto": "Persona de frente que corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia_env_estricta/c_frente_corre.json",
+  "segundos": 20.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "d_cruza_camina",
+  "texto": "Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s",
+  "archivo": "ia_env_estricta/d_cruza_camina.json",
+  "segundos": 19.1
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "d_cruza_corre",
+  "texto": "Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s",
+  "archivo": "ia_env_estricta/d_cruza_corre.json",
+  "segundos": 9.2
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "e_estatico_camina",
+  "texto": "Modo estático: persona que viene y camina (1.4 m/s)",
+  "archivo": "ia_env_estricta/e_estatico_camina.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "e_estatico_corre",
+  "texto": "Modo estático: persona que viene y corre (3.3 m/s)",
+  "archivo": "ia_env_estricta/e_estatico_corre.json",
+  "segundos": 11.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "e_estatico_lado",
+  "texto": "Modo estático: persona que pasa de lado a 5 m (1.4 m/s)",
+  "archivo": "ia_env_estricta/e_estatico_lado.json",
+  "segundos": 23.4
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "f_cruza_delante",
+  "texto": "Cruza 3-4 m por delante del dron y sigue (no debe activarse)",
+  "archivo": "ia_env_estricta/f_cruza_delante.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "f_cruza_a_tiempo",
+  "texto": "Cruza justo por donde pasa el dron (debe activarse)",
+  "archivo": "ia_env_estricta/f_cruza_a_tiempo.json",
+  "segundos": 16.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "f_paralela_3",
+  "texto": "Viene de frente, 3 m al costado de la trayectoria (no debe activarse)",
+  "archivo": "ia_env_estricta/f_paralela_3.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "f_paralela_1",
+  "texto": "Viene de frente, 1 m al costado (debe activarse)",
+  "archivo": "ia_env_estricta/f_paralela_1.json",
+  "segundos": 14.0
+ },
+ {
+  "decisor": "IA + envolvente estricta",
+  "grupo": "ia_env_estricta",
+  "escenario": "f_aleja",
+  "texto": "Camina delante en el mismo sentido, más rápido que el dron (no debe activarse)",
+  "archivo": "ia_env_estricta/f_aleja.json",
+  "segundos": 16.0
+ }
+]

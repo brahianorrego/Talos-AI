@@ -115,7 +115,7 @@ def correr(nombre, n, semilla, con_sistema=True, grabar=False, cf=None, cond=S.N
     grupo, desc, debe, v_pil, con_panel, pers, dur, x0 = TODOS[nombre]
     if v is not None:
         # otra rapidez de avance (barrido de la velocidad máxima segura): parte de más lejos para llegar a crucero antes de
-        # que el obstáculo entre en el alcance útil del LiDAR (~26 m)
+        # que el obstáculo entre en el alcance útil del LiDAR (con la geometría medida el rayo toca el piso a ~17 m)
         v_pil = v
         if x0 != 0.0:
             x0 = -(30.0 + v * v / 6.0)
@@ -202,8 +202,8 @@ def correr(nombre, n, semilla, con_sistema=True, grabar=False, cf=None, cond=S.N
 def _cuadro(w, sis, m, v_pil, parada, desc, i):
     """Un cuadro del visor (formato de la fase 1 de la misión: piloto al mando, BLOQUEO cuando interviene)."""
     lid = float(w.ultima["lid_real"][i])
-    lh = [w.dx[i] + lid * np.cos(w.psi[i]) * np.cos(np.radians(w.cam[i])),
-          w.dy[i] + lid * np.sin(w.psi[i]) * np.cos(np.radians(w.cam[i])), w.dz[i] + lid * np.sin(np.radians(w.cam[i]))]
+    lh = [w.dx[i] + lid * np.cos(w.psi[i]) * np.cos(np.radians(w.lid_pitch[i])),
+          w.dy[i] + lid * np.sin(w.psi[i]) * np.cos(np.radians(w.lid_pitch[i])), w.dz[i] + lid * np.sin(np.radians(w.lid_pitch[i]))]
     vis = bool(w.ultima["det"][i])
     pers = []
     if w.activa[i]:
@@ -459,8 +459,8 @@ def _informe(con, sin, args, seg, deg=None):
               sum(con[k]["falsa"].sum() for k, e in ESCENARIOS.items() if not e[2]),
               n * sum(1 for e in ESCENARIOS.values() if not e[2])),
           ""] + (_seccion_degradadas(deg, n) if deg else []) + _seccion_campo() + ["## Límites del protocolo", "",
-          "- Una sola persona o un solo panel por vuelo, suelo plano, panel de 2.6 m (por debajo del rayo del LiDAR desde "
-          "2.3 m) y viento suave. No hay lluvia, noche ni oclusiones parciales por otros objetos.",
+          "- Una sola persona o un solo panel por vuelo, suelo plano, panel de 2.6 m (el rayo del LiDAR lo alcanza desde %.1f m de "
+          "altura) y viento suave. No hay lluvia, noche ni oclusiones parciales por otros objetos." % M.Z_PILOTO,
           "- El detector es un modelo estadístico de YOLO (probabilidad por distancia, ruido, estatura supuesta de 1.72 m y "
           "caja cortada); no son imágenes reales. La validación de campo debe repetir los escenarios a, b y d.",
           "- La parada del operador es un modelo (ve el choque a 2 s y reacciona en 0.7 s).",
@@ -520,20 +520,21 @@ def _seccion_degradadas(deg, n):
           "frenado, así que perder el 30 % de los cuadros (recall 0.70) casi nunca deja sin detección más de 0.3 s; y el "
           "LiDAR toca el panel en decenas de lecturas seguidas, así que un 5 % sin retorno no cambia nada. Por eso los "
           "límites se buscan subiendo la velocidad y con las condiciones extremas.",
-          "- **Panel:** el límite lo pone el alcance útil del LiDAR. Con la cámara a −5° desde 2.3 m el rayo toca el suelo a "
-          "~26 m, y por encima de ~11 m/s la distancia de frenado más el margen no cabe en ese alcance. La latencia de "
-          "300 ms lo baja a 10 m/s.",
+          "- **Panel:** el límite lo pone el alcance útil del LiDAR. Con la geometría medida del dron real (TF03 fijo a %.1f° "
+          "desde %.1f m, sin gimbal) el rayo toca el suelo a ~%.0f m; por encima de unos 5 m/s la distancia de frenado más el "
+          "margen no cabe en ese alcance. Con el modelo anterior (gimbal que mantenía el rayo a −5° desde 2.3 m) el suelo "
+          "quedaba a ~26 m y el límite era de 11 m/s." % (S.LIDAR_PITCH_MONTAJE, M.Z_PILOTO, M.Z_PILOTO / np.tan(np.radians(-S.LIDAR_PITCH_MONTAJE))),
           "- **Persona quieta:** el límite (4 m/s) lo pone la regla dura de los 8 m, no la percepción: aunque la vea desde "
           "lejos, el sistema no se activa antes de los 8 m, y por encima de 4 m/s no alcanza a detenerse a 2 m (sube y le "
           "pasa por encima, fuera de su alcance, sin chocar, pero no se detiene con margen). El viento de cola lo empeora "
           "(menos vuelos con margen a 5 m/s). Si el comité acepta activarse antes con una persona inmóvil al frente, "
           "este límite sube.",
-          "- **Persona que corre hacia el dron:** lo que más pesa es la latencia (de 10 m/s con 100 ms a 7 m/s con 300 ms).",
+          "- **Persona que corre hacia el dron:** lo que más pesa es la latencia de la cadena (compárense las columnas C0, C6, C7 y C13 de la tabla).",
           "- **Condiciones extremas (C11-C13), donde se rompe:** con recall 0.40 o latencia de 500 ms aparecen las primeras "
-          "fallas con la persona que corre hacia el dron (velocidad segura 7 y 5 m/s). Con solo cabeza y hombros a la vista "
-          "(15 % del alto) la detección llega tarde incluso a 1 m/s y aparecen choques (2 de 100 en el barrido; en la tabla "
-          "de escenarios, con otras semillas, 0 de 100: el mismo orden de magnitud). Ese es el límite de la percepción: el "
-          "sistema necesita ver al menos un tercio del cuerpo.",
+          "fallas con la persona que corre hacia el dron (ver la tabla de velocidades seguras). Con solo cabeza y hombros a la "
+          "vista (15 % del alto) la detección llega tarde incluso a 1 m/s y aparecen choques (unos pocos de 100 en el barrido; "
+          "en la tabla de escenarios, con otras semillas, 0 de 100: el mismo orden de magnitud). Ese es el límite de la "
+          "percepción: el sistema necesita ver al menos un tercio del cuerpo.",
           "- **Recomendación operativa:** limitar en ArduPilot la velocidad de avance del piloto (LOIT_SPEED) a la menor "
           "velocidad segura de la condición esperada; con personas en la zona, 4 m/s.", ""]
     return L
@@ -547,8 +548,8 @@ def _seccion_campo():
             "piloto avanza en línea recta a 1, 2 y 3 m/s (velocidad limitada con LOIT_SPEED), 10 repeticiones por velocidad.",
             "2. **Persona quieta (b):** primero un maniquí o una silueta de 1.7 m en el lugar del panel. Una persona real solo "
             "después de que (a) y (b) con maniquí den 10 de 10, y siempre con la parada (CH8) en la mano del operador.",
-            "3. **Persona que se acerca (c, e):** un voluntario camina hacia el dron, que vuela en estático a 2.3 m o "
-            "avanza a 1 m/s; se empieza desde 15 m, 10 repeticiones. Correr hacia el dron solo con maniquí sobre un carro.",
+            ("3. **Persona que se acerca (c, e):** un voluntario camina hacia el dron, que vuela en estático a %.1f m o "
+             "avanza a 1 m/s; se empieza desde 15 m, 10 repeticiones. Correr hacia el dron solo con maniquí sobre un carro.") % M.Z_PILOTO,
             "4. **Persona que cruza lejos (d):** cruza a 12 m al frente, caminando y trotando, 10 repeticiones de cada una.",
             "5. **Condiciones:** repetir (a) y (b) con sol de frente y con viento de más de 3 m/s, si se dan.", "",
             "Qué se mide con el registro de la Jetson (una línea por cuadro con la marca de tiempo del reloj del sistema): "

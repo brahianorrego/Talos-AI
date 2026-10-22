@@ -72,7 +72,7 @@ class Extractor(object):
         # velocidad lateral relativa: componente perpendicular a la línea de vista
         ux, uy = t.rel_x / np.maximum(d, 1e-6), t.rel_y / np.maximum(d, 1e-6)
         v_lat = np.abs(-uy * t.vrx + ux * t.vry)
-        suelo = m["dz"] / max(np.sin(np.radians(-M.GIMBAL_FRONTAL)), 1e-6)
+        suelo = M.suelo_lidar(m)
         util = (m["lid"] < S.LIDAR_MAX - 0.05) & (np.abs(m["lid"] - suelo) > 1.0)
         X = np.stack([
             det.astype(float), m["alto"], m["ancho"], m["alto"] * m["ancho"],
@@ -233,7 +233,7 @@ class DecisorIA(object):
         en_trk = t.t_sin <= M.T_SOSTIENE
         d = np.hypot(t.rel_x, t.rel_y)
         arbitro = en_trk & ((d < M.D_CRITICA) | ((d < M.D_AMENAZA) & (t.vac > M.V_ACERCA)))
-        suelo = m["dz"] / max(np.sin(np.radians(-M.GIMBAL_FRONTAL)), 1e-6)
+        suelo = M.suelo_lidar(m)
         util = (m["lid"] < S.LIDAR_MAX - 0.05) & (np.abs(m["lid"] - suelo) > 1.0)
         bloqueo = util & (m["lid"] < M.D_BLOQUEO) & (m["v_av"] > 0.2)
         if self.env:

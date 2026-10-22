@@ -23,14 +23,20 @@ RIESGO DEFINIDO (con las medidas de los sensores, retrasadas 100 ms y con ruido)
 Las mismas condiciones con la verdad del simulador (sin ruido ni retardo) definen el "riesgo real" con que se miden las
 activaciones verdaderas y falsas y la latencia.
 """
+import os
+
 import numpy as np
 
-from .control import AutopilotoArduPilot, GimbalBaseCam
+from .control import AutopilotoArduPilot
 from . import sensores as S
 
 DT = S.DT
-Z_PILOTO, Z_SEGURA = 2.3, 3.30
-GIMBAL_FRONTAL = -5.0              # cámara casi horizontal: ve personas y paneles al frente; el suelo cae a ~26 m
+# Altura de vuelo del piloto: 2.0 m por pedido de Brahian (20-oct: "la altura del mínimo, máxima 2 m"; antes 2.3 m). La altura segura sigue
+# en 3.30 m (regla dura D-043) hasta que Brahian decida otra por escrito. MINIMO_Z_PILOTO permite probar otra altura.
+Z_PILOTO, Z_SEGURA = float(os.environ.get("MINIMO_Z_PILOTO", "2.0")), 3.30
+# SIN GIMBAL (dron real del 20-oct): la cámara y el TF03 van fijos al chasis; su inclinación es la del montaje (medida) más el
+# cabeceo del chasis (nariz abajo al acelerar, arriba al frenar). Antes el gimbal los mantenía en -5°.
+CAM_MONTAJE, LIDAR_MONTAJE = S.CAM_PITCH_MONTAJE, S.LIDAR_PITCH_MONTAJE
 RADIO_DRON = 0.4
 ALCANCE_H, ALCANCE_Z = 1.0, 2.6    # burbuja de una persona (horizontal y por debajo de esta altura)
 D_CRITICA, D_AMENAZA, V_ACERCA = 3.0, 8.0, 0.4
@@ -63,8 +69,8 @@ class Mundo(object):
         self.estatura = np.clip(self.rng.normal(e[0], e[1], n), e[2], e[3])
         self.ap = AutopilotoArduPilot(n, self.rng)
         self.ap.reset(np.ones(n, bool), nivel_viento)
-        self.gb = GimbalBaseCam(n, GIMBAL_FRONTAL)
-        self.cam = np.full(n, GIMBAL_FRONTAL)
+        self.cam = np.full(n, CAM_MONTAJE)                # inclinación de la cámara respecto al horizonte (°)
+        self.lid_pitch = np.full(n, LIDAR_MONTAJE)        # inclinación del rayo del TF03 respecto al horizonte (°)
         self.t = 0.0
         self.cola = []                                   # medidas en tránsito (retardo de 100 ms)
         self.choque_panel, self.choque_persona = np.zeros(n, bool), np.zeros(n, bool)
@@ -74,13 +80,14 @@ class Mundo(object):
         det, d_est, rumbo, frac = S.camara(self.rng, self.dx, self.dy, self.dz, self.psi, self.cam, self.px, self.py,
                                            self.estatura, self.activa, self.paneles, self.cond)
         lid, lid_real, que = S.lidar(self.rng, self.dx, self.dy, self.dz, self.psi, self.cam, self.px, self.py,
-                                     self.estatura, self.activa, self.paneles, self.cond, self.rng_deg)
+                                     self.estatura, self.activa, self.paneles, self.cond, self.rng_deg, pitch_lidar=self.lid_pitch)
         # velocidad propia (EKF de ArduPilot: GPS + IMU), con un poco de ruido
         v_av = (self.dvx * np.cos(self.psi) + self.dvy * np.sin(self.psi)) + self.rng.normal(0, 0.05, self.n)
         alto, ancho, conf = S.caja(self.rng_caja, self.dx, self.dy, self.dz, self.psi, self.cam, self.px, self.py,
                                    self.estatura, frac, det)
         m = dict(det=det, d=d_est, rumbo=rumbo, frac=frac, lid=lid, lid_real=lid_real, que=que, v_av=v_av,
-                 dz=self.dz.copy(), psi=self.psi.copy(), alto=alto, ancho=ancho, conf=conf)
+                 dz=self.dz.copy(), psi=self.psi.copy(), alto=alto, ancho=ancho, conf=conf,
+                 lid_pitch=self.lid_pitch.copy())
         self.cola.append(m)
         if len(self.cola) > self.cond.retardo + 1:
             self.cola.pop(0)
@@ -99,11 +106,11 @@ class Mundo(object):
             self.dvx += self.ap.ARRASTRE * w * DT
         self.ap.guinada(self, np.zeros(self.n), DT)
         self.psi = self.psi + np.radians(self.yaw_dps) * DT
-        cab0 = self.chasis_pitch.copy()
         self.dx += self.dvx * DT
         self.dy += self.dvy * DT
         self.dz = np.clip(self.dz + self.dvz * DT, 0.5, 8.0)
-        self.cam = self.gb.paso(np.full(self.n, GIMBAL_FRONTAL), self.chasis_pitch - cab0, DT)
+        self.cam = CAM_MONTAJE + self.chasis_pitch                 # fijos al chasis: siguen su cabeceo
+        self.lid_pitch = LIDAR_MONTAJE + self.chasis_pitch
         self.px = np.where(self.activa, self.px + self.pvx * DT, self.px)
         self.py = np.where(self.activa, self.py + self.pvy * DT, self.py)
         self.t += DT
@@ -113,6 +120,13 @@ class Mundo(object):
             self.choque_panel |= (d < RADIO_DRON + 0.1) & (self.dz < h + 0.2)
         dh = np.hypot(self.px - self.dx, self.py - self.dy)
         self.choque_persona |= self.activa & (dh < ALCANCE_H) & (self.dz < ALCANCE_Z)
+
+
+def suelo_lidar(m):
+    """Distancia a la que el rayo del TF03 toca el suelo (se descarta esa lectura). Con la inclinación que da el cabeceo del chasis
+    (la Pixhawk lo informa); si el rayo apunta al horizonte o hacia arriba, no hay lectura de suelo."""
+    s = np.sin(np.radians(-m["lid_pitch"]))
+    return np.where(s > 1e-3, m["dz"] / np.maximum(s, 1e-3), np.inf)
 
 
 def riesgo_obstaculo(L, v_av, util=None):
@@ -171,7 +185,7 @@ class SistemaMinimo(object):
         self.cpa = np.where(en_trk, cpa_previsto(rx, ry, self.vrx, self.vry), np.inf)
         r_per = riesgo_persona(d, self.vac, self.cpa, en_trk)
         # LiDAR: se descarta la lectura del suelo (la altura y el ángulo dicen dónde cae)
-        suelo = m["dz"] / max(np.sin(np.radians(-GIMBAL_FRONTAL)), 1e-6)
+        suelo = suelo_lidar(m)
         util = (m["lid"] < S.LIDAR_MAX - 0.05) & (np.abs(m["lid"] - suelo) > 1.0)
         r_obs = riesgo_obstaculo(m["lid"], m["v_av"], util)
         riesgo = (r_per | r_obs) & self.activo

@@ -9,6 +9,9 @@ ni tocar nada de la simulación. Solo lectura y solo en este computador (127.0.0
 Uso:  03_SIMULACION_RL\\.venv\\Scripts\\python.exe 04_VISOR_Y_MOTOR_GRAFICO\\estacion\\servidor.py [--puerto 8768]
 """
 import argparse
+import re
+import socket
+from concurrent.futures import ThreadPoolExecutor
 import json
 import http.server
 import os
@@ -19,6 +22,7 @@ import urllib.request
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SIM = os.path.normpath(os.path.join(AQUI, "..", "..", "03_SIMULACION_RL"))
+JETSON = os.environ.get("DRONIA_JETSON", "talos-jetson.local:8080")      # panel de campo del mínimo (02_JETSON_MINIMO/panel_campo.py)
 TIPOS = {".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".html": "text/html; charset=utf-8"}
 
 
@@ -35,6 +39,51 @@ def corridas_v17():
             lista.append({"carpeta": nombre, "it": e.get("it"), "pasos": e.get("pasos", 0), "t": e.get("t", 0),
                           "vivo": time.time() - e.get("t", 0) < 120})
     return sorted(lista, key=lambda c: -c["t"])
+
+
+def _sirve(host, t=0.8):
+    try:
+        with urllib.request.urlopen("http://%s/toma/estado" % host, timeout=t) as r:
+            return r.status == 200
+    except (OSError, ValueError):
+        return False
+
+
+def buscar_jetson():
+    """Si la Jetson no responde en JETSON, prueba talos-jetson.local y luego recorre las direcciones de la red local (puerto 8080). Devuelve 'ip:puerto' o None."""
+    global JETSON
+    for h in (JETSON, "talos-jetson.local:8080"):
+        if _sirve(h):
+            JETSON = h
+            return h
+    ips = set()
+    try:
+        u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        u.connect(("8.8.8.8", 80))
+        ips.add(u.getsockname()[0])
+        u.close()
+    except OSError:
+        pass
+    try:
+        ips.update(socket.gethostbyname_ex(socket.gethostname())[2])
+    except OSError:
+        pass
+
+    def prueba(h):
+        try:
+            with socket.create_connection((h, 8080), timeout=0.4):
+                pass
+        except OSError:
+            return None
+        return h + ":8080" if _sirve(h + ":8080", 1.5) else None
+    for ip in sorted(i for i in ips if not i.startswith("127.")):
+        base = ip.rsplit(".", 1)[0]
+        with ThreadPoolExecutor(64) as ex:
+            for r in ex.map(prueba, ["%s.%d" % (base, i) for i in range(1, 255)]):
+                if r:
+                    JETSON = r
+                    return r
+    return None
 
 
 sys.path.insert(0, os.path.join(AQUI, "..", "entorno"))
@@ -104,7 +153,53 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(datos)
 
+    def jetson(self, ruta=None):
+        """/jetson/<ruta>: pasa la petición al panel de la Jetson del mínimo (JETSON, por defecto talos-jetson.local:8080) y devuelve la respuesta tal cual,
+        incluido el video MJPEG. Así minimo.html habla con un solo origen y no hace falta CORS en la Jetson. Solo GET, solo ese servidor."""
+        destino = "http://%s%s" % (JETSON, ruta if ruta is not None else "/" + self.path[len("/jetson/"):])
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(destino), timeout=8)
+        except OSError as e:
+            self.send_error(502, "Jetson sin respuesta: %s" % getattr(e, "reason", e))
+            return
+        try:
+            self.send_response(r.status)
+            self.send_header("Content-Type", r.headers.get("Content-Type", "application/octet-stream"))
+            if r.headers.get("Content-Length") and "multipart" not in r.headers.get("Content-Type", ""):
+                self.send_header("Content-Length", r.headers["Content-Length"])
+            self.end_headers()
+            while True:
+                trozo = r.read(8192) if "multipart" not in r.headers.get("Content-Type", "") else r.read1(8192)
+                if not trozo:
+                    break
+                self.wfile.write(trozo)
+                self.wfile.flush()
+        except (OSError, ValueError):
+            pass          # el navegador cerró la conexión (cambió de página o se cortó el video)
+        finally:
+            r.close()
+
     def do_GET(self):
+        if self.path.startswith("/jetson/"):
+            return self.jetson()
+        if re.match(r"^/(calibrar|alinear|video|datos|toma)(/|\?|$)", self.path):     # las páginas de la Jetson, sin prefijo: así /calibrar funciona dentro de la estación (iframe del mismo origen)
+            return self.jetson(self.path)
+        if self.path.startswith("/jetson_"):                       # /jetson_estado, /jetson_buscar, /jetson_host?h=ip:puerto
+            u = urllib.parse.urlparse(self.path)
+            global JETSON
+            if u.path == "/jetson_buscar":
+                buscar_jetson()
+            elif u.path == "/jetson_host":
+                h = urllib.parse.parse_qs(u.query).get("h", [""])[0].strip()
+                if re.fullmatch(r"[A-Za-z0-9.\-]+(:\d{2,5})?", h):
+                    JETSON = h if ":" in h else h + ":8080"
+            cuerpo = json.dumps({"host": JETSON, "ok": _sirve(JETSON)}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(cuerpo)))
+            self.end_headers()
+            self.wfile.write(cuerpo)
+            return
         if self.path.startswith("/tiles/"):
             return self.tesela()
         if self.path.startswith("/unreal_cam/"):                  # lo que ven las cámaras del dron en Unreal (unreal/vivo_unreal.py las guarda como JPG ~10 Hz)
@@ -176,4 +271,7 @@ if __name__ == "__main__":
     a = ap.parse_args()
     os.chdir(AQUI)
     print("Estación de tierra en http://127.0.0.1:%d/  (Ctrl+C para cerrar)" % a.puerto, flush=True)
+    if not _sirve(JETSON):          # primera búsqueda en segundo plano: la página la repite con un botón si hace falta
+        import threading
+        threading.Thread(target=buscar_jetson, name="buscar-jetson", daemon=True).start()
     http.server.ThreadingHTTPServer(("127.0.0.1", a.puerto), Manejador).serve_forever()

@@ -14,6 +14,8 @@ pegar en Word). Todos son de autoría propia: según la plantilla USB no hace fa
 | `07_caja_transparente` | Figura 7 (2.1.1) | Los cuatro subsistemas (potencia, percepción, decisión, control) y sus dos respuestas |
 | `08_funcional` | Figura 8 (2.1.2) | Descomposición funcional en F1 percibir, F2 decidir y F3 responder |
 | `09_conexiones` | Figura 10 (2.2.2) | Conexiones eléctricas (líneas gruesas) y de datos (líneas delgadas) |
+| `10_motores_vista_superior` | Nueva (2.2.2) | Motores vistos desde arriba: número, lugar, giro, hélice y salida de la Pixhawk (`FRAME_TYPE = 18`). Hay `.svg` editable y `.png` |
+| `11_ubicacion_componentes_vista_lateral` | Nueva (2.2.2) | De arriba abajo: GPS, Jetson y antenas, placa superior, bloque de cables y TF03, placa inferior, Pixhawk, batería. Esquema sin escala (`.svg` y `.png`) |
 
 Los diagramas 06 a 09 reemplazan figuras de la versión anterior que tenían errores (Raspberry Pi, textos ilegibles o
 datos que no coincidían con el montaje real). Se diseñaron para que, al tamaño de la página, la letra quede cerca de
@@ -26,3 +28,5 @@ npx -y @mermaid-js/mermaid-cli@11.4.2 -i 01_arquitectura.mmd -o 01_arquitectura.
 ```
 
 Se usó el tema `neutral` con letra Times New Roman (la misma del documento).
+
+**20-oct:** `01`, `07` y `09` se actualizaron (cámara CSI en lugar de la USB y sin el estabilizador BaseCam; YOLO ~22 ms). Las versiones anteriores están en `_versiones_anteriores/`. La altura de intervención (3.30 m) no se tocó: está por decidir (D-077).

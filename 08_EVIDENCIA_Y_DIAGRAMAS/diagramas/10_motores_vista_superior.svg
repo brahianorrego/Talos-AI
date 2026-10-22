@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1070" width="1000" height="1070" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="hCW" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1565c0"/></marker>
+    <marker id="hCCW" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e65100"/></marker>
+  </defs>
+  <rect width="1000" height="1070" fill="#ffffff"/>
+  <text x="500" y="42" text-anchor="middle" font-size="26" font-weight="700" fill="#1a1a1a">Distribución de los motores · vista desde arriba</text>
+  <text x="500" y="70" text-anchor="middle" font-size="16" fill="#555">Dron del mínimo (Pixhawk boca abajo, FRAME_TYPE 18 "X_REV") · sin hélices en las pruebas del 20-oct</text>
+
+  <!-- brazos -->
+  <g stroke="#37474f" stroke-width="26" stroke-linecap="round">
+    <line x1="500" y1="520" x2="255" y2="275"/><line x1="500" y1="520" x2="745" y2="275"/>
+    <line x1="500" y1="520" x2="255" y2="765"/><line x1="500" y1="520" x2="745" y2="765"/>
+  </g>
+
+  <!-- placa central de 15 x 15 cm (esquema: el largo de los brazos no está medido) -->
+  <rect x="425" y="445" width="150" height="150" fill="#fafafa" fill-opacity="0.92" stroke="#212121" stroke-width="3"/>
+  <!-- Jetson en caja (adelantada) -->
+  <rect x="445" y="458" width="110" height="82" rx="6" fill="#e3f2fd" fill-opacity="0.9" stroke="#1565c0" stroke-width="3"/>
+  <text x="500" y="494" text-anchor="middle" font-size="14" font-weight="700" fill="#0d47a1">Jetson</text>
+  <text x="500" y="512" text-anchor="middle" font-size="11" fill="#0d47a1">en caja de acrílico</text>
+  <line x1="470" y1="458" x2="452" y2="430" stroke="#37474f" stroke-width="4"/><line x1="530" y1="458" x2="548" y2="430" stroke="#37474f" stroke-width="4"/>
+  <!-- GPS en la parte posterior de la placa -->
+  <circle cx="500" cy="568" r="17" fill="#c8e6c9" stroke="#2e7d32" stroke-width="3"/>
+  <text x="500" y="573" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">GPS</text>
+  <!-- frente: TF03 (entre las placas) y cámara CSI (al frente de la caja) -->
+  <rect x="470" y="430" width="60" height="22" rx="4" fill="#fce4ec" stroke="#c2185b" stroke-width="3"/>
+  <text x="500" y="446" text-anchor="middle" font-size="12" font-weight="700" fill="#880e4f">TF03</text>
+  <rect x="488" y="446" width="24" height="12" rx="2" fill="#fff3e0" stroke="#e65100" stroke-width="2.5"/>
+
+  <text x="395" y="432" text-anchor="end" font-size="13" fill="#37474f" paint-order="stroke" stroke="#ffffff" stroke-width="5">Antenas WiFi</text>
+  <line x1="399" y1="428" x2="462" y2="442" stroke="#37474f" stroke-width="1.2"/>
+  <text x="395" y="492" text-anchor="end" font-size="13" fill="#0d47a1" paint-order="stroke" stroke="#ffffff" stroke-width="5">Jetson en caja de acrílico</text>
+  <line x1="399" y1="488" x2="445" y2="496" stroke="#0d47a1" stroke-width="1.2"/>
+  <text x="395" y="574" text-anchor="end" font-size="13" fill="#1b5e20" paint-order="stroke" stroke="#ffffff" stroke-width="5">GPS (parte posterior)</text>
+  <line x1="399" y1="570" x2="483" y2="568" stroke="#1b5e20" stroke-width="1.2"/>
+  <text x="612" y="430" text-anchor="start" font-size="13" fill="#880e4f" paint-order="stroke" stroke="#ffffff" stroke-width="5">TF03 (entre las placas)</text>
+  <line x1="608" y1="426" x2="532" y2="441" stroke="#880e4f" stroke-width="1.2"/>
+  <text x="612" y="458" text-anchor="start" font-size="13" fill="#bf360c" paint-order="stroke" stroke="#ffffff" stroke-width="5">Cámara CSI (al frente de la caja)</text>
+  <line x1="608" y1="454" x2="513" y2="452" stroke="#bf360c" stroke-width="1.2"/>
+  <text x="612" y="520" text-anchor="start" font-size="13" fill="#212121" paint-order="stroke" stroke="#ffffff" stroke-width="5">Placa central de 15 × 15 cm</text>
+  <line x1="608" y1="516" x2="576" y2="520" stroke="#212121" stroke-width="1.2"/>
+  <text x="612" y="584" text-anchor="start" font-size="13" fill="#6d4c41" paint-order="stroke" stroke="#ffffff" stroke-width="5">Pixhawk (boca abajo) y batería:</text>
+  <line x1="608" y1="580" x2="560" y2="584" stroke="#6d4c41" stroke-width="1.2"/>
+  <text x="612" y="601" text-anchor="start" font-size="13" fill="#6d4c41" paint-order="stroke" stroke="#ffffff" stroke-width="5">debajo de la placa inferior</text>
+  <!-- flecha frente -->
+  <line x1="500" y1="350" x2="500" y2="150" stroke="#c62828" stroke-width="8"/>
+  <polygon points="500,112 478,150 522,150" fill="#c62828"/>
+  <text x="500" y="100" text-anchor="middle" font-size="24" font-weight="800" fill="#c62828">FRENTE</text>
+  <text x="500" y="370" text-anchor="middle" font-size="13" fill="#c62828" paint-order="stroke" stroke="#ffffff" stroke-width="4">hacia donde miran la cámara y el LiDAR</text>
+
+  <!-- izquierda / derecha (vistos desde atrás del dron) -->
+  <text x="40" y="530" font-size="20" font-weight="700" fill="#455a64">IZQUIERDA</text>
+  <text x="960" y="530" text-anchor="end" font-size="20" font-weight="700" fill="#455a64">DERECHA</text>
+  <text x="40" y="552" font-size="12" fill="#78909c">(vistas desde atrás del dron)</text>
+
+  <!-- motores: FL=motor 4 (CCW) FR=motor 2 (CW) RL=motor 3 (CW) RR=motor 1 (CCW) -->
+  <!-- FL -->
+  <circle cx="250" cy="270" r="48" fill="#fff3e0" stroke="#e65100" stroke-width="5"/>
+  <path d="M250,200 A70,70 0 1,0 299.5,319.5" fill="none" stroke="#e65100" stroke-width="6" marker-end="url(#hCCW)"/>
+  <text x="250" y="282" text-anchor="middle" font-size="40" font-weight="800" fill="#bf360c">4</text>
+  <text x="250" y="378" text-anchor="middle" font-size="17" font-weight="700" fill="#bf360c">Motor 4 · delantero izquierdo</text>
+  <text x="250" y="400" text-anchor="middle" font-size="15" fill="#444">gira ANTI-horario · salida 1</text>
+  <text x="250" y="420" text-anchor="middle" font-size="15" fill="#444">hélice anti-horario · prueba D</text>
+  <!-- FR -->
+  <circle cx="750" cy="270" r="48" fill="#e3f2fd" stroke="#1565c0" stroke-width="5"/>
+  <path d="M750,200 A70,70 0 1,1 700.5,319.5" fill="none" stroke="#1565c0" stroke-width="6" marker-end="url(#hCW)"/>
+  <text x="750" y="282" text-anchor="middle" font-size="40" font-weight="800" fill="#0d47a1">2</text>
+  <text x="750" y="378" text-anchor="middle" font-size="17" font-weight="700" fill="#0d47a1">Motor 2 · delantero derecho</text>
+  <text x="750" y="400" text-anchor="middle" font-size="15" fill="#444">gira HORARIO · salida 3</text>
+  <text x="750" y="420" text-anchor="middle" font-size="15" fill="#444">hélice horario · prueba A</text>
+  <!-- RL -->
+  <circle cx="250" cy="770" r="48" fill="#e3f2fd" stroke="#1565c0" stroke-width="5"/>
+  <path d="M250,700 A70,70 0 1,1 200.5,819.5" fill="none" stroke="#1565c0" stroke-width="6" marker-end="url(#hCW)"/>
+  <text x="250" y="782" text-anchor="middle" font-size="40" font-weight="800" fill="#0d47a1">3</text>
+  <text x="250" y="878" text-anchor="middle" font-size="17" font-weight="700" fill="#0d47a1">Motor 3 · trasero izquierdo</text>
+  <text x="250" y="900" text-anchor="middle" font-size="15" fill="#444">gira HORARIO · salida 4</text>
+  <text x="250" y="920" text-anchor="middle" font-size="15" fill="#444">hélice horario · prueba C</text>
+  <!-- RR -->
+  <circle cx="750" cy="770" r="48" fill="#fff3e0" stroke="#e65100" stroke-width="5"/>
+  <path d="M750,700 A70,70 0 1,0 799.5,819.5" fill="none" stroke="#e65100" stroke-width="6" marker-end="url(#hCCW)"/>
+  <text x="750" y="782" text-anchor="middle" font-size="40" font-weight="800" fill="#bf360c">1</text>
+  <text x="750" y="878" text-anchor="middle" font-size="17" font-weight="700" fill="#bf360c">Motor 1 · trasero derecho</text>
+  <text x="750" y="900" text-anchor="middle" font-size="15" fill="#444">gira ANTI-horario · salida 2</text>
+  <text x="750" y="920" text-anchor="middle" font-size="15" fill="#444">hélice anti-horario · prueba B</text>
+
+  <!-- leyenda -->
+  <rect x="40" y="955" width="920" height="95" rx="10" fill="#f5f5f5" stroke="#cfd8dc"/>
+  <line x1="62" y1="985" x2="102" y2="985" stroke="#1565c0" stroke-width="6"/><text x="112" y="990" font-size="14" fill="#333">azul = gira en sentido de las manecillas del reloj (visto desde arriba)</text>
+  <line x1="62" y1="1010" x2="102" y2="1010" stroke="#e65100" stroke-width="6"/><text x="112" y="1015" font-size="14" fill="#333">naranja = gira en sentido contrario a las manecillas</text>
+  <text x="62" y="1033" font-size="13" fill="#555">Salida = pin de la Pixhawk (1 a 4). Esquema: el largo de los brazos no está medido.</text><text x="62" y="1048" font-size="13" fill="#555">La prueba de motores de ArduPilot va en orden A-B-C-D, en sentido horario desde el delantero derecho.</text>
+</svg>

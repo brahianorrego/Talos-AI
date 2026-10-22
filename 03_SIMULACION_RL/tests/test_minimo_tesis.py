@@ -9,6 +9,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from minimo_tesis import protocolo_comite as P  # noqa: E402
+from minimo_tesis.control import GimbalBaseCam  # noqa: E402  (copia congelada: el tope duro del gimbal sigue valiendo para el pan-tilt del plus)
 from minimo_tesis import sensores as S  # noqa: E402
 from minimo_tesis import sistema as M  # noqa: E402
 
@@ -18,7 +19,7 @@ AQUI = os.path.join(os.path.dirname(__file__), "..", "minimo_tesis")
 def medida(n, lid=30.0, det=False, d=50.0, rumbo=0.0, v_av=0.0, dz=2.3):
     """Medida sintética para la lógica (sin el mundo)."""
     return dict(det=np.full(n, det), d=np.full(n, d), rumbo=np.full(n, rumbo), frac=np.ones(n), lid=np.full(n, lid),
-                v_av=np.full(n, v_av), dz=np.full(n, dz), psi=np.zeros(n))
+                v_av=np.full(n, v_av), dz=np.full(n, dz), psi=np.zeros(n), lid_pitch=np.full(n, S.LIDAR_PITCH_MONTAJE))
 
 
 class TestIndependencia(unittest.TestCase):
@@ -32,8 +33,8 @@ class TestIndependencia(unittest.TestCase):
                 self.assertNotIn("from %s " % mod, txt, ruta)
 
     def test_gimbal_dentro_del_limite_duro(self):
-        g = M.GimbalBaseCam(3, M.GIMBAL_FRONTAL)
-        for c in (-120.0, 60.0, M.GIMBAL_FRONTAL):
+        g = GimbalBaseCam(3, -5.0)
+        for c in (-120.0, 60.0, -5.0):
             for _ in range(80):
                 a = g.paso(np.full(3, c), np.full(3, 25.0), M.DT)
                 self.assertTrue(((a >= -45.0) & (a <= 15.0)).all())
@@ -94,10 +95,10 @@ class TestSensores(unittest.TestCase):
     def test_lidar_ve_el_panel_y_descarta_lo_lejano(self):
         rng = np.random.default_rng(0)
         z = np.zeros(1)
-        med, real, que = S.lidar(rng, np.full(1, -5.0), z, np.full(1, 2.3), z, np.full(1, M.GIMBAL_FRONTAL), np.full(1, 99.0),
-                                 z, np.full(1, 1.7), np.zeros(1, bool), [P.PANEL])
+        med, real, que = S.lidar(rng, np.full(1, -5.0), z, np.full(1, 2.3), z, np.full(1, S.CAM_PITCH_MONTAJE), np.full(1, 99.0),
+                                 z, np.full(1, 1.7), np.zeros(1, bool), [P.PANEL], pitch_lidar=np.full(1, S.LIDAR_PITCH_MONTAJE))
         self.assertEqual(que[0], 2)
-        self.assertAlmostEqual(real[0], 5.0 / np.cos(np.radians(5.0)), delta=0.01)
+        self.assertAlmostEqual(real[0], 5.0 / np.cos(np.radians(-S.LIDAR_PITCH_MONTAJE)), delta=0.01)
 
     def test_retardo_de_100_ms(self):
         w = M.Mundo(1, 0)
@@ -125,9 +126,16 @@ class TestProtocolo(unittest.TestCase):
         a, _ = P.correr("b_quieta_3.0", 6, 5, True)
         b, _ = P.correr("b_quieta_3.0", 6, 5, True, cond=S.Condicion())
         self.assertTrue(np.array_equal(a["d_min_h"], b["d_min_h"]))
-        # sin detecciones (recall 0) no hay activación ante la persona: la degradación sí llega a la lógica
-        r, _ = P.correr("b_quieta_1.5", 4, 5, True, cond=S.Condicion("ciega", recall=0.0))
-        self.assertFalse(r["activo"].any())
+        # sin detecciones (recall 0) YOLO no ve a nadie: la degradación sí llega a la cámara. (Con la geometría medida el
+        # TF03, a -6.7° desde 2.0 m, toca a una persona de 1.72 m desde ~2.4 m, así que el sistema aún puede activarse por LiDAR.)
+        n = 200
+        z, uno = np.zeros(n), np.ones(n)
+        det, _, _, _ = S.camara(np.random.default_rng(1), z, z, 2.0 * uno, z, S.CAM_PITCH_MONTAJE * uno, 5.0 * uno, z, 1.72 * uno,
+                                np.ones(n, bool), [], S.Condicion("ciega", recall=0.0))
+        self.assertFalse(det.any())
+        det, _, _, _ = S.camara(np.random.default_rng(1), z, z, 2.0 * uno, z, S.CAM_PITCH_MONTAJE * uno, 5.0 * uno, z, 1.72 * uno,
+                                np.ones(n, bool), [], S.NOMINAL)
+        self.assertGreater(det.mean(), 0.9)
         # el retardo configurable cambia la medida que recibe la lógica
         w = M.Mundo(1, 0, cond=S.Condicion(retardo=3))
         ms = [w.medir() for _ in range(5)]

@@ -120,5 +120,7 @@ Además de las reglas, el mínimo tiene un **decisor aprendido**: la IA no solo 
 .venv\Scripts\python.exe -m minimo_tesis.evaluar_decisores       (comparación completa; ~1 h)
 ```
 
+> **20-oct-2026:** el decisor se reentrenó con la geometría medida del dron real (CSI 68.3° × 54.0° a −2.4°, TF03 a −6.7°, sin gimbal; ver `docs/DECISIONES.md` D-078 y D-079). Al cambiar la geometría hay que **borrar `datos/*.npz` y `datos/clf_*.pkl`**: `entrenar_decisor.py` los reutiliza si existen. Versiones anteriores en `_antes_20oct/`.
+
 Informe: `informes/minimo_tesis_decisor_ia.md` (con la justificación para el documento). Pruebas:
 `tests/test_decisor_ia.py`. En el visor, una opción por decisor en el grupo "Proyecto de grado".

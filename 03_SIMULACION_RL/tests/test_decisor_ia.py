@@ -25,7 +25,8 @@ def modelo_chico(umbral=0.5):
 def medida(n, lid=30.0, det=False, d=50.0, rumbo=0.0, v_av=0.0, dz=2.3):
     return dict(det=np.full(n, det), d=np.full(n, d), rumbo=np.full(n, rumbo), frac=np.ones(n), lid=np.full(n, lid),
                 v_av=np.full(n, v_av), dz=np.full(n, dz), psi=np.zeros(n), alto=np.full(n, 0.3 if det else 0.0),
-                ancho=np.full(n, 0.05 if det else 0.0), conf=np.full(n, 0.8 if det else 0.0))
+                ancho=np.full(n, 0.05 if det else 0.0), conf=np.full(n, 0.8 if det else 0.0),
+                lid_pitch=np.full(n, -6.7))
 
 
 class TestDecisorIA(unittest.TestCase):

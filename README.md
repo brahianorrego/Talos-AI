@@ -21,12 +21,14 @@
 > **En una frase:** el piloto vuela; una Jetson a bordo mira con una cámara y un LiDAR, y una red neuronal decide en
 > milisegundos si hay que **frenar y subir a 3.30 m** para no chocar con una persona o un obstáculo. Las reglas de
 > seguridad y el piloto siempre tienen la última palabra.
+>
+> El dron se llama **TALOS-AI** (la estación de tierra lleva ese nombre); el repositorio conserva el nombre `Dron-IA-Vigilancia`.
 
 <div align="center">
 
-| 🎯 **100 %** | 🚫 **0** | 🧠 **−28 %** | ⚡ **9-11 ms** |
+| 🎯 **100 %** | 🚫 **0** | 🧠 **−17 %** | ⚡ **9-11 ms** |
 |:---:|:---:|:---:|:---:|
-| éxito en 1300 vuelos del protocolo del comité | activaciones falsas en 300 vuelos donde no debía actuar | choques de la IA frente a las reglas (39 → 28 en 3 840 vuelos de prueba) | por cuadro de YOLO en la Jetson |
+| éxito en 1300 vuelos del protocolo del comité | activaciones falsas en 300 vuelos donde no debía actuar | choques de la IA frente a las reglas (117 → 97 en 3 840 vuelos de prueba) | por cuadro de YOLO en la Jetson |
 
 <sub>Simulación con ruido de sensores y 100 ms de retardo · fuentes en <code>03_SIMULACION_RL/informes/</code></sub>
 
@@ -178,10 +180,13 @@ vuelos seguros.
 | Decisor | Choques | Persona a < 2 m bajo 3.30 m (vuelos) | Activaciones innecesarias |
 |---|---:|---:|---:|
 | Sin sistema | 1681 | 1488 | — |
-| Reglas | 39 | 420 | 137 |
-| **IA + envolvente** (la que va al dron) | **28** | **218** | **67** |
+| Reglas | 117 | 516 | 161 |
+| **IA + envolvente** (la que va al dron) | **97** | **212** | **109** |
 
-Clasificador en el conjunto de prueba: AUC-ROC 0.974, precisión 97.0 %, falsos positivos 0.3 % por cuadro.
+Clasificador en el conjunto de prueba: AUC-ROC 0.961, precisión 97.1 %, falsos positivos 0.3 % por cuadro.
+Con el piloto a 4 m/s o menos la IA queda igual que las reglas en seguridad (11 riesgos contra 10); su ventaja clara es que frena menos veces sin necesidad.
+Estas cifras usan la geometría medida el 20-oct (cámara 68.3° × 54.0°, sin gimbal). El 21-oct se vio que los ángulos del montaje estaban medidos
+respecto al horizonte y no al chasis (LiDAR ≈ −9.0° y cámara ≈ −5.6° respecto al chasis, [D-082](docs/DECISIONES.md)): **se re-simula tras recalibrar el 22-oct**.
 
 <img src="03_SIMULACION_RL/informes/minimo_tesis_decisor_curvas.png" width="640" alt="Curvas ROC y precisión-exhaustividad del decisor">
 
@@ -205,11 +210,27 @@ Clasificador en el conjunto de prueba: AUC-ROC 0.974, precisión 97.0 %, falsos 
 | 0 | Inventario del código de la Jetson | ✅ |
 | 1 | Percepción + registro en banco (`registro_minimo.py`) | ✅ |
 | 2 | Gimbal con pitch fijo por AUX1 (−5°, 1444 µs) | ✅ |
-| 3 | Intervención por MAVLink en banco, sin hélices (`intervencion_banco.py`) | Sábado 17 oct |
-| 4 | Datos reales con el dron en un carrito, escenarios E0-E6 (`campo.py`) | Próximo |
+| 3 | Intervención por MAVLink en banco, sin hélices (`intervencion_banco.py`) | ✅ 18 oct (17 intervenciones, 0 fallidas, latencia media 38 ms) |
+| 4 | Datos reales con el dron sobre un carro, escenarios E0-E6 | En curso: 21-oct E1 ×5, E2 ×6, E3 ×5, E4 caminando ×7; faltan E0, E4 trotando, E5, E6 |
 | 5 | Decisor en "modo sombra" (decide y registra, no manda) | Pendiente |
 | 6 | Vuelos: panel de cartón → maniquí → persona | Pendiente |
 | 7 | Protocolo del comité en campo (10 repeticiones por escenario) | Pendiente |
+
+### Campo del 21-oct: primeras tomas reales (dron sin hélices, quieto, sobre un carro)
+
+Informe completo y procedimiento: [`docs/INFORME_CAMPO_21OCT.md`](docs/INFORME_CAMPO_21OCT.md) · [`docs/PROCEDIMIENTO_REPLICABLE.md`](docs/PROCEDIMIENTO_REPLICABLE.md) · [`docs/HISTORIAL_PRUEBAS_FISICAS.md`](docs/HISTORIAL_PRUEBAS_FISICAS.md).
+
+| Marca (m) | Persona detectada por YOLO | LiDAR contra la cinta |
+|---:|---:|---:|
+| 15 | 82 % | +0.02 m |
+| 12 | 94 % | +0.02 m |
+| 8 | 99 % | +0.07 m |
+| 4 | 100 % | +0.05 m |
+| 2 | 99 % | +0.16 m |
+
+El rayo del LiDAR cae dentro de la persona que ve YOLO el 75-100 % de los cuadros (persona quieta) y ~80 % al caminar o trotar hacia el dron.
+Hallazgo: el rayo apuntaba unos −9° respecto al chasis (no −6.7°): con el dron plano tocaba el suelo a ~12 m. Dron y estación se manejan con
+la [estación de tierra TALOS-AI](04_VISOR_Y_MOTOR_GRAFICO/) (video 1280×960, LiDAR sobre la imagen, inclinación del dron, mapa GPS y control de tomas).
 
 Plan completo: [`01_MINIMO_INDISPENSABLE/PLAN_MINIMO_FISICO.md`](01_MINIMO_INDISPENSABLE/PLAN_MINIMO_FISICO.md).
 
@@ -360,9 +381,9 @@ Todas tienen pruebas automáticas en [`03_SIMULACION_RL/tests/test_reglas_duras.
 | Carpeta | Contenido |
 |---|---|
 | [`01_MINIMO_INDISPENSABLE/`](01_MINIMO_INDISPENSABLE/) | Mínimo congelado, con huellas SHA-256 |
-| [`02_JETSON_A_BORDO/`](02_JETSON_A_BORDO/) | Código que corre en la Jetson |
+| [`02_JETSON_A_BORDO/`](02_JETSON_A_BORDO/) | Código que corre en la Jetson (época del gimbal) y, en [`minimo_sin_gimbal/`](02_JETSON_A_BORDO/minimo_sin_gimbal/), el del mínimo actual: panel de campo, `/calibrar`, registro con tomas |
 | [`03_SIMULACION_RL/`](03_SIMULACION_RL/) | Simulación, entrenamiento, visor, pruebas e informes |
-| [`04_VISOR_Y_MOTOR_GRAFICO/`](04_VISOR_Y_MOTOR_GRAFICO/) | Plan del visor nuevo |
+| [`04_VISOR_Y_MOTOR_GRAFICO/`](04_VISOR_Y_MOTOR_GRAFICO/) | Estación de tierra TALOS-AI (mínimo y plus), plan del visor y del motor gráfico |
 | [`05_HARDWARE_Y_VARIANTES/`](05_HARDWARE_Y_VARIANTES/) | Hardware, Pixhawk y Jetson |
 | [`06_REDES_NEURONALES_Y_MODELOS/`](06_REDES_NEURONALES_Y_MODELOS/) | `ver_redes.py` e índice de modelos |
 | [`08_EVIDENCIA_Y_DIAGRAMAS/`](08_EVIDENCIA_Y_DIAGRAMAS/) | Fotos, diagramas y gráficas |

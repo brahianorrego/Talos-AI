@@ -1,0 +1,184 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medir ángulos · cámara y LiDAR</title><style>
+:root{--bg:#0b0f14;--card:#121922;--line:#1f2b38;--txt:#e6edf3;--mut:#8b9bb0;--ok:#2ecc71;--bad:#ff4d4f;--acc:#4da3ff;--warn:#f5a524}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,"Segoe UI",Roboto,sans-serif;padding:12px}
+a{color:var(--acc)}h1{font-size:20px;margin:0 0 8px}.fila{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:12px}
+@media(max-width:1000px){.fila{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.card.act{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}.card h3{cursor:pointer}
+#marco{position:relative;display:inline-block;max-width:100%;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;line-height:0}
+#img{max-width:100%;height:auto;cursor:crosshair;display:block;-webkit-user-select:none;user-select:none}
+#cv{position:absolute;left:0;top:0;pointer-events:none}
+#lupa{position:absolute;right:8px;bottom:8px;width:180px;height:135px;border:2px solid #fff;border-radius:8px;background:#000;pointer-events:none;display:none}
+.m{font-size:44px;font-weight:800;line-height:1.05}.lej{color:var(--mut)}.cer{color:var(--ok)}
+button{background:#1c2733;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:14px;font-weight:600;cursor:pointer;margin:3px 4px 3px 0}
+button.pri{background:var(--acc);color:#04121f;border:0}button.mal{background:#3a1c1e}
+input,select{background:#0e141b;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;width:92px}
+label{font-size:13px;color:var(--mut);display:inline-block;margin:3px 10px 3px 0}.k{color:var(--mut);font-size:13px}
+ol,ul{padding-left:20px;margin:6px 0}li{margin:4px 0;font-size:14px}h3{margin:0 0 6px;font-size:16px}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+.res{font-size:15px;line-height:1.7}.res b{color:var(--acc)}#msg{min-height:20px;font-size:14px;margin-top:6px}
+</style></head><body>
+<h1>Medir los ángulos de la cámara y del LiDAR <span class="k">· <a href="/" onclick="if(window.parent!==window){window.parent.postMessage('cerrar-jetson','*');return false}">volver</a> · <a href="/alinear">alinear con un cartón</a></span></h1>
+<div class="fila"><div>
+<div id="marco"><img id="img" src="/video" alt="cámara" onerror="setTimeout(()=>{this.src='/video?'+Date.now()},800)"><canvas id="cv"></canvas><canvas id="lupa" width="180" height="135"></canvas></div>
+<div class="k" style="margin-top:6px">Los clics se hacen sobre la imagen. «Izquierda» y «derecha» son las de la <b>imagen</b>, no las del dron. Toca el título de un paso para pasar a él.</div>
+<div class="card" style="margin-top:12px"><h3>Cómo funciona</h3><ul>
+<li>Con dos marcas de separación conocida a una distancia conocida se saca el <b>campo de visión</b> (horizontal y vertical).</li>
+<li>Con la altura de las marcas se saca la <b>inclinación de la cámara</b> (arriba/abajo).</li>
+<li>Con tu dedo (o un lápiz delgado) delante del LiDAR se ve <b>a dónde apunta el LiDAR</b>: el número se pone verde cuando el rayo le pega al dedo.</li>
+<li>Con una <b>línea vertical de verdad</b> (esquina de la habitación, marco de la puerta, un hilo con peso) se saca el <b>giro</b> de la cámara sobre su propio eje.</li></ul>
+<div class="k">Todas las medidas con el metro. El resultado se guarda en la Jetson (<code>~/calibracion_angulos.json</code>) y el punto del LiDAR queda dibujado en el video.</div></div>
+</div><div>
+<div class="card"><div class="k">LiDAR TF03 · frente</div><div class="m lej" id="lid">--</div><div class="k" id="lidk"></div></div>
+<div class="card"><h3>Inclinación del dron (Pixhawk)</h3><div class="res"><b id="pitD">–</b> cabeceo · <b id="rolD">–</b> alabeo</div><div class="k" id="pitK">Los pasos 2 y 3 miden respecto al <b>horizonte</b>; con el cabeceo de la Pixhawk se pasan al <b>chasis</b> (lo que usa la simulación). Con la batería conectada, el dron <b>quieto</b> mientras haces los clics. + = nariz arriba.</div></div>
+<div class="card"><h3>Datos del dron</h3>
+<label>Altura de la superficie de apoyo sobre el suelo (cm)<br><input id="T" type="number" step="0.5" placeholder="p. ej. 75.3"></label>
+<label>Eje de la cámara sobre la superficie (cm)<br><input id="hc" type="number" step="0.1" value="32"></label>
+<label>Eje del LiDAR sobre la superficie (cm)<br><input id="hl" type="number" step="0.1" value="27.5"></label>
+<label>La cámara está ___ cm detrás del frente del LiDAR<br><input id="off" type="number" step="0.5" value="6"></label>
+<label>Distancia del frente del LiDAR a la pared (m)<br><input id="D" type="number" step="0.01" placeholder="LiDAR"> <button onclick="usarD()">usar la del LiDAR</button></label>
+<div class="k">Pasa el mouse sobre la imagen: abajo a la derecha aparece una <b>lupa</b> para ver las marcas chicas. El dron debe estar <b>quieto, de frente a la pared</b> y con el LiDAR leyendo la pared (no una puerta abierta ni una marca). Si mediste la distancia con el metro, escribe esa en lugar de la del LiDAR.</div></div>
+<div class="card act" id="c1"><h3 onclick="marcarPaso(1)">Paso 1 · Campo de visión horizontal</h3>
+<div class="k">Pega dos marcas en la pared (papeles de color), una a cada lado, separadas por:</div>
+<label><input id="Sh" type="number" step="1" value="180"> cm</label>
+<div class="k">Haz clic en la marca <b>izquierda</b> y luego en la <b>derecha</b> de la imagen. <span id="n1"></span></div>
+<button onclick="reiniciar(1)">Repetir</button></div>
+<div class="card" id="c2"><h3 onclick="marcarPaso(2)">Paso 2 · Campo vertical e inclinación de la cámara</h3>
+<div class="k">Pega dos marcas en la pared, una arriba y otra abajo, medidas <b>desde el suelo</b>:</div>
+<label>la de abajo<br><input id="h1" type="number" step="1" value="40"> cm</label><label>la de arriba<br><input id="h2" type="number" step="1" value="150"> cm</label>
+<div class="k">Haz clic en la marca de <b>abajo</b> y luego en la de <b>arriba</b>. <span id="n2"></span></div>
+<button onclick="reiniciar(2)">Repetir</button></div>
+<div class="card" id="c3"><h3 onclick="marcarPaso(3)">Paso 3 · Dónde apunta el LiDAR</h3>
+<div class="k">Pon el dedo (o un lápiz delgado) delante del dron, a esta distancia del LiDAR:</div>
+<label><select id="Dt"><option>1</option><option selected>1.5</option><option>2</option><option>3</option></select> m</label>
+<div class="k">Muévelo despacio hasta que el número de arriba se ponga <b>verde</b> con esa distancia: ahí el rayo le pega. Haz clic en la <b>punta del dedo</b>. Repite 3 veces o más, y cambia la distancia si puedes. <span id="n3"></span></div>
+<button onclick="quitar3()">Quitar último</button><button onclick="reiniciar(3)">Repetir todo</button></div>
+<div class="card" id="c4"><h3 onclick="marcarPaso(4)">Paso 4 · Giro de la cámara sobre su eje</h3>
+<div class="k">Busca una <b>línea vertical de verdad</b> que se vea en la imagen: la esquina de la habitación, el marco de una puerta o un hilo con un peso colgado. Haz <b>2 clics en la misma línea</b>, uno arriba y otro abajo, lo más separados posible. Si puedes, haz otra línea en otro lugar de la imagen (así también se comprueba la inclinación). <span id="n4"></span></div>
+<button onclick="quitar4()">Quitar última línea</button><button onclick="reiniciar(4)">Repetir todo</button></div>
+<div class="card" id="c5"><h3 onclick="marcarPaso(5)">Paso 5 · Cámara con una persona (sirve en el parqueadero)</h3><div class="k">Una persona se para de frente, <b>entera en la imagen</b> y con los pies a la vista, sobre una marca medida con la cinta desde el frente del LiDAR (5 a 10 m va bien). Mide el suelo plano.</div><label>Altura del lente sobre el suelo (m)<br><input id="h5" type="number" step="0.01" placeholder="p. ej. 1.88"></label><label>Distancia de la persona (m)<br><input id="d5" type="number" step="0.01" placeholder="cinta"></label><div><button onclick="medir5()">Medir 3 s</button><button onclick="st.p5=null;calcular();$('r5').textContent=''">Quitar</button></div><div class="k" id="r5"></div></div>
+<div class="card" id="c6"><h3 onclick="marcarPaso(6)">Paso 6 · LiDAR contra el suelo (sirve en el parqueadero)</h3><div class="k">Sin nadie delante y con el suelo plano y limpio: el rayo toca el piso a una distancia que depende de su inclinación. Con la altura del eje del LiDAR se calcula el ángulo del rayo.</div><label>Altura del eje del LiDAR sobre el suelo (m)<br><input id="h6" type="number" step="0.01" placeholder="p. ej. 1.83"></label><div><button onclick="medir6()">Medir el suelo 3 s</button><button onclick="st.p6=null;calcular();$('r6').textContent=''">Quitar</button></div><div class="k" id="r6"></div></div>
+<div class="card"><h3>Resultado</h3><div class="res" id="res">Aún sin datos.</div><div id="msg"></div>
+<button class="pri" onclick="guardar()">Guardar calibración</button><button onclick="location.reload()">Empezar de nuevo</button></div>
+<div class="card"><h3>Clics del LiDAR</h3><table id="tl"><tr><th>#</th><th>LiDAR</th><th>inclinación</th><th>desvío</th></tr></table></div>
+</div></div>
+<script>
+const $=i=>document.getElementById(i);
+const W=640,H=480,R=Math.PI/180,deg=x=>x/R;
+let lidarM=null,lidarOk=false,paso=1,pitD=null,rolD=null;
+const st={h:[],v:[],l:[],vl:[],res:{},p5:null,p6:null};let prev=null;
+try{const g=JSON.parse(localStorage.getItem('cal_datos2')||'{}');['T','hc','hl','off'].forEach(k=>{if(g[k]!=null&&g[k]!=='')$(k).value=g[k]})}catch(e){}
+['T','hc','hl','off'].forEach(k=>$(k).addEventListener('change',()=>{try{localStorage.setItem('cal_datos2',JSON.stringify({T:$('T').value,hc:$('hc').value,hl:$('hl').value,off:$('off').value}))}catch(e){}calcular()}));
+const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v};
+function usarD(){if(lidarM!=null)$('D').value=lidarM.toFixed(2);calcular()}
+['D','Sh','h1','h2','Dt'].forEach(k=>$(k).addEventListener('change',calcular));
+function marcarPaso(n){paso=n;for(let i=1;i<=6;i++)$('c'+i).classList.toggle('act',i===n)}
+function reiniciar(n){if(n===1)st.h=[];if(n===2)st.v=[];if(n===3)st.l=[];if(n===4)st.vl=[];marcarPaso(n);calcular()}
+function quitar3(){st.l.pop();calcular()}
+function quitar4(){st.vl.pop();calcular()}
+$('img').addEventListener('click',e=>{const r=$('img').getBoundingClientRect();const fx=(e.clientX-r.left)/r.width,fy=(e.clientY-r.top)/r.height;
+ if(paso===1){if(st.h.length<2)st.h.push({fx,fy});if(st.h.length===2)marcarPaso(2)}
+ else if(paso===2){if(st.v.length<2)st.v.push({fx,fy,pit:pitD});if(st.v.length===2)marcarPaso(3)}
+ else if(paso===3){if(lidarM==null||!lidarOk){$('msg').textContent='El LiDAR no tiene lectura válida: no se guarda el clic.';$('msg').style.color='var(--bad)';return}
+  st.l.push({fx,fy,m:lidarM,pit:pitD});$('msg').textContent=''}
+ else{const u=st.vl[st.vl.length-1];if(!u||u.length===2)st.vl.push([{fx,fy}]);else u.push({fx,fy})}
+ calcular()});
+function bisec(f,a,b){let fa=f(a),fb=f(b);if(isNaN(fa)||isNaN(fb)||fa*fb>0)return null;for(let i=0;i<80;i++){const c=(a+b)/2,fc=f(c);if(fa*fc<=0){b=c;fb=fc}else{a=c;fa=fc}}return (a+b)/2}
+// Línea vertical en la imagen: dirección esperada en el punto (x,y) (unidades de focal) para cabeceo th (arriba +) y giro ro (horario visto desde atrás +)
+function dirVert(x,y,th,ro){const Ux=-Math.sin(ro)*Math.cos(th),Uy=Math.cos(ro)*Math.cos(th),Uz=Math.sin(th);return [Ux-x*Uz,Uy-y*Uz]}
+function resid(lineas,thx,tvx,th,ro){let s=0;for(const L of lineas){const a=[(L[0].fx-0.5)*2*thx,(0.5-L[0].fy)*2*tvx],b=[(L[1].fx-0.5)*2*thx,(0.5-L[1].fy)*2*tvx];
+  const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,d=dirVert(mx,my,th,ro),vx=b[0]-a[0],vy=b[1]-a[1];const n1=Math.hypot(vx,vy),n2=Math.hypot(d[0],d[1]);if(n1<1e-6||n2<1e-9)continue;
+  const c=(vx*d[1]-vy*d[0])/(n1*n2);s+=c*c}return s}
+function calcular(){const o={};const D0=num('D'),T=num('T'),hc=num('hc'),hl=num('hl'),off=(num('off')||0)/100;const Dc=D0!=null?D0+off:null;
+ // Paso 1: tan(H/2) = S / (D * dx_normalizado), con D = distancia de la cámara a la pared
+ if(st.h.length===2&&Dc){const S=num('Sh'),dx=Math.abs((st.h[1].fx-st.h[0].fx)*2);if(S&&dx>0.02){const t=S/(Dc*100*dx);o.hfov=2*deg(Math.atan(t));o.th=t}}
+ // Paso 2: dos marcas con altura conocida: incógnitas t=tan(V/2) y la inclinación p
+ if(st.v.length===2&&Dc&&T!=null&&hc!=null){const Hc=T+hc,hs=[num('h1'),num('h2')];
+  if(hs[0]!=null&&hs[1]!=null){const yn=st.v.map(p=>(0.5-p.fy)*2),eps=hs.map(h=>Math.atan((h-Hc)/(Dc*100)));
+   const f=t=>(eps[0]-Math.atan(yn[0]*t))-(eps[1]-Math.atan(yn[1]*t));
+   let t=null,prev=null;for(let x=0.1;x<=3;x+=0.01){const v=f(x);if(prev!==null&&prev*v<=0){t=bisec(f,x-0.01,x);break}prev=v}
+   if(t){o.vfov=2*deg(Math.atan(t));o.tv=t;o.pitchCam=deg(((eps[0]-Math.atan(yn[0]*t))+(eps[1]-Math.atan(yn[1]*t)))/2)}
+   else o.errV='no cuadran las marcas con la altura que escribiste: revisa la distancia, las alturas y el orden de los clics'}}
+ if(o.pitchCam==null&&st.p5){o.pitchCam=st.p5.elevH;o.usaP5=true}
+ let th=o.th||(o.hfov?Math.tan(o.hfov*R/2):null),tv=o.tv||(o.vfov?Math.tan(o.vfov*R/2):null);
+ if(prev){if(!th&&prev.th){th=prev.th;o.usaGuardado=true}if(!tv&&prev.tv){tv=prev.tv;o.usaGuardado=true}if(o.pitchCam==null&&prev.pitchCam!=null){o.pitchCam=prev.pitchCam;o.usaGuardado=true}}
+ // Paso 3: cada clic -> inclinación y desvío del rayo del LiDAR (m = distancia desde el frente del LiDAR; la cámara está 'off' más atrás)
+ const filas=[];
+ st.l.forEach(c=>{const Dl=c.m*100,Dcam=Dl+off*100;let inc=null,desv=null;
+  if(tv&&hc!=null&&hl!=null){const eps=(o.pitchCam!=null?o.pitchCam*R:0)+Math.atan((0.5-c.fy)*2*tv);inc=deg(Math.atan((Dcam*Math.tan(eps)+(hc-hl))/Dl))}
+  if(th){desv=deg(Math.atan(Math.tan(Math.atan((c.fx-0.5)*2*th))*Dcam/Dl))}
+  filas.push({m:c.m,inc,desv,fx:c.fx,fy:c.fy})});
+ const prom=k=>{const v=filas.map(f=>f[k]).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
+ if(filas.length){o.lidarInc=prom('inc');o.lidarDesv=prom('desv');o.px=prom('fx');o.py=prom('fy');o.n=filas.length}
+ o.sinPitchCam=(o.pitchCam==null&&filas.length>0);
+ // Paso 4: giro de la cámara con líneas verticales
+ const L4=st.vl.filter(l=>l.length===2);
+ if(L4.length&&th&&tv){const th0=o.pitchCam!=null?o.pitchCam*R:0;let mejor=null;
+  for(let r=-15;r<=15;r+=0.05){const e=resid(L4,th,tv,th0,r*R);if(!mejor||e<mejor.e)mejor={e,r}}
+  o.roll=mejor.r;o.rollEsCon=o.pitchCam!=null?'con la inclinación del paso 2':'suponiendo cabeceo 0 (falta el paso 2)';
+  if(L4.length>=2){let m2=null;for(let t=-10;t<=10;t+=0.1)for(let r=-15;r<=15;r+=0.1){const e=resid(L4,th,tv,t*R,r*R);if(!m2||e<m2.e)m2={e,t,r}}o.pitchLineas=m2.t;o.rollLineas=m2.r}}
+ st.res=o;pintar(filas)}
+function f1(x,u,d){return x==null?'—':x.toFixed(d==null?1:d)+(u||'')}
+function pintar(filas){const o=st.res;
+ $('n1').textContent=st.h.length<2?('Clics: '+st.h.length+'/2'):'✓ listo';$('n2').textContent=st.v.length<2?('Clics: '+st.v.length+'/2'):'✓ listo';$('n3').textContent='Clics: '+st.l.length;
+ $('n4').textContent='Líneas completas: '+st.vl.filter(l=>l.length===2).length;
+ let t='';
+ t+='Campo de visión horizontal: <b>'+f1(o.hfov,'°')+'</b><br>';
+ t+='Campo de visión vertical: <b>'+f1(o.vfov,'°')+'</b><br>';
+ t+='Inclinación de la cámara (arriba/abajo): <b>'+f1(o.pitchCam,'°')+'</b> <span class="k">(negativo = apunta hacia abajo)</span><br>';
+ t+='Inclinación del LiDAR: <b>'+f1(o.lidarInc,'°')+'</b>'+(o.sinPitchCam?' <span class="k">(sin el paso 2 es solo respecto a la cámara)</span>':'')+'<br>';
+ t+='Desvío horizontal del LiDAR respecto a la cámara: <b>'+f1(o.lidarDesv,'°')+'</b> <span class="k">(+ = hacia la derecha de la imagen)</span><br>';
+ t+='Punto del LiDAR en la imagen: <b>'+(o.px==null?'—':(o.px*100).toFixed(1)+' % · '+(o.py*100).toFixed(1)+' %')+'</b><br>';
+ t+='Giro de la cámara sobre su eje: <b>'+f1(o.roll,'°',2)+'</b> <span class="k">(+ = cámara girada hacia la derecha, lado derecho más abajo; las verticales se ven con la punta de arriba hacia la izquierda)</span>';
+ if(o.rollLineas!=null)t+='<br><span class="k">Ajustando también el cabeceo con tus líneas: giro '+o.rollLineas.toFixed(2)+'°, cabeceo '+o.pitchLineas.toFixed(1)+'°'+(o.pitchCam!=null&&Math.abs(o.pitchLineas-o.pitchCam)>1.5?' <b style="color:var(--warn)">(no coincide con el paso 2: revisa los clics)</b>':' (coincide con el paso 2)')+'</span>';
+if(o.usaGuardado)t+='<br><span class="k">Para lo que falta se usan el campo de visión y la inclinación de la <b>calibración guardada</b> (repite los pasos 1 y 2 si quieres actualizarlos).</span>';
+ if(o.errV)t+='<br><span style="color:var(--bad)">'+o.errV+'</span>';
+ const mv=a=>{const v=a.map(x=>x.pit).filter(x=>x!=null);return v.length?v.sort((x,y)=>x-y)[Math.floor(v.length/2)]:null};
+ const pc=o.usaP5?(st.p5&&st.p5.pit):mv(st.v),pl=mv(st.l);o.pitchCamChasis=(o.pitchCam!=null&&pc!=null)?o.pitchCam-pc:null;
+ o.lidarIncChasis=st.p6&&st.p6.chasis!=null?st.p6.chasis:((o.lidarInc!=null&&pl!=null)?o.lidarInc-pl:null);o.pitchDron=pl!=null?pl:pc;
+ t+='<hr style="border:0;border-top:1px solid var(--line)">Respecto al <b>chasis</b> (lo que se guarda para la simulación): cámara <b>'+f1(o.pitchCamChasis,'°')+'</b> · LiDAR <b>'+f1(o.lidarIncChasis,'°')+'</b>'+(o.pitchDron==null?' <span class="k">(sin Pixhawk: no se puede pasar al chasis)</span>':' <span class="k">(cabeceo del dron al medir: '+o.pitchDron.toFixed(1)+'°)</span>')+(st.p6?'<br><span class="k">LiDAR del paso 6 (contra el suelo): '+f1(st.p6.elevH,'°')+' del horizonte, '+f1(st.p6.chasis,'°')+' del chasis.</span>':'');
+ if(o.usaP5)t+='<br><span class="k">La inclinación de la cámara sale del paso 5 (persona), no de marcas en la pared.</span>';
+ $('res').innerHTML=t;
+ const tb=$('tl');tb.innerHTML='<tr><th>#</th><th>LiDAR</th><th>inclinación</th><th>desvío</th></tr>'+filas.map((f,i)=>'<tr><td>'+(i+1)+'</td><td>'+f.m.toFixed(2)+' m</td><td>'+f1(f.inc,'°')+'</td><td>'+f1(f.desv,'°')+'</td></tr>').join('');
+ dibujar()}
+function dibujar(){const im=$('img'),cv=$('cv');cv.width=im.clientWidth;cv.height=im.clientHeight;const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);
+ const cruz=(p,c,n)=>{const x=p.fx*cv.width,y=p.fy*cv.height;g.strokeStyle=c;g.lineWidth=2;g.beginPath();g.moveTo(x-10,y);g.lineTo(x+10,y);g.moveTo(x,y-10);g.lineTo(x,y+10);g.stroke();g.fillStyle=c;g.font='bold 13px sans-serif';g.fillText(n,x+8,y-8)};
+ st.h.forEach((p,i)=>cruz(p,'#ffd54f','H'+(i+1)));st.v.forEach((p,i)=>cruz(p,'#80deea','V'+(i+1)));st.l.forEach((p,i)=>cruz(p,'#ff80ab','L'+(i+1)));
+ st.vl.forEach((l,i)=>{l.forEach((p,j)=>cruz(p,'#b9f6ca','V'+(i+1)+'.'+(j+1)));if(l.length===2){g.strokeStyle='#b9f6ca';g.lineWidth=1.5;g.beginPath();g.moveTo(l[0].fx*cv.width,l[0].fy*cv.height);g.lineTo(l[1].fx*cv.width,l[1].fy*cv.height);g.stroke()}});
+ const o=st.res;if(o.px!=null){const x=o.px*cv.width,y=o.py*cv.height;g.strokeStyle='#00e5ff';g.lineWidth=2;g.beginPath();g.arc(x,y,9,0,7);g.stroke()}}
+$('img').addEventListener('mousemove',e=>{const im=$('img'),r=im.getBoundingClientRect(),L=$('lupa');const nx=(e.clientX-r.left)/r.width*(im.naturalWidth||640),ny=(e.clientY-r.top)/r.height*(im.naturalHeight||480);
+ try{const g=L.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(im,nx-22.5,ny-17,45,34,0,0,180,135);g.strokeStyle='#ff1744';g.lineWidth=1;g.beginPath();g.moveTo(90,0);g.lineTo(90,135);g.moveTo(0,67.5);g.lineTo(180,67.5);g.stroke();L.style.display='block'}catch(x){}});
+$('img').addEventListener('mouseleave',()=>{$('lupa').style.display='none'});
+window.addEventListener('resize',dibujar);$('img').addEventListener('load',dibujar);
+async function guardar(){const o=st.res;if(o.hfov==null&&o.lidarInc==null&&o.roll==null&&o.lidarIncChasis==null){$('msg').textContent='Todavía no hay nada que guardar.';$('msg').style.color='var(--bad)';return}
+ const datos=Object.assign({},o,{pitchCamChasis:o.pitchCamChasis,lidarIncChasis:o.lidarIncChasis,pitchDron:o.pitchDron,paso5:st.p5,paso6:st.p6,T:num('T'),hc:num('hc'),hl:num('hl'),off_camara_cm:num('off'),D:num('D'),S_h:num('Sh'),h1:num('h1'),h2:num('h2'),
+  clics_marcas_h:st.h,clics_marcas_v:st.v,lineas_verticales:st.vl,clics_lidar:st.l.map(c=>({fx:+c.fx.toFixed(4),fy:+c.fy.toFixed(4),m:c.m})),t:Date.now()/1000});
+ try{const r=await fetch('/calibrar/guardar?j='+encodeURIComponent(JSON.stringify(datos)),{cache:'no-store'});const d=await r.json();
+  if(o.px!=null&&st.l.length){await fetch('/alinear/limpiar');for(const c of st.l.slice(-8))await fetch('/alinear/clic?x='+c.fx.toFixed(4)+'&y='+c.fy.toFixed(4));await fetch('/alinear/guardar')}
+  $('msg').textContent=r.ok?'Guardado en la Jetson.'+(o.px!=null?' El punto del LiDAR quedó como punto de alineación.':''):(d.mensaje||'error');$('msg').style.color=r.ok?'var(--ok)':'var(--bad)'}catch(e){$('msg').textContent='sin conexión con el dron';$('msg').style.color='var(--bad)'}}
+const mediana=v=>{v=v.filter(x=>x!=null&&!isNaN(x)).sort((a,b)=>a-b);return v.length?v[Math.floor(v.length/2)]:null};
+async function muestrear(seg){const m=[];const t0=Date.now();while(Date.now()-t0<seg*1000){try{m.push(await (await fetch('/datos',{cache:'no-store'})).json())}catch(e){}await new Promise(r=>setTimeout(r,150))}return m}
+function fovV(){const tvv=(prev&&prev.tv)||st.res.tv||Math.tan(27*R);return tvv}
+async function medir5(){const h=num('h5'),D=num('d5');const o=$('r5');if(!h||!D){o.textContent='Escribe la altura del lente y la distancia a la persona.';return}
+ o.textContent='Midiendo… la persona quieta, entera en la imagen.';const m=await muestrear(3);
+ const ys=m.map(d=>{const p=d.vision&&d.vision.pers&&d.vision.pers[0];return p&&!p.trunc&&p.y2<0.98?p.y2:null}).filter(x=>x!=null);
+ if(ys.length<8){o.textContent='No vi a una persona entera con los pies visibles ('+ys.length+' cuadros). Aléjala o ajusta la imagen.';return}
+ const y2=mediana(ys),pit=mediana(m.map(d=>d.pix&&d.pix.pitch)),Dc=D+num('off')/100,phi=Math.atan2(h,Dc),tv=fovV(),elevH=-deg(phi-Math.atan((y2-0.5)*2*tv));
+ const lid=mediana(m.map(d=>d.lidar&&d.lidar.valido?d.lidar.m:null)),caja=m.filter(d=>d.vision&&d.vision.lidar_en_caja).length;
+ st.p5={y2,h,D,elevH,pit,chasis:pit!=null?elevH-pit:null,lidar:lid,n:ys.length};calcular();
+ o.innerHTML='Pies en y = '+y2.toFixed(3)+' → cámara a <b>'+elevH.toFixed(2)+'°</b> del horizonte'+(pit!=null?', <b>'+(elevH-pit).toFixed(2)+'°</b> respecto al chasis (cabeceo del dron '+pit.toFixed(1)+'°)':' (sin Pixhawk: solo respecto al horizonte)')+'.<br>LiDAR: '+(lid!=null?lid.toFixed(2)+' m contra '+D.toFixed(2)+' m de la cinta ('+(lid-D>=0?'+':'')+(lid-D).toFixed(2)+' m)':'sin lectura')+(caja?'; el rayo le pegó a la persona en '+caja+' de '+m.length+' cuadros.':'.')}
+async function medir6(){const h=num('h6');const o=$('r6');if(!h){o.textContent='Escribe la altura del eje del LiDAR sobre el suelo.';return}
+ o.textContent='Midiendo… sin nadie delante.';const m=await muestrear(3);
+ const ds=m.map(d=>d.lidar&&d.lidar.valido&&!(d.vision&&d.vision.personas)?d.lidar.m:null).filter(x=>x!=null);
+ if(ds.length<8){o.textContent='El LiDAR no dio lecturas válidas sin personas en cuadro ('+ds.length+').';return}
+ const Dg=mediana(ds),pit=mediana(m.map(d=>d.pix&&d.pix.pitch)),elevH=-deg(Math.atan2(h,Dg)),disp=Math.max(...ds)-Math.min(...ds);
+ st.p6={Dg,h,elevH,pit,chasis:pit!=null?elevH-pit:null,n:ds.length};calcular();
+ o.innerHTML='Suelo a <b>'+Dg.toFixed(2)+' m</b> (variación '+disp.toFixed(2)+' m) → rayo a <b>'+elevH.toFixed(2)+'°</b> del horizonte'+(pit!=null?', <b>'+(elevH-pit).toFixed(2)+'°</b> respecto al chasis (cabeceo del dron '+pit.toFixed(1)+'°)':' (sin Pixhawk)')+'.'+(disp>1?' <b style="color:var(--warn)">La lectura varía mucho: ¿hay un carro, un bordillo o gente en el camino?</b>':'')}
+async function tick(){try{const d=await (await fetch('/datos',{cache:'no-store'})).json();pitD=d.pix&&d.pix.ok&&d.pix.pitch!=null?d.pix.pitch:null;rolD=d.pix&&d.pix.ok&&d.pix.roll!=null?d.pix.roll:null;$('pitD').textContent=pitD==null?'sin Pixhawk':(pitD>=0?'+':'')+pitD.toFixed(1)+'°';$('rolD').textContent=rolD==null?'–':(rolD>=0?'+':'')+rolD.toFixed(1)+'°';const m=d.lidar&&d.lidar.m,ok=!!(d.lidar&&d.lidar.valido&&m!=null);lidarM=m!=null?m:null;lidarOk=ok;
+  $('lid').textContent=m==null?'--':m.toFixed(2)+' m';const dt=parseFloat($('Dt').value),cerca=ok&&paso===3&&Math.abs(m-dt)<=Math.max(0.15,dt*0.08);
+  $('lid').className='m '+(cerca?'cer':'lej');$('lidk').textContent=!ok?'sin lectura válida':(paso===3?(cerca?'el rayo está en tu dedo: haz clic en la punta':'objetivo '+dt+' m: muévelo hasta que se ponga verde'):'distancia al frente')}catch(e){}setTimeout(tick,250)}
+try{['h5','h6'].forEach(k=>{const v=localStorage.getItem('cal_'+k);if(v)$(k).value=v;$(k).addEventListener('change',()=>localStorage.setItem('cal_'+k,$(k).value))})}catch(e){}
+fetch('/calibrar/estado',{cache:'no-store'}).then(r=>r.json()).then(p=>{if(p&&p.th&&p.tv){prev=p;calcular()}}).catch(()=>{});
+tick();calcular();
+</script></body></html>

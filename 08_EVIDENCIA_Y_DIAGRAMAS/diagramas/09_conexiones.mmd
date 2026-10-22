@@ -6,6 +6,5 @@ flowchart TB
     RX["Receptor Corona<br/>encoder PPM · GPS"] -->|"PPM · GPS"| PIX
     PIX -->|"MAIN OUT 1–4<br/>PWM"| ESC
     PIX <-->|"TELEM2 · 115200<br/>MAVLink 2"| JET
-    PIX -->|"AUX1 · PWM"| GIM["Estabilizador<br/>BaseCam"]
-    GIM -->|"USB"| JET
-    SEN["LiDAR TF03 (UART-USB)<br/>cámara USB"] -->|"USB"| JET
+    SEN["LiDAR TF03<br/>UART-USB"] -->|"USB"| JET
+    CAM["Cámara CSI<br/>IMX219"] -->|"cable plano · CAM0"| JET

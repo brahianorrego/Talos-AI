@@ -1,6 +1,6 @@
 # Protocolo del comité · mínimo indispensable
 
-Generado por `minimo_tesis/protocolo_comite.py` · 100 vuelos por variante · semilla base 2026 · 2026-10-10 · 315 s
+Generado por `minimo_tesis/protocolo_comite.py` · 100 vuelos por variante · semilla base 2026 · 2026-10-20 · 145 s
 
 El piloto avanza de frente en línea recta (o deja el dron quieto en el modo estático). El sistema solo interviene ante el riesgo definido, con **DETENCIÓN + ASCENSO VERTICAL** a 3.30 m, y espera al operador. Sensores con ruido y retardo de 100 ms; control de ArduPilot modelado (copias congeladas en `minimo_tesis/`). Entre corchetes, el intervalo de confianza del 95 % (Wilson para porcentajes; media ± 1.96·σ/√n para tiempos).
 
@@ -31,9 +31,9 @@ Verdadera: se activó y hubo riesgo real (medido con la verdad del simulador, si
 | Escenario | Vuelos con riesgo real | Eventos de riesgo (media) | Activaciones verdaderas | Activaciones falsas | Riesgo real sin activación |
 |---|---:|---:|---:|---:|---:|
 | a) Panel fijo, avance a 1 m/s | 100 | 1.02 | 100 % [96, 100] | 0 % [0, 4] | 0 |
-| a) Panel fijo, avance a 2 m/s | 100 | 1.40 | 100 % [96, 100] | 0 % [0, 4] | 0 |
-| a) Panel fijo, avance a 3 m/s | 100 | 1.69 | 100 % [96, 100] | 0 % [0, 4] | 0 |
-| a) Panel fijo, avance a 4 m/s | 100 | 1.49 | 100 % [96, 100] | 0 % [0, 4] | 0 |
+| a) Panel fijo, avance a 2 m/s | 100 | 1.44 | 100 % [96, 100] | 0 % [0, 4] | 0 |
+| a) Panel fijo, avance a 3 m/s | 100 | 1.76 | 100 % [96, 100] | 0 % [0, 4] | 0 |
+| a) Panel fijo, avance a 4 m/s | 100 | 2.46 | 100 % [96, 100] | 0 % [0, 4] | 0 |
 | b) Persona quieta, avance a 1.5 m/s | 100 | 1.00 | 100 % [96, 100] | 0 % [0, 4] | 0 |
 | b) Persona quieta, avance a 3.0 m/s | 100 | 1.03 | 100 % [96, 100] | 0 % [0, 4] | 0 |
 | c) Persona de frente que camina (1.4 m/s), avance a 1 m/s | 100 | 1.00 | 100 % [96, 100] | 0 % [0, 4] | 0 |
@@ -50,18 +50,18 @@ Riesgo → comando: desde que el riesgo es real hasta que el sistema manda deten
 
 | Escenario | Riesgo → comando | Comando → frenado efectivo | Comando → fuera de alcance | Distancia mínima (m) |
 |---|---:|---:|---:|---:|
-| a) Panel fijo, avance a 1 m/s | 0.09 [0.08, 0.10] | 0.59 [0.58, 0.60] | 0.40 [0.40, 0.40] | 1.77 [1.73, 1.82] |
-| a) Panel fijo, avance a 2 m/s | 0.09 [0.08, 0.11] | 0.90 [0.89, 0.90] | 0.40 [0.40, 0.40] | 3.14 [3.09, 3.18] |
-| a) Panel fijo, avance a 3 m/s | 0.10 [0.09, 0.11] | 1.11 [1.11, 1.12] | 0.40 [0.40, 0.40] | 4.34 [4.29, 4.39] |
-| a) Panel fijo, avance a 4 m/s | 0.10 [0.09, 0.11] | 1.39 [1.38, 1.39] | 0.40 [0.40, 0.40] | 5.35 [5.30, 5.40] |
-| b) Persona quieta, avance a 1.5 m/s | 0.08 [0.03, 0.12] | 0.73 [0.72, 0.74] | 0.40 [0.40, 0.40] | 7.27 [7.20, 7.33] |
-| b) Persona quieta, avance a 3.0 m/s | 0.10 [0.07, 0.12] | 1.12 [1.11, 1.13] | 0.40 [0.40, 0.40] | 6.44 [6.38, 6.51] |
-| c) Persona de frente que camina (1.4 m/s), avance a 1 m/s | 0.06 [0.03, 0.09] | 0.58 [0.58, 0.59] | 0.40 [0.40, 0.40] | 6.82 [6.75, 6.89] |
-| c) Persona de frente que corre (3.3 m/s), avance a 1 m/s | 0.11 [0.10, 0.13] | 0.58 [0.57, 0.59] | 0.40 [0.40, 0.40] | 5.65 [5.57, 5.72] |
+| a) Panel fijo, avance a 1 m/s | 0.09 [0.08, 0.10] | 0.59 [0.58, 0.60] | 0.50 [0.50, 0.50] | 1.77 [1.72, 1.81] |
+| a) Panel fijo, avance a 2 m/s | 0.10 [0.08, 0.11] | 0.90 [0.89, 0.90] | 0.50 [0.50, 0.50] | 3.09 [3.04, 3.14] |
+| a) Panel fijo, avance a 3 m/s | 0.10 [0.09, 0.12] | 1.11 [1.11, 1.12] | 0.50 [0.50, 0.50] | 4.27 [4.22, 4.33] |
+| a) Panel fijo, avance a 4 m/s | 0.09 [0.08, 0.11] | 1.39 [1.38, 1.39] | 0.50 [0.50, 0.50] | 5.24 [5.16, 5.31] |
+| b) Persona quieta, avance a 1.5 m/s | 0.08 [0.03, 0.12] | 0.73 [0.72, 0.74] | 0.50 [0.50, 0.50] | 7.16 [7.10, 7.23] |
+| b) Persona quieta, avance a 3.0 m/s | 0.10 [0.08, 0.12] | 1.12 [1.11, 1.13] | 0.50 [0.50, 0.50] | 6.19 [6.13, 6.25] |
+| c) Persona de frente que camina (1.4 m/s), avance a 1 m/s | 0.06 [0.03, 0.09] | 0.58 [0.58, 0.59] | 0.50 [0.50, 0.50] | 6.63 [6.55, 6.70] |
+| c) Persona de frente que corre (3.3 m/s), avance a 1 m/s | 0.11 [0.10, 0.13] | 0.58 [0.57, 0.59] | 0.50 [0.50, 0.50] | 5.26 [5.19, 5.34] |
 | d) Persona que cruza lejos y camina (1.4 m/s), avance a 1 m/s | — | — | — | 9.67 [9.54, 9.80] |
 | d) Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s | — | — | — | 16.13 [16.03, 16.22] |
-| e) Modo estático: persona que viene y camina (1.4 m/s) | 0.11 [0.06, 0.16] | — (quieto) | 0.40 [0.40, 0.40] | 7.21 [7.14, 7.28] |
-| e) Modo estático: persona que viene y corre (3.3 m/s) | 0.12 [0.09, 0.14] | — (quieto) | 0.40 [0.40, 0.40] | 6.12 [6.05, 6.20] |
+| e) Modo estático: persona que viene y camina (1.4 m/s) | 0.11 [0.06, 0.16] | — (quieto) | 0.50 [0.50, 0.50] | 7.07 [6.99, 7.14] |
+| e) Modo estático: persona que viene y corre (3.3 m/s) | 0.12 [0.09, 0.14] | — (quieto) | 0.50 [0.50, 0.50] | 5.80 [5.72, 5.87] |
 | e) Modo estático: persona que pasa de lado a 5 m (1.4 m/s) | — | — (quieto) | — | 5.00 [4.94, 5.06] |
 
 ## Resumen
@@ -90,7 +90,7 @@ Los mismos escenarios con una degradación a la vez y una combinada, 100 vuelos 
 | d) Persona que cruza lejos y corre (3.3 m/s), avance a 1 m/s | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | e) Modo estático: persona que viene y camina (1.4 m/s) | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | e) Modo estático: persona que viene y corre (3.3 m/s) | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
-| e) Modo estático: persona que pasa de lado a 5 m (1.4 m/s) | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
+| e) Modo estático: persona que pasa de lado a 5 m (1.4 m/s) | 100 | 100 | 100 | 99 (1 f.) | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 99 (1 f.) | 100 |
 
 Condiciones: **C0** Nominal; **C1** YOLO recall 0.85 (sol de frente); **C2** YOLO recall 0.70 (desenfoque); **C3** Oclusión: medio cuerpo visible; **C4** Oclusión: solo torso visible; **C5** LiDAR ruido ×3 y 5 % sin retorno; **C6** Latencia total 200 ms; **C7** Latencia total 300 ms; **C8** Viento de cola 3 m/s con ráfagas; **C9** Viento de cola 5 m/s con ráfagas; **C10** Combinada: recall 0.85 + medio cuerpo + LiDAR + 200 ms + viento 4 m/s; **C11** Extrema: YOLO recall 0.40; **C12** Extrema: solo cabeza y hombros (15 % del alto); **C13** Extrema: latencia total 500 ms. (ch.: vuelos con choque; f.: activaciones falsas.)
 
@@ -100,28 +100,28 @@ Barrido de 1 a 12 m/s, 100 vuelos por velocidad. Segura: esa velocidad y todas l
 
 | Condición | Panel fijo | Persona quieta | Persona de frente corriendo | Primera falla (vuelos con margen / choques) |
 |---|---:|---:|---:|---|
-| C0 Nominal | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 11 m/s: 81/100, 0 ch. |
-| C1 YOLO recall 0.85 (sol de frente) | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 11 m/s: 82/100, 0 ch. |
-| C2 YOLO recall 0.70 (desenfoque) | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 11 m/s: 87/100, 0 ch. |
-| C3 Oclusión: medio cuerpo visible | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 11 m/s: 87/100, 0 ch. |
-| C4 Oclusión: solo torso visible | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 82/100, 0 ch.; persona de frente corriendo a 11 m/s: 84/100, 0 ch. |
-| C5 LiDAR ruido ×3 y 5 % sin retorno | 11 | 4 | 10 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 11 m/s: 81/100, 0 ch. |
-| C6 Latencia total 200 ms | 11 | 4 | 9 | panel fijo a 12 m/s: 0/100, 0 ch.; persona quieta a 5 m/s: 77/100, 0 ch.; persona de frente corriendo a 10 m/s: 70/100, 1 ch. |
-| C7 Latencia total 300 ms | 10 | 4 | 7 | panel fijo a 11 m/s: 29/100, 0 ch.; persona quieta a 5 m/s: 77/100, 0 ch.; persona de frente corriendo a 8 m/s: 82/100, 0 ch. |
-| C8 Viento de cola 3 m/s con ráfagas | 11 | 4 | 10 | panel fijo a 12 m/s: 4/100, 0 ch.; persona quieta a 5 m/s: 68/100, 0 ch.; persona de frente corriendo a 11 m/s: 86/100, 0 ch. |
-| C9 Viento de cola 5 m/s con ráfagas | 11 | 4 | 10 | panel fijo a 12 m/s: 7/100, 0 ch.; persona quieta a 5 m/s: 61/100, 0 ch.; persona de frente corriendo a 11 m/s: 87/100, 0 ch. |
-| C10 Combinada: recall 0.85 + medio cuerpo + LiDAR + 200 ms + viento 4 m/s | 11 | 4 | 8 | panel fijo a 12 m/s: 0/100, 0 ch.; persona quieta a 5 m/s: 64/100, 0 ch.; persona de frente corriendo a 9 m/s: 93/100, 0 ch. |
-| C11 Extrema: YOLO recall 0.40 | 11 | 4 | 7 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 80/100, 0 ch.; persona de frente corriendo a 8 m/s: 94/100, 2 ch. |
-| C12 Extrema: solo cabeza y hombros (15 % del alto) | 11 | 4 | 0 | panel fijo a 12 m/s: 1/100, 0 ch.; persona quieta a 5 m/s: 81/100, 0 ch.; persona de frente corriendo a 1 m/s: 93/100, 2 ch. |
-| C13 Extrema: latencia total 500 ms | 10 | 4 | 5 | panel fijo a 11 m/s: 0/100, 0 ch.; persona quieta a 5 m/s: 77/100, 0 ch.; persona de frente corriendo a 6 m/s: 78/100, 0 ch. |
+| C0 Nominal | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 78/100, 0 ch.; persona de frente corriendo a 9 m/s: 91/100, 0 ch. |
+| C1 YOLO recall 0.85 (sol de frente) | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 78/100, 0 ch.; persona de frente corriendo a 9 m/s: 92/100, 0 ch. |
+| C2 YOLO recall 0.70 (desenfoque) | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 78/100, 0 ch.; persona de frente corriendo a 9 m/s: 90/100, 0 ch. |
+| C3 Oclusión: medio cuerpo visible | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 79/100, 0 ch.; persona de frente corriendo a 9 m/s: 88/100, 0 ch. |
+| C4 Oclusión: solo torso visible | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 81/100, 0 ch.; persona de frente corriendo a 9 m/s: 91/100, 0 ch. |
+| C5 LiDAR ruido ×3 y 5 % sin retorno | 5 | 4 | 8 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 76/100, 0 ch.; persona de frente corriendo a 9 m/s: 91/100, 0 ch. |
+| C6 Latencia total 200 ms | 5 | 4 | 7 | panel fijo a 6 m/s: 68/100, 0 ch.; persona quieta a 5 m/s: 74/100, 0 ch.; persona de frente corriendo a 8 m/s: 82/100, 0 ch. |
+| C7 Latencia total 300 ms | 5 | 4 | 5 | panel fijo a 6 m/s: 67/100, 0 ch.; persona quieta a 5 m/s: 69/100, 0 ch.; persona de frente corriendo a 6 m/s: 94/100, 0 ch. |
+| C8 Viento de cola 3 m/s con ráfagas | 6 | 4 | 8 | panel fijo a 7 m/s: 37/100, 0 ch.; persona quieta a 5 m/s: 68/100, 0 ch.; persona de frente corriendo a 9 m/s: 89/100, 0 ch. |
+| C9 Viento de cola 5 m/s con ráfagas | 6 | 4 | 8 | panel fijo a 7 m/s: 74/100, 0 ch.; persona quieta a 5 m/s: 61/100, 0 ch.; persona de frente corriendo a 9 m/s: 87/100, 0 ch. |
+| C10 Combinada: recall 0.85 + medio cuerpo + LiDAR + 200 ms + viento 4 m/s | 5 | 4 | 7 | panel fijo a 6 m/s: 94/100, 0 ch.; persona quieta a 5 m/s: 63/100, 0 ch.; persona de frente corriendo a 8 m/s: 82/100, 0 ch. |
+| C11 Extrema: YOLO recall 0.40 | 5 | 4 | 7 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 78/100, 0 ch.; persona de frente corriendo a 8 m/s: 88/100, 3 ch. |
+| C12 Extrema: solo cabeza y hombros (15 % del alto) | 5 | 4 | 0 | panel fijo a 6 m/s: 76/100, 0 ch.; persona quieta a 5 m/s: 79/100, 0 ch.; persona de frente corriendo a 1 m/s: 93/100, 4 ch. |
+| C13 Extrema: latencia total 500 ms | 5 | 4 | 4 | panel fijo a 6 m/s: 65/100, 0 ch.; persona quieta a 5 m/s: 58/100, 0 ch.; persona de frente corriendo a 5 m/s: 85/100, 0 ch. |
 
 ### Lectura
 
 - **A las velocidades del protocolo (hasta 4 m/s) ninguna degradación realista lo hace fallar.** No es casualidad: el riesgo se evalúa 10 veces por segundo durante los ~2 s que la persona está entre 8 m y el punto de frenado, así que perder el 30 % de los cuadros (recall 0.70) casi nunca deja sin detección más de 0.3 s; y el LiDAR toca el panel en decenas de lecturas seguidas, así que un 5 % sin retorno no cambia nada. Por eso los límites se buscan subiendo la velocidad y con las condiciones extremas.
-- **Panel:** el límite lo pone el alcance útil del LiDAR. Con la cámara a −5° desde 2.3 m el rayo toca el suelo a ~26 m, y por encima de ~11 m/s la distancia de frenado más el margen no cabe en ese alcance. La latencia de 300 ms lo baja a 10 m/s.
+- **Panel:** el límite lo pone el alcance útil del LiDAR. Con la geometría medida del dron real (TF03 fijo a -6.7° desde 2.0 m, sin gimbal) el rayo toca el suelo a ~17 m; por encima de unos 5 m/s la distancia de frenado más el margen no cabe en ese alcance. Con el modelo anterior (gimbal que mantenía el rayo a −5° desde 2.3 m) el suelo quedaba a ~26 m y el límite era de 11 m/s.
 - **Persona quieta:** el límite (4 m/s) lo pone la regla dura de los 8 m, no la percepción: aunque la vea desde lejos, el sistema no se activa antes de los 8 m, y por encima de 4 m/s no alcanza a detenerse a 2 m (sube y le pasa por encima, fuera de su alcance, sin chocar, pero no se detiene con margen). El viento de cola lo empeora (menos vuelos con margen a 5 m/s). Si el comité acepta activarse antes con una persona inmóvil al frente, este límite sube.
-- **Persona que corre hacia el dron:** lo que más pesa es la latencia (de 10 m/s con 100 ms a 7 m/s con 300 ms).
-- **Condiciones extremas (C11-C13), donde se rompe:** con recall 0.40 o latencia de 500 ms aparecen las primeras fallas con la persona que corre hacia el dron (velocidad segura 7 y 5 m/s). Con solo cabeza y hombros a la vista (15 % del alto) la detección llega tarde incluso a 1 m/s y aparecen choques (2 de 100 en el barrido; en la tabla de escenarios, con otras semillas, 0 de 100: el mismo orden de magnitud). Ese es el límite de la percepción: el sistema necesita ver al menos un tercio del cuerpo.
+- **Persona que corre hacia el dron:** lo que más pesa es la latencia de la cadena (compárense las columnas C0, C6, C7 y C13 de la tabla).
+- **Condiciones extremas (C11-C13), donde se rompe:** con recall 0.40 o latencia de 500 ms aparecen las primeras fallas con la persona que corre hacia el dron (ver la tabla de velocidades seguras). Con solo cabeza y hombros a la vista (15 % del alto) la detección llega tarde incluso a 1 m/s y aparecen choques (unos pocos de 100 en el barrido; en la tabla de escenarios, con otras semillas, 0 de 100: el mismo orden de magnitud). Ese es el límite de la percepción: el sistema necesita ver al menos un tercio del cuerpo.
 - **Recomendación operativa:** limitar en ArduPilot la velocidad de avance del piloto (LOIT_SPEED) a la menor velocidad segura de la condición esperada; con personas en la zona, 4 m/s.
 
 ## Cómo se reproduce en campo
@@ -130,7 +130,7 @@ El mismo protocolo, con el dron real, en un campo abierto y plano, sin público 
 
 1. **Panel (a):** un panel de 2 × 2.6 m (cartón pluma o lona sobre un marco) a 20 m del punto de partida. El piloto avanza en línea recta a 1, 2 y 3 m/s (velocidad limitada con LOIT_SPEED), 10 repeticiones por velocidad.
 2. **Persona quieta (b):** primero un maniquí o una silueta de 1.7 m en el lugar del panel. Una persona real solo después de que (a) y (b) con maniquí den 10 de 10, y siempre con la parada (CH8) en la mano del operador.
-3. **Persona que se acerca (c, e):** un voluntario camina hacia el dron, que vuela en estático a 2.3 m o avanza a 1 m/s; se empieza desde 15 m, 10 repeticiones. Correr hacia el dron solo con maniquí sobre un carro.
+3. **Persona que se acerca (c, e):** un voluntario camina hacia el dron, que vuela en estático a 2.0 m o avanza a 1 m/s; se empieza desde 15 m, 10 repeticiones. Correr hacia el dron solo con maniquí sobre un carro.
 4. **Persona que cruza lejos (d):** cruza a 12 m al frente, caminando y trotando, 10 repeticiones de cada una.
 5. **Condiciones:** repetir (a) y (b) con sol de frente y con viento de más de 3 m/s, si se dan.
 
@@ -138,7 +138,7 @@ Qué se mide con el registro de la Jetson (una línea por cuadro con la marca de
 
 ## Límites del protocolo
 
-- Una sola persona o un solo panel por vuelo, suelo plano, panel de 2.6 m (por debajo del rayo del LiDAR desde 2.3 m) y viento suave. No hay lluvia, noche ni oclusiones parciales por otros objetos.
+- Una sola persona o un solo panel por vuelo, suelo plano, panel de 2.6 m (el rayo del LiDAR lo alcanza desde 2.0 m de altura) y viento suave. No hay lluvia, noche ni oclusiones parciales por otros objetos.
 - El detector es un modelo estadístico de YOLO (probabilidad por distancia, ruido, estatura supuesta de 1.72 m y caja cortada); no son imágenes reales. La validación de campo debe repetir los escenarios a, b y d.
 - La parada del operador es un modelo (ve el choque a 2 s y reacciona en 0.7 s).
 

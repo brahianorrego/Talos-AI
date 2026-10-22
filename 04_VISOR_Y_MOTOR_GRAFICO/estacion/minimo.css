@@ -1,0 +1,63 @@
+/* Estación de tierra · mínimo: solo lo que no está en operacion.css (las tomas y los ajustes de la columna derecha). */
+#der { grid-template-rows: auto auto; overflow-y: auto; align-content: start; } #tomas, #tel { overflow: visible; display: block; } #rejilla { flex: none; display: grid; }
+#tomas .cont { position: static; overflow: visible; padding: 8px 10px; display: flex; flex-direction: column; gap: 7px; }
+#tForm { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; }
+#tForm label { display: flex; flex-direction: column; gap: 2px; font: 700 11px var(--sans); letter-spacing: .8px; color: var(--tenue2); text-transform: uppercase; min-width: 0; }
+#tForm select, #tForm input { width: 100%; font: 13px var(--sans); color: var(--texto); background: var(--panel2); border: 1px solid var(--linea2); border-radius: 2px; padding: 4px 6px; }
+#tForm label:first-child { grid-column: span 2; }
+#tForm input:disabled, #tForm select:disabled { opacity: .45; }
+#tAcc { display: flex; align-items: center; gap: 8px; }
+button.grande { font-size: 15px; padding: 7px 22px; border-color: #1d6b3c; background: #0f2a1b; color: var(--ok); }
+button.grande:disabled, #bCancelar:disabled { opacity: .4; cursor: default; }
+#tMsg { color: var(--alerta); font: 12.5px var(--mono); }
+#tEstado { background: var(--panel2); border: 1px solid var(--linea); padding: 7px 10px; min-height: 52px; }
+#tEstado .grande { font: 700 26px var(--mono); line-height: 1.1; } #tEstado .peq { font: 13px var(--mono); color: var(--tenue); margin-top: 2px; }
+#tEstado.prep { border-color: #7a5410; background: #2b200a; } #tEstado.act { border-color: #1d6b3c; background: #0f2a1b; }
+#tGuia { font-size: 13px; color: var(--tenue); } #tGuia p { margin: 2px 0; } #tGuia b { color: var(--texto); }
+#tHist { font: 12.5px var(--mono); color: var(--tenue2); display: flex; gap: 10px; flex-wrap: wrap; } #tHist .ok { color: var(--ok); } #tHist .mal { color: var(--alerta); }
+#logLista { max-height: 170px; overflow: hidden; }
+#sinvideoTxt { text-align: center; }
+
+/* telemetría ampliada */
+#rejilla { grid-template-rows: none; grid-auto-rows: auto; overflow: visible; align-content: start; }
+.t.s6 { grid-column: span 6; } .t.visual { min-height: 170px; } .t.s6 { min-height: 70px; }
+.t .fila input { width: 84px; font: 600 13px var(--mono); color: var(--texto); background: var(--panel); border: 1px solid var(--linea2); padding: 2px 5px; text-align: right; }
+#actTxt { position: absolute; right: 8px; top: 5px; text-align: right; font: 600 13px var(--mono); z-index: 2; line-height: 1.35; }
+#persona .fila { margin: 1px 0; } #persona b.si { color: var(--ok); } #persona b.no { color: var(--alerta); }
+#progreso { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 3px; }
+#progreso div { background: var(--panel); border: 1px solid var(--linea); padding: 3px 6px; font: 12.5px var(--mono); text-align: center; } #progreso div.listo { border-color: #1d6b3c; background: #0f2a1b; } #progreso div.medio { border-color: #7a5410; background: #2b200a; }
+#progreso b { display: block; font-size: 15px; }
+.calid { display: flex; flex-direction: column; font: 600 10px var(--sans); letter-spacing: 1px; color: var(--tenue2); text-transform: uppercase; } .calid select { font-size: 12px; padding: 2px 4px; }
+
+#der::-webkit-scrollbar { width: 8px; } #der::-webkit-scrollbar-thumb { background: var(--linea2); }
+
+/* mapa pequeño en la esquina del video; con clic se amplía a toda la ventana */
+#mini { position: absolute; z-index: 5; top: 8px; right: 8px; width: 150px; height: 112px; opacity: .92; border: 1px solid var(--linea2); background: #0b0d10; cursor: zoom-in; overflow: hidden; }
+#mini.grande { position: fixed; z-index: 12; top: 46px; left: 0; right: 0; bottom: 24px; width: auto; height: auto; cursor: default; border: 0; }
+#miniMapa { position: absolute; inset: 0; } #miniInfo { position: absolute; z-index: 600; left: 6px; bottom: 6px; background: rgba(7,9,11,.82); border: 1px solid var(--linea2); padding: 3px 8px; font: 600 12px var(--mono); }
+#miniBtn { position: absolute; z-index: 600; top: 6px; right: 6px; } #miniCentro { position: absolute; z-index: 600; top: 6px; left: 6px; display: none; } #mini.grande #miniCentro { display: block; }
+#mini .leaflet-container { background: #0b0d10; font: 12px var(--sans); } #mini .leaflet-control-attribution { background: rgba(7,9,11,.78); color: var(--tenue); font-size: 11px; } #mini .leaflet-control-attribution a { color: var(--acento); }
+.dronmapa svg { width: 40px; height: 40px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.8)); transition: transform .2s; }
+#enlaceBanner { display: none; position: fixed; z-index: 14; top: 46px; left: 0; right: 0; padding: 8px 14px; background: #3a1d06; border-bottom: 2px solid var(--alerta); font-size: 14px; } #enlaceBanner input { width: 190px; font: 13px var(--mono); color: var(--texto); background: var(--panel2); border: 1px solid var(--linea2); padding: 3px 6px; margin: 0 4px; } #enlaceBanner button { margin: 0 4px; }
+
+/* DISPOSICIÓN FINAL: el video ocupa todo el alto con proporción 4:3 (sin franjas negras) y a la derecha un solo panel con scroll: tomas, telemetría, registro de eventos y mapa */
+#cuerpo { grid-template-columns: min(calc((100vh - 84px) * 4 / 3), calc(100vw - 480px)) minmax(0, 1fr); }
+#izqCol { display: block; min-height: 0; } #izq { height: 100%; }
+#cam0 { object-fit: cover; }
+#der { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden; min-height: 0; padding-right: 2px; }
+#tomas, #tel, #logc { flex: none; overflow: visible; display: block; }
+#der::-webkit-scrollbar { width: 9px; } #der::-webkit-scrollbar-thumb { background: var(--linea2); }
+#log { display: block; background: transparent; border: 0; } #logLista { display: block; max-height: none; padding: 4px 10px 8px; } .ev { height: 22px; }
+#tForm { grid-template-columns: repeat(2, minmax(0, 1fr)); } #tForm label:first-child { grid-column: span 2; }
+#miniFila { flex: none; padding: 2px 0 8px; }
+#mini { position: relative; top: auto; right: auto; width: 230px; height: 150px; opacity: 1; margin: 0; cursor: zoom-in; border: 1px solid var(--linea2); }
+#mini.grande { position: fixed; z-index: 12; top: 46px; left: 0; right: 0; bottom: 24px; width: auto; height: auto; cursor: default; border: 0; }
+.t { padding: 4px 8px 5px; } .t .cifra { font-size: 22px; } #rejilla { gap: 4px; padding: 5px; } .t.visual { min-height: 150px; }
+.t .fila { font-size: 13px; } .t .fila span { font-size: 12px; }
+@media (max-width: 1100px) { #cuerpo { grid-template-columns: minmax(0, 1fr); overflow-y: auto; } #izq { height: 60vh; } }
+#mini:not(.grande) .leaflet-control-attribution { display: none; }
+
+/* ventana de calibración dentro de la estación */
+#modalJ { display: none; position: fixed; z-index: 20; top: 46px; left: 0; right: 0; bottom: 24px; background: var(--fondo); flex-direction: column; } #modalJ.ver { display: flex; }
+#modalBarra { display: flex; align-items: center; gap: 14px; padding: 6px 12px; background: #0c0f12; border-bottom: 1px solid var(--linea2); } #modalBarra b { font: 700 14px var(--sans); letter-spacing: 1px; } #modalBarra button { margin-left: auto; }
+#modalFrame { flex: 1; border: 0; width: 100%; background: #0b0f14; }

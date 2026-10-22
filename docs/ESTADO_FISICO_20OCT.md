@@ -11,14 +11,26 @@ No hay IPs, usuarios ni claves en este archivo. Lo que sale de un solo dicho o d
 > principal y el TF-Luna juntos en el pan-tilt, una **segunda CSI fija mirando al piso** (CAM0 y CAM1 por cable plano) y el TF03 fijo al chasis.
 > El plus se entrena en H; G solo corre el mínimo.
 
+## 0. Correcciones del 20-oct (las dicta la parte física; medidas en el dron)
+
+1. **El mínimo no ha volado con la Jetson.** Lo que hubo: un vuelo de prueba **sin la Jetson** que terminó en **failsafe por batería**; desde entonces no se ha vuelto a volar. Todo lo demás es banco y tomas con el dron en el suelo (`Proyecto-Grado-Minimo/docs/ESTADO.md`).
+2. **La cámara USB no se dañó:** se sobreexpone al sol porque su driver no expone la exposición (brillo y contraste no la arreglan). Sirve en interiores. Se descartó por eso.
+3. **JetPack 6.2.1 en la Jetson reinstalada:** `nvargus` funciona; la CSI da ≈30 FPS de captura y **≈25 FPS con YOLO** (22-25 ms por cuadro, con seguimiento), con el ISP por hardware. El campo real de la CSI sigue sin medirse (62.2° × 48.8° es nominal).
+4. **Pixhawk boca abajo** bajo la placa inferior: `AHRS_ORIENTATION = 8` (Roll180, verificado inclinando el dron). Motores **espejados y con el giro invertido** respecto a un X normal → `FRAME_TYPE = 18` (X_REV) y `SERVO1..4_FUNCTION = 36, 33, 34, 35` (prueba de motores sin hélices). Diagrama: `08_EVIDENCIA_Y_DIAGRAMAS/diagramas/10_motores_vista_superior.png`.
+5. **Dónde va cada cosa** (de arriba abajo, `diagramas/11_ubicacion_componentes_vista_lateral.png`, fotos 24-27): GPS RadioLink SE100 en un vástago atrás, más alto que la caja · Jetson en caja de acrílico con 2 antenas WiFi y la CSI pegada al frente de la caja · placa superior · bloque de cables (placa de distribución, power module) con el **TF03 al frente, entre las placas** · placa inferior con la **Pixhawk pegada debajo** · placa de la batería con 2 correas de velcro (azul y negra) y la LiPo 4S.
+6. **Medidas (Brahian, 20-oct):** placas de 15 × 15 cm; separación entre placas 3.85 cm (TF03: carcasa 44 × 43 × 32 mm, hoja técnica); caja de la Jetson 4.3 cm; GPS: 11.3 cm de la placa superior a su cima; eje del LiDAR a 28 cm y eje de la cámara a 33.5 cm de la superficie de apoyo (cámara 5.5 cm sobre el LiDAR). Diagrama lateral a escala: `diagramas/11_ubicacion_componentes_vista_lateral.png`.
+7. **MEDIDO el 20-oct (`/calibrar`, marcas en la pared a 2.0 m):** campo de visión de la CSI **68.3° × 54.0°** (no 62.2° × 48.8°), cámara inclinada **−2.4°**, rayo del TF03 inclinado **−6.7°** y desviado −0.6° de lado. Cámara 6 cm detrás del frente del LiDAR (medido con regla; si estuviera adelante, los campos subirían ~3°). Datos: `Proyecto-Grado-Minimo/datos_campo/calibracion_2026-10-20/`. Vale para la cámara del mínimo; la CSI#2 del plus es del mismo modelo pero **no se midió**.
+8. **Inclinaciones y campo de visión sin medir**: se medirán en el apartamento (pared a pared, ~10 m). El TF03 y la CSI van fijos al chasis; el punto donde pega el LiDAR en la imagen está en `~/alineacion_lidar.json` (provisional, 1 clic a 0.8 m).
+9. **Altura del mínimo (por decidir, Brahian):** propone **2.0 m como máximo** y subir a ~3 m solo con peligro inminente. Choca con D-043 (3.30 m con personas a < 8 m) y con el montaje: con el TF03 a −6.5° (medido) desde 2.0 m, el rayo solo toca a una persona de 1.72 m si está a **más de ≈ 2.5 m** (cálculo; con −5° eran 3.2 m): a menos queda por encima de la cabeza.
+
 ## 1. Qué hardware tiene hoy el dron (variante G, la del mínimo)
 
 | Pieza | Estado hoy | Fuente |
 |---|---|---|
 | **Gimbal BaseCam** | **Quitado** (Brahian lo descartó) | `05_HARDWARE_Y_VARIANTES/VARIANTES.md` §0 (D-072) |
-| **Cámara USB** | **Quitada**: el sensor se dañó con el sol | `VARIANTES.md` §0 |
-| **Cámara principal** | **CSI IMX219 en CAM0, fija ~5° hacia abajo**, sobre la caja acrílica de la Jetson, con su cable plano; placa `J8IM228-V3.0` (foto) | `VARIANTES.md` §0; `08_EVIDENCIA_Y_DIAGRAMAS/fotos/19_camara_csi_imx219_J8IM228_en_cam0.jpg` y `19_...20oct_1.webp` a `23_...` |
-| **LiDAR TF03** | **Fijo**, en la misma base que la cámara, paralelo a ella (−5°). Según el Coordinador, está **en el lado derecho** del dron; en las fotos no pude distinguirlo con seguridad | `VARIANTES.md` §0 y `config_sim/variante_G.json`; Coordinador (dicho) |
+| **Cámara USB** | **Quitada**: se sobreexpone al sol (no está dañada; ver §0) | `VARIANTES.md` §0 |
+| **Cámara principal** | **CSI IMX219 en CAM0, fija a −2.4° (medido, §0; antes "~5°")**, sobre la caja acrílica de la Jetson, con su cable plano; placa `J8IM228-V3.0` (foto) | `VARIANTES.md` §0; `08_EVIDENCIA_Y_DIAGRAMAS/fotos/19_camara_csi_imx219_J8IM228_en_cam0.jpg` y `19_...20oct_1.webp` a `23_...` |
+| **LiDAR TF03** | **Fijo**, en la misma base que la cámara, a −6.7° (medido, §0; no paralelo a la cámara, que va a −2.4°). Según el Coordinador, está **en el lado derecho** del dron; en las fotos no pude distinguirlo con seguridad | `VARIANTES.md` §0 y `config_sim/variante_G.json`; Coordinador (dicho) |
 | **Jetson Orin Nano** | En caja acrílica transparente encima del chasis, con dos antenas WiFi y un módulo GPS Radiolink visibles | Fotos del 20-oct |
 | **Batería LiPo** | Colgada **bajo el chasis**, entre las patas, con correa azul. Lo confirman las fotos `19_dron_sin_gimbal_20oct_2`, `_3` y `_4` | Fotos del 20-oct (`08_EVIDENCIA_Y_DIAGRAMAS/fotos/20_...`, `21_...`, `22_...`) |
 | **Pixhawk** | Según el Coordinador, **boca abajo bajo el chasis, junto a la batería**. En las fotos se ve una caja negra en ese lugar, compatible con eso, **pero no puedo confirmar que sea la Pixhawk ni su orientación** | Coordinador (dicho); fotos 3-4 |
@@ -73,6 +85,6 @@ valor: `05_HARDWARE_Y_VARIANTES/config_sim/variante_G.json` y `VARIANTES.md` §0
 3. **TF03 fijo a −5°** paralelo a la cámara (hoy `TF03_PITCH_V17 = −3°`) y **sin TF-Luna** ni cámara al piso en G (`CAM_PISO_ACTIVA = false`).
 4. **Zona ciega:** la cabeza se ve desde ~3.0 m y el suelo desde ~5.9 m (`COBERTURA.md`). La simulación debe dejar de ver a quien se acerca a menos de ~3 m.
 5. **Imagen real:** la CSI tiene ISP por software (exposición y balance de blancos en la CPU, ~12 ms por cuadro): añadir **sobreexposición a pleno sol**
-   (el sensor USB se dañó con el sol) y pérdidas de detección por brillo; el YOLO medido es **30.8 FPS**, no más.
+   (la USB se sobreexpone al sol) y pérdidas de detección por brillo; el YOLO medido es **30.8 FPS**, no más.
 6. **El plus se entrena en H** (D-074): pan y tilt libres, CSI principal y TF-Luna juntos en el pan-tilt, segunda CSI fija al piso (62.2° × 48.8° a −90°), TF03 fijo al chasis, el roll lo controla el dron. **G solo corre el mínimo** (puntos 1-5 aplican a G y al re-simular el mínimo; la H usa la cámara de 62.2° × 48.8° con tilt libre).
 7. **No cambiar** las reglas duras ni el árbitro; la simulación puede seguir acotando el gimbal virtual a −45°..+15° (más estricto que sin gimbal).

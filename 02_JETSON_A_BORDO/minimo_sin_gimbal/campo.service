@@ -1,0 +1,15 @@
+[Unit]
+Description=Registro del minimo y panel de campo
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/Escritorio/dron_ia
+# si la Jetson se apagó en plena toma, el archivo de control queda y la siguiente corrida etiquetaría cuadros con una toma que ya no existe
+ExecStartPre=-/bin/rm -f %h/toma_actual.json
+ExecStartPre=-/usr/bin/v4l2-ctl -d /dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._USB_2.0_Camera-video-index0 --set-ctrl=brightness=-64,contrast=64
+ExecStart=%h/dron_env/bin/python -u registro_minimo.py --video --panel 8080 --tomas %h/toma_actual.json --sin-gimbal
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
